@@ -1,0 +1,6 @@
+#ifndef UTTTCODINGAMEC_TEST_BOARD_H
+#define UTTTCODINGAMEC_TEST_BOARD_H
+
+void run_board_tests();
+
+#endif //UTTTCODINGAMEC_TEST_BOARD_H
