@@ -11,7 +11,7 @@ void test_init_board() {
     Square moves[TOTAL_SQUARES];
     int amount_of_moves = get_possible_moves(board, moves);
     my_assert(amount_of_moves == TOTAL_SQUARES, "test_init_board: Invalid move generation for empty board");
-    free(board);
+    free_board(board);
 }
 
 
@@ -36,7 +36,7 @@ void test_update_board() {
     char* fail_msg_4 = "test_update_board: Incorrect move generation after second board reset";
     my_assert(get_possible_moves(board, moves) == TOTAL_SQUARES_SMALL_BOARD - 1, fail_msg_4);
 
-    free(board);
+    free_board(board);
 }
 
 
@@ -50,7 +50,7 @@ void test_rollout() {
         make_temporary_move(board, move);
     }
     my_assert(get_board_state(board) == PLAYER_2_WIN, "test_rollout: Incorrect end state");
-    free(board);
+    free_board(board);
 }
 
 

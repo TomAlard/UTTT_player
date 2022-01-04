@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include "board.h"
 #include "util.h"
@@ -92,6 +93,11 @@ Board* init_board() {
     board->precomputed_states[PLAYER_1][FULL] = DRAW;
     board->precomputed_states[PLAYER_2][FULL] = DRAW;
     return board;
+}
+
+
+void free_board(Board* board) {
+    free(board);
 }
 
 

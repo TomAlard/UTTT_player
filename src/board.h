@@ -17,6 +17,8 @@ typedef struct Board Board;
 
 Board* init_board();
 
+void free_board(Board* board);
+
 void undo_all_temporary_moves(Board* board);
 
 void make_temporary_move(Board* board, Square square);
