@@ -7,7 +7,7 @@
 
 void test_init_board() {
     Board* board = init_board();
-    my_assert(get_board_state(board) == UNDECIDED, "test_init_board: Invalid empty board state");
+    my_assert(calculate_board_state(board) == UNDECIDED, "test_init_board: Invalid empty board state");
     Square moves[TOTAL_SQUARES];
     int amount_of_moves = get_possible_moves(board, moves);
     my_assert(amount_of_moves == TOTAL_SQUARES, "test_init_board: Invalid move generation for empty board");
@@ -44,12 +44,12 @@ void test_rollout() {
     Board* board = init_board();
     srand(69420);  // NOLINT(cert-msc51-cpp)
     Square moves[TOTAL_SQUARES];
-    while (get_board_state(board) == UNDECIDED) {
+    while (calculate_board_state(board) == UNDECIDED) {
         int amount_of_moves = get_possible_moves(board, moves);
         Square move = moves[rand() % amount_of_moves];  // NOLINT(cert-msc50-cpp)
         make_temporary_move(board, move);
     }
-    my_assert(get_board_state(board) == PLAYER_2_WIN, "test_rollout: Incorrect end state");
+    my_assert(calculate_board_state(board) == PLAYER_2_WIN, "test_rollout: Incorrect end state");
     free_board(board);
 }
 

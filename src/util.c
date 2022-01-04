@@ -31,6 +31,16 @@ void my_assert(bool condition, char* msg) {
 }
 
 
+clock_t get_deadline(double time) {
+    return clock() + time*CLOCKS_PER_SEC;
+}
+
+
+bool has_time_remaining(clock_t deadline) {
+    return clock() < deadline;
+}
+
+
 bool check_bit(uint16_t value, int bit_index) {
     return (value >> bit_index) & 1;
 }

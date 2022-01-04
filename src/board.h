@@ -25,7 +25,7 @@ void make_temporary_move(Board* board, Square square);
 
 void make_permanent_move(Board* board, Square square);
 
-State get_board_state(Board* board);
+State calculate_board_state(Board* board);
 
 int get_possible_moves(Board* board, Square* moves);
 

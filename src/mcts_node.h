@@ -10,7 +10,13 @@ MCTSNode* init_MCTS_root_node(Player player);
 
 void free_MCTS_tree(MCTSNode* root);
 
-MCTSNode* get_next_child(MCTSNode* node, Board* board);
+bool has_children(MCTSNode* node, Board* board);
+
+MCTSNode* get_next_child_by_UCT(MCTSNode* node, Board* board);
+
+Square get_most_simulated_child_square(MCTSNode* node);
+
+Player get_player(MCTSNode* node);
 
 void backpropagate(MCTSNode* node, State state);
 

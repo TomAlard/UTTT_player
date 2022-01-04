@@ -148,7 +148,7 @@ int popcount(BitBoard bit_board) {
 }
 
 
-State get_board_state(Board* board) {
+State calculate_board_state(Board* board) {
     Player potential_winner = other_player(board->player_to_move);
     State state = board->precomputed_states[potential_winner][board->big_board_bit_boards[potential_winner]];
     if (state != UNDECIDED) {
