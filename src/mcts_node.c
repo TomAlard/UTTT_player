@@ -81,7 +81,7 @@ MCTSNode* get_next_child_by_UCT(MCTSNode* node, Board* board) {
     }
 
     MCTSNode* highest_UCT_child = NULL;
-    double highest_UCT = -1;
+    double highest_UCT = -1000000000;
     for (int i = 0; i < node->amount_of_children; i++) {
         MCTSNode* child = node->children[i];
         double UCT = get_UCT_value(child);
@@ -91,6 +91,21 @@ MCTSNode* get_next_child_by_UCT(MCTSNode* node, Board* board) {
         }
     }
     return highest_UCT_child;
+}
+
+
+MCTSNode* get_next_root(MCTSNode* root, Board* board, Square square) {
+    if (root->children == NULL) {
+        find_child_nodes(root, board);
+    }
+
+    for (int i = 0; i < root->amount_of_children; i++) {
+        MCTSNode* child = root->children[i];
+        if (squares_are_equal(square, child->position)) {
+            return child;
+        }
+    }
+    return NULL;
 }
 
 
@@ -111,6 +126,16 @@ Square get_most_simulated_child_square(MCTSNode* node) {
 
 Player get_player(MCTSNode* node) {
     return node->player;
+}
+
+
+double get_wins(MCTSNode* node) {
+    return node->wins;
+}
+
+
+int get_sims(MCTSNode* node) {
+    return node->sims;
 }
 
 

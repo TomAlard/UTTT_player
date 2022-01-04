@@ -1,7 +1,6 @@
 #include <time.h>
 #include "find_best_move.h"
 #include "util.h"
-#include "random.h"
 
 
 MCTSNode* select_leaf(Board* board, MCTSNode* root) {
@@ -39,7 +38,7 @@ State simulate(Board* board, MCTSNode* playout_node, pcg32_random_t* rng) {
 }
 
 
-Square find_best_move(Board* board, MCTSNode* root, double allocated_time) {
+Square find_best_move(Board* board, MCTSNode* root, double allocated_time, pcg32_random_t* rng) {
     clock_t deadline = get_deadline(allocated_time);
     while (has_time_remaining(deadline)) {
         MCTSNode* leaf = select_leaf(board, root);
@@ -48,7 +47,7 @@ Square find_best_move(Board* board, MCTSNode* root, double allocated_time) {
         State board_state = calculate_board_state(board);
         if (board_state == UNDECIDED) {
             playout_node = expand_leaf(board, leaf);
-            simulation_result = simulate(board, playout_node);
+            simulation_result = simulate(board, playout_node, rng);
         } else {
             playout_node = leaf;
             simulation_result = board_state;

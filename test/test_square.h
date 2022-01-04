@@ -1,0 +1,6 @@
+#ifndef UTTTCODINGAMEC_TEST_SQUARE_H
+#define UTTTCODINGAMEC_TEST_SQUARE_H
+
+void run_square_tests();
+
+#endif //UTTTCODINGAMEC_TEST_SQUARE_H
