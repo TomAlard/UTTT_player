@@ -84,14 +84,12 @@ Board* init_board() {
     board->reset_player_to_move = PLAYER_1;
     board->next_small_board = -1;
     board->reset_next_small_board = -1;
-    for (BitBoard position = 0; position < FULL; position++) {
+    for (BitBoard position = 0; position < TOTAL_POSITIONS_SMALL_BOARD; position++) {
         fill_empty_squares(board, position);
         bool won = is_won(position);
         board->precomputed_states[PLAYER_1][position] = won? PLAYER_1_WIN : UNDECIDED;
         board->precomputed_states[PLAYER_2][position] = won? PLAYER_2_WIN : UNDECIDED;
     }
-    board->precomputed_states[PLAYER_1][FULL] = DRAW;
-    board->precomputed_states[PLAYER_2][FULL] = DRAW;
     return board;
 }
 
@@ -111,30 +109,33 @@ void undo_all_temporary_moves(Board* board) {
 }
 
 
-void make_temporary_move(Board* board, Square square) {
-    board->bit_boards[board->player_to_move][square.grid] |= 1 << square.pos;
-    board->next_small_board = square.pos;
-    BitBoard new_position = board->bit_boards[board->player_to_move][square.grid];
+void make_move(Board* board, Square square, BitBoard bit_boards[2][9], BitBoard* big_board_bit_boards,
+               Player* player_to_move, int8_t* next_small_board) {
+    bit_boards[board->player_to_move][square.grid] |= 1 << square.pos;
+    *next_small_board = square.pos;
+    BitBoard new_position = bit_boards[board->player_to_move][square.grid];
     State new_state = board->precomputed_states[board->player_to_move][new_position];
+    if ((bit_boards[PLAYER_1][square.grid] | bit_boards[PLAYER_2][square.grid]) == FULL) {
+        new_state = DRAW;
+    }
     if (new_state != UNDECIDED) {
         int index = new_state == DRAW? 2 : board->player_to_move;
-        board->big_board_bit_boards[index] |= 1 << square.grid;
+        big_board_bit_boards[index] |= 1 << square.grid;
     }
-    board->player_to_move = other_player(board->player_to_move);
+    *player_to_move = other_player(*player_to_move);
+}
+
+
+void make_temporary_move(Board* board, Square square) {
+    make_move(board, square, board->bit_boards, board->big_board_bit_boards, &board->player_to_move,
+              &board->next_small_board);
 }
 
 
 void make_permanent_move(Board* board, Square square) {
     make_temporary_move(board, square);
-    board->reset_bit_boards[board->player_to_move][square.grid] |= 1 << square.pos;
-    board->reset_next_small_board = square.pos;
-    BitBoard new_position = board->bit_boards[board->player_to_move][square.grid];
-    State new_state = board->precomputed_states[board->player_to_move][new_position];
-    if (new_state != UNDECIDED) {
-        int index = new_state == DRAW? 2 : board->player_to_move;
-        board->reset_big_board_bit_boards[index] |= 1 << square.grid;
-    }
-    board->reset_player_to_move = other_player(board->player_to_move);
+    make_move(board, square, board->reset_bit_boards, board->reset_big_board_bit_boards,
+              &board->reset_player_to_move, &board->reset_next_small_board);
 }
 
 

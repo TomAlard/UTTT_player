@@ -102,6 +102,7 @@ MCTSNode* get_next_root(MCTSNode* root, Board* board, Square square) {
     for (int i = 0; i < root->amount_of_children; i++) {
         MCTSNode* child = root->children[i];
         if (squares_are_equal(square, child->position)) {
+            child->parent = NULL;
             return child;
         }
     }
@@ -121,11 +122,6 @@ Square get_most_simulated_child_square(MCTSNode* node) {
         }
     }
     return highest_sims_child->position;
-}
-
-
-Player get_player(MCTSNode* node) {
-    return node->player;
 }
 
 

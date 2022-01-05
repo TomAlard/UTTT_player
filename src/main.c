@@ -22,11 +22,11 @@ void print_move(MCTSNode* root, Square best_move) {
     int sims = get_sims(root);
     double wins = get_wins(root);
     double eval = wins / sims;
-    printf("%c %c EVAL: %.2f SIMS: %d", x, y, eval, sims);
+    printf("%d %d EVAL: %.2f SIMS: %d\n", x, y, eval, sims);
 }
 
 
-#define TIME 10000  // 0.0999
+#define TIME 5
 int main() {
     run_tests();
     Board* board = init_board();
@@ -42,7 +42,7 @@ int main() {
         if (enemy_row != -1) {
             Square enemy_move = to_our_notation(enemy_row, enemy_col);
             make_permanent_move(board, enemy_move);
-            if (first) {
+            if (!first) {
                 root = get_next_root(root, board, enemy_move);
             }
         }

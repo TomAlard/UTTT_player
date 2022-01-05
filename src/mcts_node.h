@@ -18,8 +18,6 @@ MCTSNode* get_next_root(MCTSNode* root, Board* board, Square square);
 
 Square get_most_simulated_child_square(MCTSNode* node);
 
-Player get_player(MCTSNode* node);
-
 double get_wins(MCTSNode* node);
 
 int get_sims(MCTSNode* node);
