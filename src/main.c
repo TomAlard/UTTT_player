@@ -26,7 +26,7 @@ void print_move(MCTSNode* root, Square best_move) {
 }
 
 
-#define TIME 0.0999
+#define TIME 10000  // 0.0999
 int main() {
     run_tests();
     Board* board = init_board();

@@ -23,14 +23,12 @@ MCTSNode* expand_leaf(Board* board, MCTSNode* leaf) {
 }
 
 
-State simulate(Board* board, MCTSNode* playout_node, pcg32_random_t* rng) {
-    Player current_player = other_player(get_player(playout_node));
+State simulate(Board* board, pcg32_random_t* rng) {
     while (calculate_board_state(board) == UNDECIDED) {
         Square valid_moves[TOTAL_SQUARES];
         int amount_of_moves = get_possible_moves(board, valid_moves);
         Square move = valid_moves[pcg32_boundedrand_r(rng, amount_of_moves)];
         make_temporary_move(board, move);
-        current_player = other_player(current_player);
     }
     State simulation_result = calculate_board_state(board);
     undo_all_temporary_moves(board);
@@ -47,7 +45,7 @@ Square find_best_move(Board* board, MCTSNode* root, double allocated_time, pcg32
         State board_state = calculate_board_state(board);
         if (board_state == UNDECIDED) {
             playout_node = expand_leaf(board, leaf);
-            simulation_result = simulate(board, playout_node, rng);
+            simulation_result = simulate(board, rng);
         } else {
             playout_node = leaf;
             simulation_result = board_state;
