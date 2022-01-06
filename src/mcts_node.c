@@ -45,14 +45,19 @@ MCTSNode* init_MCTS_node(MCTSNode* parent, Square position, Player player) {
 }
 
 
-void free_MCTS_tree(MCTSNode* root) {
-    if (root->children != NULL) {
-        for (int i = 0; i < root->amount_of_children; i++) {
-            free_MCTS_tree(root->children[i]);
+void free_node(MCTSNode* node) {
+    free(node->children);
+    free(node);
+}
+
+
+void free_MCTS_tree(MCTSNode* node) {
+    if (node->children != NULL) {
+        for (int i = 0; i < node->amount_of_children; i++) {
+            free_MCTS_tree(node->children[i]);
         }
     }
-    free(root->children);
-    free(root);
+    free_node(node);
 }
 
 
@@ -99,14 +104,18 @@ MCTSNode* get_next_root(MCTSNode* root, Board* board, Square square) {
         find_child_nodes(root, board);
     }
 
+    MCTSNode* result = NULL;
     for (int i = 0; i < root->amount_of_children; i++) {
         MCTSNode* child = root->children[i];
-        if (squares_are_equal(square, child->position)) {
+        if (result == NULL && squares_are_equal(square, child->position)) {
             child->parent = NULL;
-            return child;
+            result = child;
+        } else {
+            free_MCTS_tree(child);
         }
     }
-    return NULL;
+    free_node(root);
+    return result;
 }
 
 
