@@ -21,8 +21,7 @@ void print_move(MCTSNode* root, Square best_move) {
     int8_t y = s.pos;
     int sims = get_sims(root);
     double wins = get_wins(root);
-    double eval = wins / sims;
-    printf("%d %d EVAL: %.2f SIMS: %d\n", x, y, eval, sims);
+    printf("%d %d %.1f/%d\n", x, y, wins, sims);
 }
 
 
@@ -48,6 +47,7 @@ int main() {
         }
         Square best_move = find_best_move(board, root, TIME, &rng);
         make_permanent_move(board, best_move);
+        fprintf(stderr, "TOTAL SIMS: %d\n", get_sims(root));
         root = get_next_root(root, board, best_move);
         print_move(root, best_move);
         first = false;
