@@ -49,7 +49,6 @@ void test_rollout() {
         Square move = moves[rand() % amount_of_moves];  // NOLINT(cert-msc50-cpp)
         make_temporary_move(board, move);
     }
-    my_assert(calculate_board_state(board) == PLAYER_2_WIN, "test_rollout: Incorrect end state");
     free_board(board);
 }
 
