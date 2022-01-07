@@ -1,6 +1,5 @@
 #include "main.h"
 #include "../test/test_main.h"
-#include "board.h"
 #include "find_best_move.h"
 
 
@@ -22,6 +21,22 @@ void print_move(MCTSNode* root, Square best_move) {
     int sims = get_sims(root);
     double wins = get_wins(root);
     printf("%d %d %.1f/%d\n", x, y, wins, sims);
+    fflush(stdout);
+}
+
+
+Square play_best_move(int enemy_row, int enemy_col, Board* board, MCTSNode** root, pcg32_random_t* rng, double time,
+                      bool first) {
+    if (enemy_row != -1) {
+        Square enemy_move = to_our_notation(enemy_row, enemy_col);
+        make_permanent_move(board, enemy_move);
+        if (!first) {
+            *root = get_next_root(*root, board, enemy_move);
+        }
+    }
+    Square best_move = find_best_move(board, *root, time, rng);
+    make_permanent_move(board, best_move);
+    return best_move;
 }
 
 
@@ -39,15 +54,7 @@ void play_game(FILE* file, double time) {
             break;
         }
         skip_moves_input(file);
-        if (enemy_row != -1) {
-            Square enemy_move = to_our_notation(enemy_row, enemy_col);
-            make_permanent_move(board, enemy_move);
-            if (!first) {
-                root = get_next_root(root, board, enemy_move);
-            }
-        }
-        Square best_move = find_best_move(board, root, time, &rng);
-        make_permanent_move(board, best_move);
+        Square best_move = play_best_move(enemy_row, enemy_col, board, &root, &rng, time, first);
         fprintf(stderr, "TOTAL SIMS: %d\n", get_sims(root));
         root = get_next_root(root, board, best_move);
         print_move(root, best_move);
