@@ -1,0 +1,72 @@
+#include "player_bitboard.h"
+#include "util.h"
+
+
+typedef struct PlayerBitBoard {
+    uint16_t smallBoards[9];
+    uint16_t bigBoard;
+} PlayerBitBoard;
+
+
+PlayerBitBoard* createPlayerBitBoard() {
+    return safe_calloc(sizeof(PlayerBitBoard));
+}
+
+
+void freePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
+    safe_free(playerBitBoard);
+}
+
+
+bool getPlayerBigBoardSquare(PlayerBitBoard* playerBitBoard, uint8_t board) {
+    return BIT_CHECK(playerBitBoard->bigBoard, board);
+}
+
+
+Player getPlayerSquare(PlayerBitBoard* playerBitBoard, Square square) {
+    return BIT_CHECK(playerBitBoard->smallBoards[square.board], square.position);
+}
+
+
+uint16_t winningMasks[8] = {448, 56, 7, 292, 146, 73, 273, 84};  // in order: 3 horizontal, 3 vertical, 2 diagonal
+bool isWin(uint16_t smallBoard) {
+    for (int i = 0; i < 8; i++) {
+        uint16_t winningMask = winningMasks[i];
+        if ((smallBoard & winningMask) == winningMask) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
+    return (smallBoard | otherPlayerSmallBoard) == 511;
+}
+
+
+void setPlayerSquare(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square) {
+    BIT_SET(playerBitBoard->smallBoards[square.board], square.position);
+    uint16_t smallBoard = playerBitBoard->smallBoards[square.board];
+    uint16_t otherPlayerSmallBoard = otherPlayerBitBoard->smallBoards[square.board];
+    if (isWin(smallBoard)) {
+        BIT_SET(playerBitBoard->bigBoard, square.board);
+    } else if (isDraw(smallBoard, otherPlayerSmallBoard)) {
+        BIT_SET(playerBitBoard->bigBoard, square.board);
+        BIT_SET(otherPlayerBitBoard->bigBoard, square.board);
+    }
+}
+
+
+void clearPlayerSquare(PlayerBitBoard* playerBitBoard, Square square) {
+    BIT_CLEAR(playerBitBoard->smallBoards[square.board], square.position);
+}
+
+
+// DELETE THIS
+void clearPlayerBoard(PlayerBitBoard* playerBitBoard) {
+    for (int i = 0; i < 9; i++) {
+        playerBitBoard->smallBoards[i] = 0;
+    }
+    playerBitBoard->bigBoard = 0;
+}
