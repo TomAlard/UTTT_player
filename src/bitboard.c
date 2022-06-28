@@ -52,6 +52,18 @@ void setSquare(BitBoard* bitBoard, Square square, Player player) {
 }
 
 
+void revertToCheckpoint(BitBoard* bitBoard) {
+    revertToPlayerCheckpoint(bitBoard->player1);
+    revertToPlayerCheckpoint(bitBoard->player2);
+}
+
+
+void updateCheckpoint(BitBoard* bitBoard) {
+    updatePlayerCheckpoint(bitBoard->player1);
+    updatePlayerCheckpoint(bitBoard->player2);
+}
+
+
 // DELETE THIS
 void clearBoard(BitBoard* bitBoard) {
     clearPlayerBoard(bitBoard->player1);

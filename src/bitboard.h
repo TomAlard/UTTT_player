@@ -16,6 +16,10 @@ Player getSquare(BitBoard* bitBoard, Square square);
 
 void setSquare(BitBoard* bitBoard, Square square, Player player);
 
+void revertToCheckpoint(BitBoard* bitBoard);
+
+void updateCheckpoint(BitBoard* bitBoard);
+
 // DELETE THIS
 void clearBoard(BitBoard* bitBoard);
 

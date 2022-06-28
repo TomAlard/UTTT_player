@@ -97,6 +97,19 @@ void drawSmallBoardUpdatesBothBigBoards(BitBoard* bitBoard) {
 }
 
 
+void testCheckpoints(BitBoard* bitBoard) {
+    revertToCheckpoint(bitBoard);
+    boardInitiallyEmpty(bitBoard);
+    Square beforeCheckpoint = createSquare(5, 2);
+    setSquare(bitBoard, beforeCheckpoint, PLAYER1);
+    updateCheckpoint(bitBoard);
+    Square afterCheckpoint = createSquare(1, 4);
+    setSquare(bitBoard, afterCheckpoint, PLAYER1);
+    revertToCheckpoint(bitBoard);
+    myAssert(getSquare(bitBoard, beforeCheckpoint) == PLAYER1 && getSquare(bitBoard, afterCheckpoint) == NONE);
+}
+
+
 void runBitBoardTests() {
     BitBoard* bitBoard = createBitBoard();
     printf("boardInitiallyEmpty...\n");
@@ -107,5 +120,7 @@ void runBitBoardTests() {
     winSmallBoardUpdatesBigBoard(bitBoard);
     printf("drawSmallBoardUpdatesBothBigBoards...\n");
     drawSmallBoardUpdatesBothBigBoards(bitBoard);
+    printf("testCheckpoints...\n");
+    testCheckpoints(bitBoard);
     freeBitBoard(bitBoard);
 }

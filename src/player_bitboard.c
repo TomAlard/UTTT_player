@@ -5,6 +5,8 @@
 typedef struct PlayerBitBoard {
     uint16_t smallBoards[9];
     uint16_t bigBoard;
+    uint16_t checkpointSmallBoards[9];
+    uint16_t checkpointBigBoard;
 } PlayerBitBoard;
 
 
@@ -60,6 +62,21 @@ void setPlayerSquare(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayer
 
 void clearPlayerSquare(PlayerBitBoard* playerBitBoard, Square square) {
     BIT_CLEAR(playerBitBoard->smallBoards[square.board], square.position);
+}
+
+
+void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
+    for (int i = 0; i < 9; i++) {
+        playerBitBoard->smallBoards[i] = playerBitBoard->checkpointSmallBoards[i];
+    }
+    playerBitBoard->bigBoard = playerBitBoard->checkpointBigBoard;
+}
+
+void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
+    for (int i = 0; i < 9; i++) {
+        playerBitBoard->checkpointSmallBoards[i] = playerBitBoard->smallBoards[i];
+    }
+    playerBitBoard->checkpointBigBoard = playerBitBoard->bigBoard;
 }
 
 
