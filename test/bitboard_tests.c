@@ -32,23 +32,6 @@ void getAfterSetReturnsOriginalPlayer(BitBoard* bitBoard) {
 }
 
 
-void fillBoardWithOnePlayer(BitBoard* bitBoard) {
-    for (int board = 0; board < 9; board++) {
-        for (int position = 0; position < 9; position++) {
-            Square square = createSquare(board, position);
-            setSquare(bitBoard, square, PLAYER1);
-        }
-    }
-    for (int board = 0; board < 9; board++) {
-        for (int position = 0; position < 9; position++) {
-            Square square = createSquare(board, position);
-            myAssert(getSquare(bitBoard, square) == PLAYER1);
-        }
-    }
-    clearBoard(bitBoard);
-}
-
-
 void winSmallBoardUpdatesBigBoard(BitBoard* bitBoard) {
     int directWins[8][3] = {
             {0, 1, 2}, {3, 4, 5}, {6, 7, 8},  // horizontal
@@ -114,23 +97,15 @@ void drawSmallBoardUpdatesBothBigBoards(BitBoard* bitBoard) {
 }
 
 
-void getAndSetSquareTests() {
+void runBitBoardTests() {
     BitBoard* bitBoard = createBitBoard();
     printf("boardInitiallyEmpty...\n");
     boardInitiallyEmpty(bitBoard);
     printf("getAfterSetReturnsOriginalPlayer...\n");
     getAfterSetReturnsOriginalPlayer(bitBoard);
-    printf("fillBoardWithOnePlayer...\n");
-    fillBoardWithOnePlayer(bitBoard);
     printf("winSmallBoardUpdatesBigBoard...\n");
     winSmallBoardUpdatesBigBoard(bitBoard);
     printf("drawSmallBoardUpdatesBothBigBoards...\n");
     drawSmallBoardUpdatesBothBigBoards(bitBoard);
     freeBitBoard(bitBoard);
-}
-
-
-void runBitBoardTests() {
-    printf("getAndSetSquare Tests...\n");
-    getAndSetSquareTests();
 }
