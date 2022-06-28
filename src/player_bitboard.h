@@ -23,7 +23,6 @@ void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard);
 
 void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard);
 
-// DELETE THIS
 void clearPlayerBoard(PlayerBitBoard* playerBitBoard);
 
 #endif //UTTT2_PLAYER_BITBOARD_H

@@ -72,6 +72,7 @@ void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
     playerBitBoard->bigBoard = playerBitBoard->checkpointBigBoard;
 }
 
+
 void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
     for (int i = 0; i < 9; i++) {
         playerBitBoard->checkpointSmallBoards[i] = playerBitBoard->smallBoards[i];
@@ -80,7 +81,6 @@ void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
 }
 
 
-// DELETE THIS
 void clearPlayerBoard(PlayerBitBoard* playerBitBoard) {
     for (int i = 0; i < 9; i++) {
         playerBitBoard->smallBoards[i] = 0;

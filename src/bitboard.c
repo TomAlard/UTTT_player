@@ -64,7 +64,6 @@ void updateCheckpoint(BitBoard* bitBoard) {
 }
 
 
-// DELETE THIS
 void clearBoard(BitBoard* bitBoard) {
     clearPlayerBoard(bitBoard->player1);
     clearPlayerBoard(bitBoard->player2);
