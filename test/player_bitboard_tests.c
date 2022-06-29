@@ -8,7 +8,7 @@ void boardInitiallyEmpty(PlayerBitBoard* playerBitBoard) {
     for (int board = 0; board < 9; board++) {
         for (int position = 0; position < 9; position++) {
             Square square = createSquare(board, position);
-            myAssert(squareIsOccupied(playerBitBoard, square) == NONE);
+            myAssert(!squareIsOccupied(playerBitBoard, square));
         }
     }
 }
