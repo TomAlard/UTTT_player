@@ -14,7 +14,7 @@ Player getBigBoardSquare(BitBoard* bitBoard, uint8_t board);
 
 Player getSquare(BitBoard* bitBoard, Square square);
 
-void setSquare(BitBoard* bitBoard, Square square, Player player);
+void makeMove(BitBoard* bitBoard, Square square);
 
 void revertToCheckpoint(BitBoard* bitBoard);
 

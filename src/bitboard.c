@@ -6,6 +6,7 @@
 typedef struct BitBoard {
     PlayerBitBoard* player1;
     PlayerBitBoard* player2;
+    Player currentPlayer;
 } BitBoard;
 
 
@@ -13,6 +14,7 @@ BitBoard* createBitBoard() {
     BitBoard* bitBoard = safe_malloc(sizeof(BitBoard));
     bitBoard->player1 = createPlayerBitBoard();
     bitBoard->player2 = createPlayerBitBoard();
+    bitBoard->currentPlayer = PLAYER1;
     return bitBoard;
 }
 
@@ -38,16 +40,11 @@ Player getSquare(BitBoard* bitBoard, Square square) {
 }
 
 
-void setSquare(BitBoard* bitBoard, Square square, Player player) {
-    if (player == PLAYER1) {
+void makeMove(BitBoard* bitBoard, Square square) {
+    if (bitBoard->currentPlayer == PLAYER1) {
         setSquareOccupied(bitBoard->player1, bitBoard->player2, square);
-    } else if (player == PLAYER2) {
-        setSquareOccupied(bitBoard->player2, bitBoard->player1, square);
-    } else if (player == NONE) {
-        clearPlayerSquare(bitBoard->player1, square);
-        clearPlayerSquare(bitBoard->player2, square);
     } else {
-        crash("Can't pass BOTH Player Enum value to setSquare method.");
+        setSquareOccupied(bitBoard->player2, bitBoard->player1, square);
     }
 }
 
@@ -61,10 +58,4 @@ void revertToCheckpoint(BitBoard* bitBoard) {
 void updateCheckpoint(BitBoard* bitBoard) {
     updatePlayerCheckpoint(bitBoard->player1);
     updatePlayerCheckpoint(bitBoard->player2);
-}
-
-
-void clearBoard(BitBoard* bitBoard) {
-    clearPlayerBoard(bitBoard->player1);
-    clearPlayerBoard(bitBoard->player2);
 }
