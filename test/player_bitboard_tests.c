@@ -25,7 +25,7 @@ void testSetSquareOccupied(PlayerBitBoard* playerBitBoard) {
         }
     }
     freePlayerBitBoard(otherPlayerBitBoard);
-    clearPlayerBoard(playerBitBoard);
+    revertToPlayerCheckpoint(playerBitBoard);
 }
 
 
@@ -54,21 +54,21 @@ void winSmallBoardUpdatesBigBoard(PlayerBitBoard* playerBitBoard) {
                 setSquareOccupied(playerBitBoard, otherPlayerBitBoard, square);
             }
             myAssert(boardIsWon(playerBitBoard, board));
-            clearPlayerBoard(playerBitBoard);
+            revertToPlayerCheckpoint(playerBitBoard);
             for (int i = 0; i < 4; i++) {
                 Square square = createSquare(board, oneAdditionalMove[testCaseIndex][i]);
                 myAssert(!boardIsWon(playerBitBoard, board));
                 setSquareOccupied(playerBitBoard, otherPlayerBitBoard, square);
             }
             myAssert(boardIsWon(playerBitBoard, board));
-            clearPlayerBoard(playerBitBoard);
+            revertToPlayerCheckpoint(playerBitBoard);
             for (int i = 0; i < 5; i++) {
                 Square square = createSquare(board, twoAdditionalMoves[testCaseIndex][i]);
                 myAssert(!boardIsWon(playerBitBoard, board));
                 setSquareOccupied(playerBitBoard, otherPlayerBitBoard, square);
             }
             myAssert(boardIsWon(playerBitBoard, board));
-            clearPlayerBoard(playerBitBoard);
+            revertToPlayerCheckpoint(playerBitBoard);
         }
     }
     freePlayerBitBoard(otherPlayerBitBoard);
@@ -94,7 +94,7 @@ void drawSmallBoardUpdatesBothBigBoards(PlayerBitBoard* playerBitBoard) {
             }
         }
         myAssert(boardIsWon(playerBitBoard, board) && boardIsWon(otherPlayerBitBoard, board));
-        clearPlayerBoard(playerBitBoard);
+        revertToPlayerCheckpoint(playerBitBoard);
     }
     freePlayerBitBoard(otherPlayerBitBoard);
 }

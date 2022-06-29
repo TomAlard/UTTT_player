@@ -60,11 +60,6 @@ void setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
 }
 
 
-void clearPlayerSquare(PlayerBitBoard* playerBitBoard, Square square) {
-    BIT_CLEAR(playerBitBoard->smallBoards[square.board], square.position);
-}
-
-
 void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
     for (int i = 0; i < 9; i++) {
         playerBitBoard->smallBoards[i] = playerBitBoard->checkpointSmallBoards[i];
@@ -78,12 +73,4 @@ void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
         playerBitBoard->checkpointSmallBoards[i] = playerBitBoard->smallBoards[i];
     }
     playerBitBoard->checkpointBigBoard = playerBitBoard->bigBoard;
-}
-
-
-void clearPlayerBoard(PlayerBitBoard* playerBitBoard) {
-    for (int i = 0; i < 9; i++) {
-        playerBitBoard->smallBoards[i] = 0;
-    }
-    playerBitBoard->bigBoard = 0;
 }

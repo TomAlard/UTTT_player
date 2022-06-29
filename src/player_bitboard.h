@@ -17,12 +17,8 @@ bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
 
 void setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square);
 
-void clearPlayerSquare(PlayerBitBoard* playerBitBoard, Square square);
-
 void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard);
 
 void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard);
-
-void clearPlayerBoard(PlayerBitBoard* playerBitBoard);
 
 #endif //UTTT2_PLAYER_BITBOARD_H
