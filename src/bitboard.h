@@ -16,6 +16,4 @@ void revertToCheckpoint(BitBoard* bitBoard);
 
 void updateCheckpoint(BitBoard* bitBoard);
 
-void clearBoard(BitBoard* bitBoard);
-
 #endif //UTTT2_BITBOARD_H

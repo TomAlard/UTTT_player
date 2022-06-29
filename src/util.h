@@ -18,4 +18,6 @@ void safe_free(void* pointer);
 
 void crash(char* errorMessage);
 
+void assertMsg(bool condition, char* errorMessage);
+
 #endif //UTTT2_UTIL_H

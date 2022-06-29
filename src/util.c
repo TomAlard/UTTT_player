@@ -36,3 +36,10 @@ void crash(char* errorMessage) {
     fprintf(stderr, "%s\n", errorMessage);
     exit(1);
 }
+
+
+void assertMsg(bool condition, char* errorMessage) {
+    if (!condition) {
+        crash(errorMessage);
+    }
+}
