@@ -10,10 +10,6 @@ BitBoard* createBitBoard();
 
 void freeBitBoard(BitBoard* bitBoard);
 
-Player getBigBoardSquare(BitBoard* bitBoard, uint8_t board);
-
-Player getSquare(BitBoard* bitBoard, Square square);
-
 void makeMove(BitBoard* bitBoard, Square square);
 
 void revertToCheckpoint(BitBoard* bitBoard);
