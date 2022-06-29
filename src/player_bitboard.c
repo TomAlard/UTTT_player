@@ -20,12 +20,12 @@ void freePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
 }
 
 
-bool getPlayerBigBoardSquare(PlayerBitBoard* playerBitBoard, uint8_t board) {
+bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board) {
     return BIT_CHECK(playerBitBoard->bigBoard, board);
 }
 
 
-Player getPlayerSquare(PlayerBitBoard* playerBitBoard, Square square) {
+bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
     return BIT_CHECK(playerBitBoard->smallBoards[square.board], square.position);
 }
 
@@ -47,7 +47,7 @@ bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
 }
 
 
-void setPlayerSquare(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square) {
+void setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square) {
     BIT_SET(playerBitBoard->smallBoards[square.board], square.position);
     uint16_t smallBoard = playerBitBoard->smallBoards[square.board];
     uint16_t otherPlayerSmallBoard = otherPlayerBitBoard->smallBoards[square.board];

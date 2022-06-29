@@ -11,11 +11,11 @@ PlayerBitBoard* createPlayerBitBoard();
 
 void freePlayerBitBoard(PlayerBitBoard* playerBitBoard);
 
-bool getPlayerBigBoardSquare(PlayerBitBoard* playerBitBoard, uint8_t board);
+bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board);
 
-Player getPlayerSquare(PlayerBitBoard* playerBitBoard, Square square);
+bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
 
-void setPlayerSquare(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square);
+void setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square);
 
 void clearPlayerSquare(PlayerBitBoard* playerBitBoard, Square square);
 

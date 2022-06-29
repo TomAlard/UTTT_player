@@ -25,24 +25,24 @@ void freeBitBoard(BitBoard* bitBoard) {
 
 
 Player getBigBoardSquare(BitBoard* bitBoard, uint8_t board) {
-    bool player1Bit = getPlayerBigBoardSquare(bitBoard->player1, board);
-    bool player2Bit = getPlayerBigBoardSquare(bitBoard->player2, board);
+    bool player1Bit = boardIsWon(bitBoard->player1, board);
+    bool player2Bit = boardIsWon(bitBoard->player2, board);
     return 2*player2Bit + player1Bit;
 }
 
 
 Player getSquare(BitBoard* bitBoard, Square square) {
-    bool player1Bit = getPlayerSquare(bitBoard->player1, square);
-    bool player2Bit = getPlayerSquare(bitBoard->player2, square);
+    bool player1Bit = squareIsOccupied(bitBoard->player1, square);
+    bool player2Bit = squareIsOccupied(bitBoard->player2, square);
     return 2*player2Bit + player1Bit;
 }
 
 
 void setSquare(BitBoard* bitBoard, Square square, Player player) {
     if (player == PLAYER1) {
-        setPlayerSquare(bitBoard->player1, bitBoard->player2, square);
+        setSquareOccupied(bitBoard->player1, bitBoard->player2, square);
     } else if (player == PLAYER2) {
-        setPlayerSquare(bitBoard->player2, bitBoard->player1, square);
+        setSquareOccupied(bitBoard->player2, bitBoard->player1, square);
     } else if (player == NONE) {
         clearPlayerSquare(bitBoard->player1, square);
         clearPlayerSquare(bitBoard->player2, square);

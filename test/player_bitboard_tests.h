@@ -1,0 +1,6 @@
+#ifndef UTTT2_PLAYER_BITBOARD_TESTS_H
+#define UTTT2_PLAYER_BITBOARD_TESTS_H
+
+void runPlayerBitBoardTests();
+
+#endif //UTTT2_PLAYER_BITBOARD_TESTS_H
