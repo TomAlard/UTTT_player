@@ -38,7 +38,40 @@ void freeBitBoard(BitBoard* bitBoard) {
 }
 
 
-SmallBoardState getBigBoardSquare(BitBoard* bitBoard, uint8_t board) {
+int generateMovesSingleBoard(BitBoard* bitBoard, uint8_t board, Square moves[TOTAL_SMALL_SQUARES], int amountOfMoves) {
+    uint16_t smallBoardPlayer1 = getSmallBoard(bitBoard->player1, board);
+    uint16_t smallBoardPlayer2 = getSmallBoard(bitBoard->player2, board);
+    uint16_t openSquares = ~(smallBoardPlayer1 | smallBoardPlayer2) & 511;
+    while (openSquares) {
+        Square square = {board, __builtin_ffs(openSquares) - 1};
+        moves[amountOfMoves++] = square;
+        openSquares &= openSquares - 1;
+    }
+    return amountOfMoves;
+}
+
+
+int generateMovesAnyBoard(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES]) {
+    int amountOfMoves = 0;
+    uint16_t undecidedSmallBoards = ~(getBigBoard(bitBoard->player1) | getBigBoard(bitBoard->player2)) & 511;
+    while (undecidedSmallBoards) {
+        uint8_t board = __builtin_ffs(undecidedSmallBoards) - 1;
+        amountOfMoves = generateMovesSingleBoard(bitBoard, board, moves, amountOfMoves);
+        undecidedSmallBoards &= undecidedSmallBoards - 1;
+    }
+    return amountOfMoves;
+}
+
+
+int generateMoves(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES]) {
+    uint8_t currentBoard = bitBoard->additionalState.currentBoard;
+    return currentBoard == ANY_BOARD
+        ? generateMovesAnyBoard(bitBoard, moves)
+        : generateMovesSingleBoard(bitBoard, currentBoard, moves, 0);
+}
+
+
+SmallBoardState getSmallBoardState(BitBoard* bitBoard, uint8_t board) {
     bool player1Bit = boardIsWon(bitBoard->player1, board);
     bool player2Bit = boardIsWon(bitBoard->player2, board);
     return 2*player2Bit + player1Bit;
@@ -53,7 +86,7 @@ Occupation getSquare(BitBoard* bitBoard, Square square) {
 
 
 uint8_t getNextBoard(BitBoard* bitBoard, uint8_t previousPosition) {
-    SmallBoardState nextBoardState = getBigBoardSquare(bitBoard, previousPosition);
+    SmallBoardState nextBoardState = getSmallBoardState(bitBoard, previousPosition);
     return nextBoardState == UNDECIDED ? previousPosition : ANY_BOARD;
 }
 

@@ -4,11 +4,15 @@
 #include "square.h"
 #include "player.h"
 
+#define TOTAL_SMALL_SQUARES 81
+
 typedef struct BitBoard BitBoard;
 
 BitBoard* createBitBoard();
 
 void freeBitBoard(BitBoard* bitBoard);
+
+int generateMoves(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES]);
 
 void makeMove(BitBoard* bitBoard, Square square);
 

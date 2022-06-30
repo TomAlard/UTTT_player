@@ -20,8 +20,18 @@ void freePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
 }
 
 
+uint16_t getBigBoard(PlayerBitBoard* playerBitBoard) {
+    return playerBitBoard->bigBoard;
+}
+
+
 bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board) {
     return BIT_CHECK(playerBitBoard->bigBoard, board);
+}
+
+
+uint16_t getSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t board) {
+    return playerBitBoard->smallBoards[board];
 }
 
 

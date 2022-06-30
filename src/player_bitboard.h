@@ -11,7 +11,11 @@ PlayerBitBoard* createPlayerBitBoard();
 
 void freePlayerBitBoard(PlayerBitBoard* playerBitBoard);
 
+uint16_t getBigBoard(PlayerBitBoard* playerBitBoard);
+
 bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board);
+
+uint16_t getSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t board);
 
 bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
 
