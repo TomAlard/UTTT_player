@@ -19,7 +19,9 @@ uint16_t getSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t board);
 
 bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
 
-void setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square);
+bool isWin(uint16_t smallBoard);
+
+bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square);
 
 void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard);
 

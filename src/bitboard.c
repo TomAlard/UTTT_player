@@ -9,6 +9,7 @@
 typedef struct AdditionalState {
     Player currentPlayer;
     uint8_t currentBoard;
+    Winner winner;
 } AdditionalState;
 
 
@@ -26,6 +27,7 @@ BitBoard* createBitBoard() {
     bitBoard->player2 = createPlayerBitBoard();
     bitBoard->additionalState.currentPlayer = PLAYER1;
     bitBoard->additionalState.currentBoard = ANY_BOARD;
+    bitBoard->additionalState.winner = NONE;
     bitBoard->additionalStateCheckpoint = bitBoard->additionalState;
     return bitBoard;
 }
@@ -71,7 +73,7 @@ int generateMoves(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES]) {
 }
 
 
-SmallBoardState getSmallBoardState(BitBoard* bitBoard, uint8_t board) {
+Winner getSmallBoardWinner(BitBoard* bitBoard, uint8_t board) {
     bool player1Bit = boardIsWon(bitBoard->player1, board);
     bool player2Bit = boardIsWon(bitBoard->player2, board);
     return 2*player2Bit + player1Bit;
@@ -86,26 +88,56 @@ Occupation getSquare(BitBoard* bitBoard, Square square) {
 
 
 uint8_t getNextBoard(BitBoard* bitBoard, uint8_t previousPosition) {
-    SmallBoardState nextBoardState = getSmallBoardState(bitBoard, previousPosition);
-    return nextBoardState == UNDECIDED ? previousPosition : ANY_BOARD;
+    Winner smallBoardWinner = getSmallBoardWinner(bitBoard, previousPosition);
+    return smallBoardWinner == NONE ? previousPosition : ANY_BOARD;
 }
 
 
-void makeMove(BitBoard* bitBoard, Square square) {
+void verifyWinner(BitBoard* bitBoard) {
+    uint16_t player1BigBoard = getBigBoard(bitBoard->player1);
+    uint16_t player2BigBoard = getBigBoard(bitBoard->player2);
+    uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
+    uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
+    if (isWin(boardsWonByPlayer1)) {
+        bitBoard->additionalState.winner = WIN_P1;
+        return;
+    }
+    uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
+    if (isWin(boardsWonByPlayer2)) {
+        bitBoard->additionalState.winner = WIN_P2;
+        return;
+    }
+    if ((player1BigBoard | player2BigBoard) == 511) {
+        int player1AmountBoardsWon = __builtin_popcount(player1BigBoard);
+        int player2AmountBoardsWon = __builtin_popcount(player2BigBoard);
+        bitBoard->additionalState.winner = (
+                player1AmountBoardsWon > player2AmountBoardsWon
+                    ? WIN_P1
+                    : player1AmountBoardsWon < player2AmountBoardsWon
+                        ? WIN_P2
+                        : DRAW
+        );
+    }
+}
+
+
+Winner makeMove(BitBoard* bitBoard, Square square) {
     assertMsg(
             square.board == bitBoard->additionalState.currentBoard
             || bitBoard->additionalState.currentBoard == ANY_BOARD,
             "Can't make a move on that board");
-    assertMsg(getSquare(bitBoard, square) == UNOCCUPIED,
-              "Can't make a move on a square that is already occupied");
+    assertMsg(getSquare(bitBoard, square) == UNOCCUPIED, "Can't make a move on a square that is already occupied");
+    assertMsg(bitBoard->additionalState.winner == NONE, "Can't make a move when there is already a winner");
 
-    if (bitBoard->additionalState.currentPlayer == PLAYER1) {
-        setSquareOccupied(bitBoard->player1, bitBoard->player2, square);
-    } else {
-        setSquareOccupied(bitBoard->player2, bitBoard->player1, square);
+    bool bigBoardWasUpdated = bitBoard->additionalState.currentPlayer == PLAYER1
+            ? setSquareOccupied(bitBoard->player1, bitBoard->player2, square)
+            : setSquareOccupied(bitBoard->player2, bitBoard->player1, square);
+    if (bigBoardWasUpdated) {
+        verifyWinner(bitBoard);
     }
     bitBoard->additionalState.currentPlayer = otherPlayer(bitBoard->additionalState.currentPlayer);
     bitBoard->additionalState.currentBoard = getNextBoard(bitBoard, square.position);
+    return bitBoard->additionalState.winner;
 }
 
 

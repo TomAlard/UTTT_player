@@ -14,11 +14,11 @@ typedef enum Occupation {
     OCCUPIED_P2
 } Occupation;
 
-typedef enum SmallBoardState {
-    UNDECIDED,
-    WON_P1,
-    WON_P2,
+typedef enum Winner {
+    NONE,
+    WIN_P1,
+    WIN_P2,
     DRAW
-} SmallBoardState;
+} Winner;
 
 #endif //UTTT2_PLAYER_H

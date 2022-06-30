@@ -14,7 +14,7 @@ void freeBitBoard(BitBoard* bitBoard);
 
 int generateMoves(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES]);
 
-void makeMove(BitBoard* bitBoard, Square square);
+Winner makeMove(BitBoard* bitBoard, Square square);
 
 void revertToCheckpoint(BitBoard* bitBoard);
 
