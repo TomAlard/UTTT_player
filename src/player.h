@@ -1,6 +1,8 @@
 #ifndef UTTT2_PLAYER_H
 #define UTTT2_PLAYER_H
 
+#include <stdbool.h>
+
 typedef enum Player {
     PLAYER1,
     PLAYER2
@@ -20,5 +22,7 @@ typedef enum Winner {
     WIN_P2,
     DRAW
 } Winner;
+
+bool playerIsWinner(Player player, Winner winner);
 
 #endif //UTTT2_PLAYER_H

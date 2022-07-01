@@ -2,6 +2,7 @@
 #include "tests_main.h"
 #include "bitboard_tests.h"
 #include "player_bitboard_tests.h"
+#include "mcts_node_tests.h"
 
 
 void runTests() {
@@ -9,4 +10,6 @@ void runTests() {
     runPlayerBitBoardTests();
     printf("BitBoard tests...\n");
     runBitBoardTests();
+    printf("MCTSNode tests...\n");
+    runMCTSNodeTests();
 }

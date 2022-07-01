@@ -66,6 +66,9 @@ int generateMovesAnyBoard(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES])
 
 
 int generateMoves(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES]) {
+    if (bitBoard->additionalState.winner != NONE) {
+        return 0;
+    }
     uint8_t currentBoard = bitBoard->additionalState.currentBoard;
     return currentBoard == ANY_BOARD
         ? generateMovesAnyBoard(bitBoard, moves)

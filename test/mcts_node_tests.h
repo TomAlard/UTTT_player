@@ -1,0 +1,6 @@
+#ifndef UTTT2_MCTS_NODE_TESTS_H
+#define UTTT2_MCTS_NODE_TESTS_H
+
+void runMCTSNodeTests();
+
+#endif //UTTT2_MCTS_NODE_TESTS_H
