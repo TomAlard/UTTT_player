@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
