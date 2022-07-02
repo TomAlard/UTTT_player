@@ -16,7 +16,7 @@ void nineOrEightMovesAllowedAfterFirstMove(Board* board) {
     int amountOfMoves = generateMoves(board, moves);
     for (int i = 0; i < amountOfMoves; i++) {
         Square move = moves[i];
-        makeMove(board, move);
+        makeTemporaryMove(board, move);
         int expectedAmountOfMoves = move.board == move.position? 8 : 9;
         Square nextMoves[TOTAL_SMALL_SQUARES];
         myAssert(generateMoves(board, nextMoves) == expectedAmountOfMoves);
@@ -28,7 +28,7 @@ void nineOrEightMovesAllowedAfterFirstMove(Board* board) {
 void testSecondMoveGeneration() {
     Board* board = createBoard();
     Square firstMove = {1, 0};
-    makeMove(board, firstMove);
+    makeTemporaryMove(board, firstMove);
     Square expectedMoves[9] = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {0, 7}, {0, 8}};
     Square actualMoves[TOTAL_SMALL_SQUARES];
     generateMoves(board, actualMoves);
@@ -45,7 +45,7 @@ void gameSimulation(const int amountOfMoves, const Square* playedMoves, const in
     for (int i = 0; i < amountOfMoves; i++) {
         myAssert(generateMoves(board, ignoredGeneratedMoves) == possibleMoves[i]);
         Square move = toOurNotation(playedMoves[i]);
-        makeMove(board, move);
+        makeTemporaryMove(board, move);
         myAssert(getWinner(board) == (i != amountOfMoves - 1? NONE : expectedWinner));
     }
     freeBoard(board);

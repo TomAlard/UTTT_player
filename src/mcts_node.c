@@ -140,7 +140,7 @@ void backpropagate(MCTSNode* node, Winner winner) {
 
 
 void visitNode(MCTSNode* node, Board* board) {
-    makeMove(board, node->square);
+    makeTemporaryMove(board, node->square);
 }
 
 

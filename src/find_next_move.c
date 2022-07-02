@@ -26,7 +26,7 @@ Winner simulate(Board* board, pcg32_random_t* rng) {
         Square validMoves[TOTAL_SMALL_SQUARES];
         int amountOfMoves = generateMoves(board, validMoves);
         Square move = validMoves[pcg32_boundedrand_r(rng, amountOfMoves)];
-        makeMove(board, move);
+        makeTemporaryMove(board, move);
     }
     Winner simulationWinner = getWinner(board);
     revertToCheckpoint(board);

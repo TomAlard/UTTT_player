@@ -33,10 +33,10 @@ Board* createBoard() {
 }
 
 
-void freeBoard(Board* bitBoard) {
-    freePlayerBitBoard(bitBoard->player1);
-    freePlayerBitBoard(bitBoard->player2);
-    safe_free(bitBoard);
+void freeBoard(Board* board) {
+    freePlayerBitBoard(board->player1);
+    freePlayerBitBoard(board->player2);
+    safe_free(board);
 }
 
 
@@ -73,6 +73,20 @@ int generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
     return currentBoard == ANY_BOARD
         ? generateMovesAnyBoard(board, moves)
         : generateMovesSingleBoard(board, currentBoard, moves, 0);
+}
+
+
+void revertToCheckpoint(Board* board) {
+    revertToPlayerCheckpoint(board->player1);
+    revertToPlayerCheckpoint(board->player2);
+    board->additionalState = board->additionalStateCheckpoint;
+}
+
+
+void updateCheckpoint(Board* board) {
+    updatePlayerCheckpoint(board->player1);
+    updatePlayerCheckpoint(board->player2);
+    board->additionalStateCheckpoint = board->additionalState;
 }
 
 
@@ -124,7 +138,7 @@ void verifyWinner(Board* board) {
 }
 
 
-void makeMove(Board* board, Square square) {
+void makeTemporaryMove(Board* board, Square square) {
     assertMsg(
             square.board == board->additionalState.currentBoard
             || board->additionalState.currentBoard == ANY_BOARD,
@@ -143,17 +157,9 @@ void makeMove(Board* board, Square square) {
 }
 
 
-void revertToCheckpoint(Board* board) {
-    revertToPlayerCheckpoint(board->player1);
-    revertToPlayerCheckpoint(board->player2);
-    board->additionalState = board->additionalStateCheckpoint;
-}
-
-
-void updateCheckpoint(Board* board) {
-    updatePlayerCheckpoint(board->player1);
-    updatePlayerCheckpoint(board->player2);
-    board->additionalStateCheckpoint = board->additionalState;
+void makePermanentMove(Board* board, Square square) {
+    makeTemporaryMove(board, square);
+    updateCheckpoint(board);
 }
 
 

@@ -21,8 +21,7 @@ void findNextMoveDoesNotChangeBoard() {
         for (int i = 0; i < amountMovesBefore; i++) {
             myAssert(squaresAreEqual(movesBefore[i], movesAfter[i]));
         }
-        makeMove(board, nextMove);
-        updateCheckpoint(board);
+        makePermanentMove(board, nextMove);
         root = updateRoot(root, board, nextMove);
     }
     freeMCTSTree(root);

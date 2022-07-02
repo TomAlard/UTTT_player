@@ -10,16 +10,16 @@ typedef struct Board Board;
 
 Board* createBoard();
 
-void freeBoard(Board* bitBoard);
+void freeBoard(Board* board);
 
-int generateMoves(Board* bitBoard, Square moves[TOTAL_SMALL_SQUARES]);
+int generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]);
 
-void makeMove(Board* bitBoard, Square square);
+void revertToCheckpoint(Board* board);
 
-void revertToCheckpoint(Board* bitBoard);
+void makeTemporaryMove(Board* board, Square square);
 
-void updateCheckpoint(Board* bitBoard);
+void makePermanentMove(Board* board, Square square);
 
-Winner getWinner(Board* bitBoard);
+Winner getWinner(Board* board);
 
 #endif //UTTT2_BOARD_H
