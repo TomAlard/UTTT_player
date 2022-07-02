@@ -19,6 +19,7 @@ typedef struct MCTSNode {
 MCTSNode* createMCTSRootNode() {
     MCTSNode* root = safe_calloc(sizeof(MCTSNode));
     root->amountOfChildren = -1;
+    root->player = PLAYER2;
     root->square.board = 9;
     root->square.position = 9;
     root->UCTValue = -1;
