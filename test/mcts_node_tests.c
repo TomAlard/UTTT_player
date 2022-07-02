@@ -64,6 +64,19 @@ void selectsChildWithHighChanceOfWin() {
 }
 
 
+void updateRootTest() {
+    MCTSNode* root = createMCTSRootNode();
+    BitBoard* board = createBitBoard();
+    hasChildren(root, board);  // discover children
+    Square square = getMostSimulatedChildSquare(root);
+    MCTSNode* newRoot = updateRoot(root, board, square);
+    hasChildren(newRoot, board);  // discover children
+    myAssert(getMostSimulatedChildSquare(newRoot).board == square.position);
+    freeBitBoard(board);
+    freeMCTSTree(newRoot);
+}
+
+
 void runMCTSNodeTests() {
     printf("\trootHasChildrenAndIsLeaf...\n");
     rootHasChildrenAndIsLeaf();
@@ -73,4 +86,6 @@ void runMCTSNodeTests() {
     keepsSelectingSameNodeWhenSetAsWin();
     printf("\tselectsChildWithHighChanceOfWin...\n");
     selectsChildWithHighChanceOfWin();
+    printf("\tupdateRootTest...\n");
+    updateRootTest();
 }
