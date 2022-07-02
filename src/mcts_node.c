@@ -52,7 +52,7 @@ void freeMCTSTree(MCTSNode* node) {
 }
 
 
-void discoverChildNodes(MCTSNode* node, BitBoard* board) {
+void discoverChildNodes(MCTSNode* node, Board* board) {
     if (node->amountOfChildren == -1) {
         Square moves[TOTAL_SMALL_SQUARES];
         node->amountOfChildren = generateMoves(board, moves);
@@ -64,7 +64,7 @@ void discoverChildNodes(MCTSNode* node, BitBoard* board) {
 }
 
 
-bool hasChildren(MCTSNode* node, BitBoard* board) {
+bool hasChildren(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
     return node->amountOfChildren > 0;
 }
@@ -88,7 +88,7 @@ double getUCTValue(MCTSNode* node) {
 }
 
 
-MCTSNode* selectNextChild(MCTSNode* node, BitBoard* board) {
+MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
     assertMsg(node->amountOfChildren > 0, "selectNextChild: node has no children");
     MCTSNode* highestUCTChild = NULL;
@@ -106,7 +106,7 @@ MCTSNode* selectNextChild(MCTSNode* node, BitBoard* board) {
 }
 
 
-MCTSNode* updateRoot(MCTSNode* root, BitBoard* board, Square square) {
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     discoverChildNodes(root, board);
     assertMsg(root->amountOfChildren > 0, "updateRoot: root has no children");
     MCTSNode* newRoot = NULL;
@@ -139,7 +139,7 @@ void backpropagate(MCTSNode* node, Winner winner) {
 }
 
 
-void visitNode(MCTSNode* node, BitBoard* board) {
+void visitNode(MCTSNode* node, Board* board) {
     makeMove(board, node->square);
 }
 

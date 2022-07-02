@@ -1,25 +1,25 @@
 #include <stdio.h>
-#include "bitboard_tests.h"
-#include "../src/bitboard.h"
+#include "board_tests.h"
+#include "../src/board.h"
 #include "test_util.h"
 
 
-void anyMoveAllowedOnEmptyBoard(BitBoard* bitBoard) {
+void anyMoveAllowedOnEmptyBoard(Board* board) {
     Square moves[TOTAL_SMALL_SQUARES];
-    myAssert(generateMoves(bitBoard, moves) == TOTAL_SMALL_SQUARES);
+    myAssert(generateMoves(board, moves) == TOTAL_SMALL_SQUARES);
 }
 
 
-void nineOrEightMovesAllowedAfterFirstMove(BitBoard* bitBoard) {
+void nineOrEightMovesAllowedAfterFirstMove(Board* board) {
     Square moves[TOTAL_SMALL_SQUARES];
-    int amountOfMoves = generateMoves(bitBoard, moves);
+    int amountOfMoves = generateMoves(board, moves);
     for (int i = 0; i < amountOfMoves; i++) {
         Square move = moves[i];
-        makeMove(bitBoard, move);
+        makeMove(board, move);
         int expectedAmountOfMoves = move.board == move.position? 8 : 9;
         Square nextMoves[TOTAL_SMALL_SQUARES];
-        myAssert(generateMoves(bitBoard, nextMoves) == expectedAmountOfMoves);
-        revertToCheckpoint(bitBoard);
+        myAssert(generateMoves(board, nextMoves) == expectedAmountOfMoves);
+        revertToCheckpoint(board);
     }
 }
 
@@ -35,15 +35,15 @@ Square to_our_notation(Square rowAndColumn) {
 
 
 void gameSimulation(const int amountOfMoves, const Square* playedMoves, const int* possibleMoves, Winner expectedWinner) {
-    BitBoard* bitBoard = createBitBoard();
+    Board* board = createBoard();
     Square ignoredGeneratedMoves[TOTAL_SMALL_SQUARES];
     for (int i = 0; i < amountOfMoves; i++) {
-        myAssert(generateMoves(bitBoard, ignoredGeneratedMoves) == possibleMoves[i]);
+        myAssert(generateMoves(board, ignoredGeneratedMoves) == possibleMoves[i]);
         Square move = to_our_notation(playedMoves[i]);
-        makeMove(bitBoard, move);
-        myAssert(getWinner(bitBoard) == (i != amountOfMoves - 1? NONE : expectedWinner));
+        makeMove(board, move);
+        myAssert(getWinner(board) == (i != amountOfMoves - 1? NONE : expectedWinner));
     }
-    freeBitBoard(bitBoard);
+    freeBoard(board);
 }
 
 
@@ -83,15 +83,15 @@ void yurkovVsJacek() {
 }
 
 
-void runBitBoardTests() {
-    BitBoard* bitBoard = createBitBoard();
+void runBoardTests() {
+    Board* board = createBoard();
     printf("\tanyMoveAllowedOnEmptyBoard...\n");
-    anyMoveAllowedOnEmptyBoard(bitBoard);
+    anyMoveAllowedOnEmptyBoard(board);
     printf("\tnineOrEightMovesAllowedAfterFirstMove...\n");
-    nineOrEightMovesAllowedAfterFirstMove(bitBoard);
+    nineOrEightMovesAllowedAfterFirstMove(board);
     printf("\treCurseVsDaFish...\n");
     reCurseVsDaFish();
     printf("\tyurkovVsJacek...\n");
     yurkovVsJacek();
-    freeBitBoard(bitBoard);
+    freeBoard(board);
 }

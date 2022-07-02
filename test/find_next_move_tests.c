@@ -5,7 +5,7 @@
 
 
 void findNextMoveDoesNotChangeBoard() {
-    BitBoard* board = createBitBoard();
+    Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
     pcg32_random_t rng;
     pcg32_srandom_r(&rng, 69, 420);
@@ -26,7 +26,7 @@ void findNextMoveDoesNotChangeBoard() {
         root = updateRoot(root, board, nextMove);
     }
     freeMCTSTree(root);
-    freeBitBoard(board);
+    freeBoard(board);
 }
 
 

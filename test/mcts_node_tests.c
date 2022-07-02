@@ -6,16 +6,16 @@
 
 void rootHasChildrenAndIsLeaf() {
     MCTSNode* root = createMCTSRootNode();
-    BitBoard* board = createBitBoard();
+    Board* board = createBoard();
     myAssert(hasChildren(root, board) && isLeafNode(root));
-    freeBitBoard(board);
+    freeBoard(board);
     freeMCTSTree(root);
 }
 
 
 void between17And81MovesInOneGame() {
     MCTSNode* root = createMCTSRootNode();
-    BitBoard* board = createBitBoard();
+    Board* board = createBoard();
     MCTSNode* node = root;
     int count = 0;
     while (hasChildren(node, board)) {
@@ -24,25 +24,25 @@ void between17And81MovesInOneGame() {
         count++;
     }
     myAssert(count >= 17 && count <= 81);
-    freeBitBoard(board);
+    freeBoard(board);
     freeMCTSTree(root);
 }
 
 
 void keepsSelectingSameNodeWhenSetAsWin() {
     MCTSNode* root = createMCTSRootNode();
-    BitBoard* board = createBitBoard();
+    Board* board = createBoard();
     MCTSNode* node = selectNextChild(root, board);
     setNodeWinner(node, WIN_P2);
     myAssert(selectNextChild(root, board) == node);
-    freeBitBoard(board);
+    freeBoard(board);
     freeMCTSTree(root);
 }
 
 
 void selectsChildWithHighChanceOfWin() {
     MCTSNode* root = createMCTSRootNode();
-    BitBoard* board = createBitBoard();
+    Board* board = createBoard();
     MCTSNode* winNode = selectNextChild(root, board);
     // backpropagate one loss and 99 wins
     backpropagate(winNode, WIN_P1);
@@ -59,20 +59,20 @@ void selectsChildWithHighChanceOfWin() {
         node = selectNextChild(root, board);
     }
     myAssert(node == winNode);
-    freeBitBoard(board);
+    freeBoard(board);
     freeMCTSTree(root);
 }
 
 
 void updateRootTest() {
     MCTSNode* root = createMCTSRootNode();
-    BitBoard* board = createBitBoard();
+    Board* board = createBoard();
     hasChildren(root, board);  // discover children
     Square square = getMostSimulatedChildSquare(root);
     MCTSNode* newRoot = updateRoot(root, board, square);
     hasChildren(newRoot, board);  // discover children
     myAssert(getMostSimulatedChildSquare(newRoot).board == square.position);
-    freeBitBoard(board);
+    freeBoard(board);
     freeMCTSTree(newRoot);
 }
 

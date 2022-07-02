@@ -1,10 +1,9 @@
 #include <time.h>
-#include <stdio.h>
 #include "find_next_move.h"
 #include "util.h"
 
 
-MCTSNode* selectLeaf(BitBoard* board, MCTSNode* root) {
+MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
     MCTSNode* currentNode = root;
     while (!isLeafNode(currentNode) && hasChildren(currentNode, board)) {
         currentNode = selectNextChild(currentNode, board);
@@ -15,14 +14,14 @@ MCTSNode* selectLeaf(BitBoard* board, MCTSNode* root) {
 }
 
 
-MCTSNode* expandLeaf(BitBoard* board, MCTSNode* leaf) {
+MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
     MCTSNode* nextChild = selectNextChild(leaf, board);
     visitNode(nextChild, board);
     return nextChild;
 }
 
 
-Winner simulate(BitBoard* board, pcg32_random_t* rng) {
+Winner simulate(Board* board, pcg32_random_t* rng) {
     while (getWinner(board) == NONE) {
         Square validMoves[TOTAL_SMALL_SQUARES];
         int amountOfMoves = generateMoves(board, validMoves);
@@ -45,7 +44,7 @@ bool hasTimeRemaining(clock_t deadline) {
 }
 
 
-Square findNextMove(BitBoard* board, MCTSNode* root, double allocatedTime, pcg32_random_t* rng) {
+Square findNextMove(Board* board, MCTSNode* root, double allocatedTime, pcg32_random_t* rng) {
     clock_t deadline = getDeadline(allocatedTime);
     while (hasTimeRemaining(deadline)) {
         MCTSNode* leaf = selectLeaf(board, root);

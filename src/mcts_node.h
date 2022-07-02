@@ -2,7 +2,7 @@
 #define UTTT2_MCTS_NODE_H
 
 #include <stdbool.h>
-#include "bitboard.h"
+#include "board.h"
 
 typedef struct MCTSNode MCTSNode;
 
@@ -10,17 +10,17 @@ MCTSNode* createMCTSRootNode();
 
 void freeMCTSTree(MCTSNode* root);
 
-bool hasChildren(MCTSNode* node, BitBoard* board);
+bool hasChildren(MCTSNode* node, Board* board);
 
 bool isLeafNode(MCTSNode* node);
 
-MCTSNode* selectNextChild(MCTSNode* node, BitBoard* board);
+MCTSNode* selectNextChild(MCTSNode* node, Board* board);
 
-MCTSNode* updateRoot(MCTSNode* root, BitBoard* board, Square square);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
 void backpropagate(MCTSNode* node, Winner winner);
 
-void visitNode(MCTSNode* node, BitBoard* board);
+void visitNode(MCTSNode* node, Board* board);
 
 void setNodeWinner(MCTSNode* node, Winner winner);
 
