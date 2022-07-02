@@ -13,7 +13,7 @@ void findNextMoveDoesNotChangeBoard() {
         Winner winnerBefore = getWinner(board);
         Square movesBefore[TOTAL_SMALL_SQUARES];
         int amountMovesBefore = generateMoves(board, movesBefore);
-        Square nextMove = findNextMove(board, root, 0.1, &rng);
+        Square nextMove = findNextMove(board, root, 0.005, &rng);
         myAssert(winnerBefore == getWinner(board));
         Square movesAfter[TOTAL_SMALL_SQUARES];
         int amountMovesAfter = generateMoves(board, movesAfter);
