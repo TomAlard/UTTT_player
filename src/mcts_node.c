@@ -75,7 +75,7 @@ bool isLeafNode(MCTSNode* node) {
 }
 
 
-#define EXPLORATION_PARAMETER 1.41
+#define EXPLORATION_PARAMETER 0.5
 double getUCTValue(MCTSNode* node) {
     if (node->UCTValue != -1) {
         return node->UCTValue;
