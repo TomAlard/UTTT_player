@@ -12,7 +12,7 @@ void skipMovesInput(FILE* file) {
         int row;
         int col;
         amountMatched = fscanf(file, "%d%d", &row, &col);  // NOLINT(cert-err34-c)
-        assertMsg(amountMatched == 1, "Incorrect amount of arguments matched");
+        assertMsg(amountMatched == 2, "Incorrect amount of arguments matched");
     }
 }
 
