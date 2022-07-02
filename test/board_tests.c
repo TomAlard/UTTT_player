@@ -2,6 +2,7 @@
 #include "board_tests.h"
 #include "../src/board.h"
 #include "test_util.h"
+#include "../src/util.h"
 
 
 void anyMoveAllowedOnEmptyBoard(Board* board) {
@@ -38,22 +39,12 @@ void testSecondMoveGeneration() {
 }
 
 
-Square to_our_notation(Square rowAndColumn) {
-    uint8_t row = rowAndColumn.board;
-    uint8_t column = rowAndColumn.position;
-    uint8_t board = 3 * (row / 3) + (column / 3);
-    uint8_t position = 3 * (row % 3) + (column % 3);
-    Square result = {board, position};
-    return result;
-}
-
-
 void gameSimulation(const int amountOfMoves, const Square* playedMoves, const int* possibleMoves, Winner expectedWinner) {
     Board* board = createBoard();
     Square ignoredGeneratedMoves[TOTAL_SMALL_SQUARES];
     for (int i = 0; i < amountOfMoves; i++) {
         myAssert(generateMoves(board, ignoredGeneratedMoves) == possibleMoves[i]);
-        Square move = to_our_notation(playedMoves[i]);
+        Square move = toOurNotation(playedMoves[i]);
         makeMove(board, move);
         myAssert(getWinner(board) == (i != amountOfMoves - 1? NONE : expectedWinner));
     }

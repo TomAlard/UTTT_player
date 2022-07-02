@@ -43,3 +43,13 @@ void assertMsg(bool condition, char* errorMessage) {
         crash(errorMessage);
     }
 }
+
+
+Square toOurNotation(Square rowAndColumn) {
+    uint8_t row = rowAndColumn.board;
+    uint8_t column = rowAndColumn.position;
+    uint8_t board = 3 * (row / 3) + (column / 3);
+    uint8_t position = 3 * (row % 3) + (column % 3);
+    Square result = {board, position};
+    return result;
+}
