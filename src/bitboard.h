@@ -14,10 +14,12 @@ void freeBitBoard(BitBoard* bitBoard);
 
 int generateMoves(BitBoard* bitBoard, Square moves[TOTAL_SMALL_SQUARES]);
 
-Winner makeMove(BitBoard* bitBoard, Square square);
+void makeMove(BitBoard* bitBoard, Square square);
 
 void revertToCheckpoint(BitBoard* bitBoard);
 
 void updateCheckpoint(BitBoard* bitBoard);
+
+Winner getWinner(BitBoard* bitBoard);
 
 #endif //UTTT2_BITBOARD_H

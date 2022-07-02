@@ -40,7 +40,8 @@ void gameSimulation(const int amountOfMoves, const Square* playedMoves, const in
     for (int i = 0; i < amountOfMoves; i++) {
         myAssert(generateMoves(bitBoard, ignoredGeneratedMoves) == possibleMoves[i]);
         Square move = to_our_notation(playedMoves[i]);
-        myAssert(makeMove(bitBoard, move) == (i != amountOfMoves - 1? NONE : expectedWinner));
+        makeMove(bitBoard, move);
+        myAssert(getWinner(bitBoard) == (i != amountOfMoves - 1? NONE : expectedWinner));
     }
     freeBitBoard(bitBoard);
 }

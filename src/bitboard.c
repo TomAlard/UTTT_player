@@ -124,7 +124,7 @@ void verifyWinner(BitBoard* bitBoard) {
 }
 
 
-Winner makeMove(BitBoard* bitBoard, Square square) {
+void makeMove(BitBoard* bitBoard, Square square) {
     assertMsg(
             square.board == bitBoard->additionalState.currentBoard
             || bitBoard->additionalState.currentBoard == ANY_BOARD,
@@ -140,7 +140,6 @@ Winner makeMove(BitBoard* bitBoard, Square square) {
     }
     bitBoard->additionalState.currentPlayer = otherPlayer(bitBoard->additionalState.currentPlayer);
     bitBoard->additionalState.currentBoard = getNextBoard(bitBoard, square.position);
-    return bitBoard->additionalState.winner;
 }
 
 
@@ -155,4 +154,9 @@ void updateCheckpoint(BitBoard* bitBoard) {
     updatePlayerCheckpoint(bitBoard->player1);
     updatePlayerCheckpoint(bitBoard->player2);
     bitBoard->additionalStateCheckpoint = bitBoard->additionalState;
+}
+
+
+Winner getWinner(BitBoard* bitBoard) {
+    return bitBoard->additionalState.winner;
 }
