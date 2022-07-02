@@ -22,4 +22,6 @@ void assertMsg(bool condition, char* errorMessage);
 
 Square toOurNotation(Square rowAndColumn);
 
+Square toGameNotation(Square square);
+
 #endif //UTTT2_UTIL_H

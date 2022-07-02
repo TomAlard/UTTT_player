@@ -121,6 +121,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
         }
     }
     freeNode(root);
+    assertMsg(newRoot != NULL, "updateRoot: newRoot shouldn't be NULL");
     return newRoot;
 }
 
