@@ -24,6 +24,20 @@ void nineOrEightMovesAllowedAfterFirstMove(Board* board) {
 }
 
 
+void testSecondMoveGeneration() {
+    Board* board = createBoard();
+    Square firstMove = {1, 0};
+    makeMove(board, firstMove);
+    Square expectedMoves[9] = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {0, 7}, {0, 8}};
+    Square actualMoves[TOTAL_SMALL_SQUARES];
+    generateMoves(board, actualMoves);
+    for (int i = 0; i < 9; i++) {
+        myAssert(squaresAreEqual(expectedMoves[i], actualMoves[i]));
+    }
+    freeBoard(board);
+}
+
+
 Square to_our_notation(Square rowAndColumn) {
     uint8_t row = rowAndColumn.board;
     uint8_t column = rowAndColumn.position;
@@ -89,6 +103,8 @@ void runBoardTests() {
     anyMoveAllowedOnEmptyBoard(board);
     printf("\tnineOrEightMovesAllowedAfterFirstMove...\n");
     nineOrEightMovesAllowedAfterFirstMove(board);
+    printf("\ttestSecondMoveGeneration...\n");
+    testSecondMoveGeneration();
     printf("\treCurseVsDaFish...\n");
     reCurseVsDaFish();
     printf("\tyurkovVsJacek...\n");
