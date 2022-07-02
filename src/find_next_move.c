@@ -44,7 +44,7 @@ bool hasTimeRemaining(clock_t deadline) {
 }
 
 
-Square findNextMove(Board* board, MCTSNode* root, double allocatedTime, pcg32_random_t* rng) {
+Square findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
     clock_t deadline = getDeadline(allocatedTime);
     while (hasTimeRemaining(deadline)) {
         MCTSNode* leaf = selectLeaf(board, root);
