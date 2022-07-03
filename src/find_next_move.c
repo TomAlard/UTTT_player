@@ -46,7 +46,8 @@ bool hasTimeRemaining(clock_t deadline) {
 
 Square findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
     clock_t deadline = getDeadline(allocatedTime);
-    while (hasTimeRemaining(deadline)) {
+    int amountOfSimulations = 0;
+    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(deadline)) {
         MCTSNode* leaf = selectLeaf(board, root);
         MCTSNode* playoutNode;
         Winner simulationWinner;
