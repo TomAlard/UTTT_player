@@ -33,7 +33,7 @@ void keepsSelectingSameNodeWhenSetAsWin() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     MCTSNode* node = selectNextChild(root, board);
-    setNodeWinner(node, WIN_P2);
+    setNodeWinner(node, WIN_P1);
     myAssert(selectNextChild(root, board) == node);
     freeBoard(board);
     freeMCTSTree(root);
@@ -45,16 +45,16 @@ void selectsChildWithHighChanceOfWin() {
     Board* board = createBoard();
     MCTSNode* winNode = selectNextChild(root, board);
     // backpropagate one loss and 99 wins
-    backpropagate(winNode, WIN_P1);
+    backpropagate(winNode, WIN_P2);
     for (int i = 0; i < 99 ; i++) {
-        backpropagate(winNode, WIN_P2);
+        backpropagate(winNode, WIN_P1);
     }
     MCTSNode* node = selectNextChild(root, board);
     while (isLeafNode(node)) {
         // backpropagate one win and 99 losses
-        backpropagate(node, WIN_P2);
+        backpropagate(node, WIN_P1);
         for (int i = 0; i < 99; i++) {
-            backpropagate(node, WIN_P1);
+            backpropagate(node, WIN_P2);
         }
         node = selectNextChild(root, board);
     }
