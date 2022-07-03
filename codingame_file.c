@@ -689,10 +689,13 @@ double getUCTValue(MCTSNode* node) {
         return node->UCTValue;
     }
     double w = node->wins;
-    double n = node->sims != 0? node->sims : 0.0001;
+    double n = node->sims;
+    if (n == 0) {
+        return 99999;
+    }
     double c = EXPLORATION_PARAMETER;
-    double N = node->parent->sims != 0? node->parent->sims : 0.0001;
-    return w/n + c*(log(N) / n);
+    double N = node->parent->sims;
+    return w/n + c*sqrt(log(N) / n);
 }
 
 
@@ -853,7 +856,8 @@ bool hasTimeRemaining(clock_t deadline) {
 
 Square findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
     clock_t deadline = getDeadline(allocatedTime);
-    while (hasTimeRemaining(deadline)) {
+    int amountOfSimulations = 0;
+    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(deadline)) {
         MCTSNode* leaf = selectLeaf(board, root);
         MCTSNode* playoutNode;
         Winner simulationWinner;
@@ -980,7 +984,7 @@ void playGame(FILE* file, double timePerMove) {
 }
 
 
-#define TIME 0.0999
+#define TIME 0.060
 int main() {
     // runTests();
     playGame(stdin, TIME);
