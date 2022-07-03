@@ -44,10 +44,10 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
             gettimeofday(&end, NULL);
             double elapsedTime = (double) (end.tv_sec - start.tv_sec) * 1000.0;
             elapsedTime += (double) (end.tv_usec - start.tv_usec) / 1000.0;
-            if (elapsedTime <= timeMs || elapsedTime >= 1.1*timeMs) {
+            myAssert(elapsedTime >= timeMs);
+            if (elapsedTime >= 1.1*timeMs) {
                 printf("%f\n", elapsedTime);
             }
-            // myAssert(elapsedTime > timeMs && elapsedTime < 1.1*timeMs);
             makePermanentMove(board, nextMove);
             root = updateRoot(root, board, nextMove);
         }
