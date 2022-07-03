@@ -35,8 +35,6 @@ void safe_free(void* pointer);
 
 void crash(char* errorMessage);
 
-void assertMsg(bool condition, char* errorMessage);
-
 Square toOurNotation(Square rowAndColumn);
 
 Square toGameNotation(Square square);
@@ -164,7 +162,6 @@ HandleTurnResult handleTurn(Board* board, MCTSNode* root, pcg32_random_t* rng, d
 
 // START SQUARE
 Square createSquare(uint8_t board, uint8_t position) {
-    assertMsg(board <= 8 && position <= 8, "Square board and position must be between 0 and 8 inclusive");
     Square result = {board, position};
     return result;
 }
@@ -221,13 +218,6 @@ void safe_free(void* pointer) {
 void crash(char* errorMessage) {
     fprintf(stderr, "%s\n", errorMessage);
     exit(1);
-}
-
-
-void assertMsg(bool condition, char* errorMessage) {
-    if (!condition) {
-        crash(errorMessage);
-    }
 }
 
 
@@ -566,13 +556,6 @@ void verifyWinner(Board* board) {
 
 
 void makeTemporaryMove(Board* board, Square square) {
-    assertMsg(
-            square.board == board->additionalState.currentBoard
-            || board->additionalState.currentBoard == ANY_BOARD,
-            "Can't make a move on that board");
-    assertMsg(getSquare(board, square) == UNOCCUPIED, "Can't make a move on a square that is already occupied");
-    assertMsg(board->additionalState.winner == NONE, "Can't make a move when there is already a winner");
-
     bool bigBoardWasUpdated = board->additionalState.currentPlayer == PLAYER1
                               ? setSquareOccupied(board->player1, board->player2, square)
                               : setSquareOccupied(board->player2, board->player1, square);
@@ -701,7 +684,6 @@ double getUCTValue(MCTSNode* node) {
 
 MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
-    assertMsg(node->amountOfChildren > 0, "selectNextChild: node has no children");
     MCTSNode* highestUCTChild = NULL;
     double highestUCT = -100000000000;
     for (int i = 0; i < node->amountOfChildren; i++) {
@@ -712,19 +694,16 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
             highestUCT = UCT;
         }
     }
-    assertMsg(highestUCTChild != NULL, "selectNextChild: Panic! This should be impossible.");
     return highestUCTChild;
 }
 
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     discoverChildNodes(root, board);
-    assertMsg(root->amountOfChildren > 0, "updateRoot: root has no children");
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = root->children[i];
         if (squaresAreEqual(square, child->square)) {
-            assertMsg(newRoot == NULL, "updateRoot: multiple children with same square found");
             child->parent = NULL;
             newRoot = child;
         } else {
@@ -732,13 +711,11 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
         }
     }
     freeNode(root);
-    assertMsg(newRoot != NULL, "updateRoot: newRoot shouldn't be NULL");
     return newRoot;
 }
 
 
 void backpropagate(MCTSNode* node, Winner winner) {
-    assertMsg(winner != NONE, "backpropagate: Can't backpropagate a NONE Winner");
     node->sims++;
     if (playerIsWinner(node->player, winner)) {
         node->wins++;
@@ -759,7 +736,6 @@ void visitNode(MCTSNode* node, Board* board) {
 #define UCT_WIN 100000
 #define UCT_LOSS (-UCT_WIN)
 void setNodeWinner(MCTSNode* node, Winner winner) {
-    assertMsg(winner != NONE, "setNodeWinner: Can't set NONE as winner");
     if (winner != DRAW) {
         bool win = playerIsWinner(node->player, winner);
         node->UCTValue = win? UCT_WIN : UCT_LOSS;
@@ -771,7 +747,6 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 
 
 Square getMostSimulatedChildSquare(MCTSNode* node) {
-    assertMsg(node->amountOfChildren != -1, "getMostSimulatedChildSquare: node has no children");
     MCTSNode* highestSimsChild = NULL;
     int highestSims = -1;
     for (int i = 0; i < node->amountOfChildren; i++) {
@@ -817,7 +792,6 @@ MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
     MCTSNode* currentNode = root;
     while (!isLeafNode(currentNode) && hasChildren(currentNode, board)) {
         currentNode = selectNextChild(currentNode, board);
-        assertMsg(currentNode != NULL, "selectLeaf: currentNode is NULL!");
         visitNode(currentNode, board);
     }
     return currentNode;
@@ -938,13 +912,11 @@ HandleTurnResult handleTurn(Board* board, MCTSNode* root, pcg32_random_t* rng, d
 // START MAIN
 void skipMovesInput(FILE* file) {
     int validActionCount;
-    int amountMatched = fscanf(file, "%d", &validActionCount);  // NOLINT(cert-err34-c)
-    assertMsg(amountMatched == 1, "Incorrect amount of arguments matched");
+    fscanf(file, "%d", &validActionCount);  // NOLINT(cert-err34-c)
     for (int i = 0; i < validActionCount; i++) {
         int row;
         int col;
-        amountMatched = fscanf(file, "%d%d", &row, &col);  // NOLINT(cert-err34-c)
-        assertMsg(amountMatched == 2, "Incorrect amount of arguments matched");
+        fscanf(file, "%d%d", &row, &col);  // NOLINT(cert-err34-c)
     }
 }
 
