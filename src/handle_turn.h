@@ -6,6 +6,7 @@
 typedef struct HandleTurnResult {
     Square move;
     MCTSNode* newRoot;
+    int amountOfSimulations;
 } HandleTurnResult;
 
 HandleTurnResult handleTurn(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove);

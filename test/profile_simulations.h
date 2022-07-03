@@ -1,0 +1,6 @@
+#ifndef UTTT2_PROFILE_SIMULATIONS_H
+#define UTTT2_PROFILE_SIMULATIONS_H
+
+void profileSimulations();
+
+#endif //UTTT2_PROFILE_SIMULATIONS_H

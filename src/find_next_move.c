@@ -44,7 +44,7 @@ bool hasTimeRemaining(clock_t deadline) {
 }
 
 
-Square findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
+int findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
     clock_t deadline = getDeadline(allocatedTime);
     int amountOfSimulations = 0;
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(deadline)) {
@@ -63,5 +63,5 @@ Square findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double al
         }
         backpropagate(playoutNode, simulationWinner);
     }
-    return getMostSimulatedChildSquare(root);
+    return amountOfSimulations;
 }

@@ -4,6 +4,7 @@
 #include "player_bitboard_tests.h"
 #include "mcts_node_tests.h"
 #include "find_next_move_tests.h"
+#include "profile_simulations.h"
 
 
 void runTests() {
@@ -15,4 +16,6 @@ void runTests() {
     runMCTSNodeTests();
     printf("runFindNextMoveTests...\n");
     runFindNextMoveTests();
+    printf("Amount of simulations on second move: ");
+    profileSimulations();
 }

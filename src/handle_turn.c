@@ -13,9 +13,10 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
 
 HandleTurnResult handleTurn(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove) {
     root = handleEnemyTurn(board, root, enemyMove);
-    Square move = findNextMove(board, root, rng, allocatedTime);
+    int amountOfSimulations = findNextMove(board, root, rng, allocatedTime);
+    Square move = getMostSimulatedChildSquare(root);
     MCTSNode* newRoot = updateRoot(root, board, move);
     makePermanentMove(board, move);
-    HandleTurnResult result = {move, newRoot};
+    HandleTurnResult result = {move, newRoot, amountOfSimulations};
     return result;
 }
