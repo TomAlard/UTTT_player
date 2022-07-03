@@ -22,7 +22,6 @@ MCTSNode* createMCTSRootNode() {
     root->player = PLAYER2;
     root->square.board = 9;
     root->square.position = 9;
-    root->UCTValue = -1;
     return root;
 }
 
@@ -32,9 +31,7 @@ MCTSNode* createMCTSNode(MCTSNode* parent, Square square) {
     node->parent = parent;
     node->amountOfChildren = -1;
     node->player = otherPlayer(parent->player);
-    node->square.board = square.board;
-    node->square.position = square.position;
-    node->UCTValue = -1;
+    node->square = square;
     return node;
 }
 
@@ -78,7 +75,7 @@ bool isLeafNode(MCTSNode* node) {
 
 #define EXPLORATION_PARAMETER 0.5
 double getUCTValue(MCTSNode* node) {
-    if (node->UCTValue != -1) {
+    if (node->UCTValue) {
         return node->UCTValue;
     }
     double w = node->wins;
