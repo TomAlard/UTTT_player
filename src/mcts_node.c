@@ -91,14 +91,20 @@ double getUCTValue(MCTSNode* node) {
 }
 
 
+MCTSNode* expandNode(MCTSNode* node, int childIndex) {
+    MCTSNode* newChild = createMCTSNode(node, node->untriedMoves[childIndex]);
+    node->amountOfUntriedMoves--;
+    node->children = safe_realloc(node->children, (node->amountOfChildren + 1) * sizeof(MCTSNode*));
+    node->children[node->amountOfChildren++] = newChild;
+    return newChild;
+}
+
+
 MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
     assertMsg(isLeafNode(node, board) || node->amountOfChildren > 0, "selectNextChild: node is terminal");
     if (node->amountOfUntriedMoves) {
-        MCTSNode* newChild = createMCTSNode(node, node->untriedMoves[--node->amountOfUntriedMoves]);
-        node->children = safe_realloc(node->children, (node->amountOfChildren + 1) * sizeof(MCTSNode*));
-        node->children[node->amountOfChildren++] = newChild;
-        return newChild;
+        return expandNode(node, node->amountOfUntriedMoves - 1);
     }
     MCTSNode* highestUCTChild = NULL;
     double highestUCT = -100000000000;
@@ -117,7 +123,7 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     discoverChildNodes(root, board);
-    assertMsg(root->amountOfChildren > 0, "updateRoot: root has no children");
+    assertMsg(root->amountOfChildren > 0 || isLeafNode(root, board), "updateRoot: root is terminal");
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = root->children[i];
@@ -127,6 +133,15 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
             newRoot = child;
         } else {
             freeMCTSTree(child);
+        }
+    }
+    if (newRoot == NULL) {
+        for (int i = 0; i < root->amountOfUntriedMoves; i++) {
+            if (squaresAreEqual(square, root->untriedMoves[i])) {
+                newRoot = expandNode(root, i);
+                newRoot->parent = NULL;
+                break;
+            }
         }
     }
     freeNode(root);
