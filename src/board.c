@@ -1,3 +1,4 @@
+#include <string.h>
 #include "board.h"
 #include "util.h"
 #include "player_bitboard.h"
@@ -18,7 +19,20 @@ typedef struct Board {
     PlayerBitBoard* player2;
     AdditionalState additionalState;
     AdditionalState additionalStateCheckpoint;
+    Square openSquares[512][9][9];
+    int amountOfOpenSquares[512];
 } Board;
+
+
+int setOpenSquares(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard) {
+    int amountOfMoves = 0;
+    while (bitBoard) {
+        Square square = {boardIndex, __builtin_ffs(bitBoard) - 1};
+        openSquares[amountOfMoves++] = square;
+        bitBoard &= bitBoard - 1;
+    }
+    return amountOfMoves;
+}
 
 
 Board* createBoard() {
@@ -29,6 +43,13 @@ Board* createBoard() {
     board->additionalState.currentBoard = ANY_BOARD;
     board->additionalState.winner = NONE;
     board->additionalStateCheckpoint = board->additionalState;
+    for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
+        for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
+            board->amountOfOpenSquares[bitBoard] =
+                    setOpenSquares(board->openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
+        }
+    }
+
     return board;
 }
 
@@ -43,13 +64,10 @@ void freeBoard(Board* board) {
 int generateMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int amountOfMoves) {
     uint16_t smallBoardPlayer1 = getSmallBoard(board->player1, boardIndex);
     uint16_t smallBoardPlayer2 = getSmallBoard(board->player2, boardIndex);
-    uint16_t openSquares = ~(smallBoardPlayer1 | smallBoardPlayer2) & 511;
-    while (openSquares) {
-        Square square = {boardIndex, __builtin_ffs(openSquares) - 1};
-        moves[amountOfMoves++] = square;
-        openSquares &= openSquares - 1;
-    }
-    return amountOfMoves;
+    uint16_t bitBoard = ~(smallBoardPlayer1 | smallBoardPlayer2) & 511;
+    memcpy(&moves[amountOfMoves], board->openSquares[bitBoard][boardIndex],
+           board->amountOfOpenSquares[bitBoard] * sizeof(Square));
+    return amountOfMoves + board->amountOfOpenSquares[bitBoard];
 }
 
 
