@@ -76,18 +76,14 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 
 
 #define EXPLORATION_PARAMETER 0.5
-double getUCTValue(MCTSNode* node) {
+double getUCTValue(MCTSNode* node, double parentLogSims) {
     if (node->UCTValue) {
         return node->UCTValue;
     }
     double w = node->wins;
     double n = node->sims;
-    if (n == 0) {
-        return 99999;
-    }
     double c = EXPLORATION_PARAMETER;
-    double N = node->parent->sims;
-    return w/n + c*sqrt(log(N) / n);
+    return w/n + c*sqrt(parentLogSims / n);
 }
 
 
@@ -106,11 +102,12 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
     if (node->amountOfUntriedMoves) {
         return expandNode(node, node->amountOfUntriedMoves - 1);
     }
+    double logSims = log(node->sims);
     MCTSNode* highestUCTChild = NULL;
     double highestUCT = -100000000000;
     for (int i = 0; i < node->amountOfChildren; i++) {
         MCTSNode* child = node->children[i];
-        double UCT = getUCTValue(child);
+        double UCT = getUCTValue(child, logSims);
         if (UCT > highestUCT) {
             highestUCTChild = child;
             highestUCT = UCT;
