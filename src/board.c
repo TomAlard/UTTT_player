@@ -26,6 +26,7 @@ typedef struct Board {
 
 int setOpenSquares(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard) {
     int amountOfMoves = 0;
+    bitBoard = ~bitBoard & 511;
     while (bitBoard) {
         Square square = {boardIndex, __builtin_ffs(bitBoard) - 1};
         openSquares[amountOfMoves++] = square;
@@ -62,12 +63,10 @@ void freeBoard(Board* board) {
 
 
 int generateMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int amountOfMoves) {
-    uint16_t smallBoardPlayer1 = getSmallBoard(board->player1, boardIndex);
-    uint16_t smallBoardPlayer2 = getSmallBoard(board->player2, boardIndex);
-    uint16_t bitBoard = ~(smallBoardPlayer1 | smallBoardPlayer2) & 511;
-    memcpy(&moves[amountOfMoves], board->openSquares[bitBoard][boardIndex],
-           board->amountOfOpenSquares[bitBoard] * sizeof(Square));
-    return amountOfMoves + board->amountOfOpenSquares[bitBoard];
+    uint16_t bitBoard = getSmallBoard(board->player1, boardIndex) | getSmallBoard(board->player2, boardIndex);
+    int amountOpen = board->amountOfOpenSquares[bitBoard];
+    memcpy(&moves[amountOfMoves], board->openSquares[bitBoard][boardIndex], amountOpen * sizeof(Square));
+    return amountOfMoves + amountOpen;
 }
 
 
