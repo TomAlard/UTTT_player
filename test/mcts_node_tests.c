@@ -4,10 +4,10 @@
 #include "test_util.h"
 
 
-void rootHasChildrenAndIsLeaf() {
+void rootIsLeafNode() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    myAssert(hasChildren(root, board) && isLeafNode(root));
+    myAssert(isLeafNode(root, board));
     freeBoard(board);
     freeMCTSTree(root);
 }
@@ -18,7 +18,7 @@ void between17And81MovesInOneGame() {
     Board* board = createBoard();
     MCTSNode* node = root;
     int count = 0;
-    while (hasChildren(node, board)) {
+    while (isLeafNode(node, board)) {
         node = selectNextChild(node, board);
         visitNode(node, board);
         count++;
@@ -34,6 +34,14 @@ void keepsSelectingSameNodeWhenSetAsWin() {
     Board* board = createBoard();
     MCTSNode* node = selectNextChild(root, board);
     setNodeWinner(node, WIN_P1);
+    MCTSNode* untriedNode = selectNextChild(root, board);
+    while (getSims(untriedNode) == 0) {
+        // backpropagate 100 wins
+        for (int i = 0; i < 100; i++) {
+            backpropagate(untriedNode, WIN_P1);
+        }
+        untriedNode = selectNextChild(root, board);
+    }
     myAssert(selectNextChild(root, board) == node);
     freeBoard(board);
     freeMCTSTree(root);
@@ -50,7 +58,7 @@ void selectsChildWithHighChanceOfWin() {
         backpropagate(winNode, WIN_P1);
     }
     MCTSNode* node = selectNextChild(root, board);
-    while (isLeafNode(node)) {
+    while (getSims(node) == 0) {
         // backpropagate one win and 99 losses
         backpropagate(node, WIN_P1);
         for (int i = 0; i < 99; i++) {
@@ -67,19 +75,19 @@ void selectsChildWithHighChanceOfWin() {
 void updateRootTest() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    hasChildren(root, board);  // discover children
-    Square square = getMostSimulatedChildSquare(root);
+    backpropagate(selectNextChild(root, board), DRAW);
+    Square square = getMostSimulatedChildSquare(root, board);
     MCTSNode* newRoot = updateRoot(root, board, square);
-    hasChildren(newRoot, board);  // discover children
-    myAssert(getMostSimulatedChildSquare(newRoot).board == square.position);
+    backpropagate(selectNextChild(newRoot, board), DRAW);
+    myAssert(getMostSimulatedChildSquare(newRoot, board).board == square.position);
     freeBoard(board);
     freeMCTSTree(newRoot);
 }
 
 
 void runMCTSNodeTests() {
-    printf("\trootHasChildrenAndIsLeaf...\n");
-    rootHasChildrenAndIsLeaf();
+    printf("\trootIsLeafNode...\n");
+    rootIsLeafNode();
     printf("\tbetween17And81MovesInOneGame...\n");
     between17And81MovesInOneGame();
     printf("\tkeepsSelectingSameNodeWhenSetAsWin...\n");

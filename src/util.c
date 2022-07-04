@@ -23,6 +23,16 @@ void* safe_calloc(size_t size) {
 }
 
 
+void* safe_realloc(void* pointer, size_t size) {
+    void* ptr = realloc(pointer, size);
+    if (ptr == NULL) {
+        fprintf(stderr, "Couldn't reallocate %zu bytes of memory!\n", size);
+        exit(1);
+    }
+    return ptr;
+}
+
+
 void safe_free(void* pointer) {
     if (pointer == NULL) {
         fprintf(stderr, "Cannot free NULL pointer!\n");

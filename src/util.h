@@ -14,6 +14,8 @@ void* safe_malloc(size_t size);
 
 void* safe_calloc(size_t size);
 
+void* safe_realloc(void* pointer, size_t size);
+
 void safe_free(void* pointer);
 
 void crash(char* errorMessage);

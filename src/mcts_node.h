@@ -10,9 +10,7 @@ MCTSNode* createMCTSRootNode();
 
 void freeMCTSTree(MCTSNode* root);
 
-bool hasChildren(MCTSNode* node, Board* board);
-
-bool isLeafNode(MCTSNode* node);
+bool isLeafNode(MCTSNode* node, Board* board);
 
 MCTSNode* selectNextChild(MCTSNode* node, Board* board);
 
@@ -24,7 +22,7 @@ void visitNode(MCTSNode* node, Board* board);
 
 void setNodeWinner(MCTSNode* node, Winner winner);
 
-Square getMostSimulatedChildSquare(MCTSNode* node);
+Square getMostSimulatedChildSquare(MCTSNode* node, Board* board);
 
 int getSims(MCTSNode* node);
 
