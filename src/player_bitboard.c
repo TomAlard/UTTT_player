@@ -1,3 +1,8 @@
+#pragma GCC target("avx")
+
+
+#include <emmintrin.h>
+#include <smmintrin.h>
 #include "player_bitboard.h"
 #include "util.h"
 
@@ -40,15 +45,13 @@ bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
 }
 
 
-uint16_t winningMasks[8] = {448, 56, 7, 292, 146, 73, 273, 84};  // in order: 3 horizontal, 3 vertical, 2 diagonal
 bool isWin(uint16_t smallBoard) {
-    for (int i = 0; i < 8; i++) {
-        uint16_t winningMask = winningMasks[i];
-        if ((smallBoard & winningMask) == winningMask) {
-            return true;
-        }
-    }
-    return false;
+    __m128i masks = _mm_setr_epi16(0x7, 0x38, 0x1c0, 0x49, 0x92, 0x124, 0x111, 0x54);
+    __m128i v1 = _mm_set1_epi16(1);
+    __m128i boards128 = _mm_set1_epi16((short) smallBoard);
+    __m128i andResult = _mm_and_si128(masks, boards128);
+    __m128i result = _mm_cmpeq_epi16(andResult, masks);
+    return !_mm_test_all_zeros(result, v1);
 }
 
 
