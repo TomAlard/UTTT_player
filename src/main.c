@@ -17,13 +17,12 @@ void skipMovesInput(FILE* file) {
 }
 
 
-void printMove(MCTSNode* root, Square bestMove) {
+void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
     Square s = toGameNotation(bestMove);
     uint8_t x = s.board;
     uint8_t y = s.position;
     double winrate = getWinrate(root);
-    int sims = getSims(root);
-    printf("%d %d %.4f %d\n", x, y, winrate, sims);
+    printf("%d %d %.4f %d\n", x, y, winrate, amountOfSimulations);
     fflush(stdout);
 }
 
@@ -45,7 +44,7 @@ void playGame(FILE* file, double timePerMove) {
         Square enemyMove = toOurNotation(enemyMoveGameNotation);
         HandleTurnResult result = handleTurn(board, root, &rng, timePerMove, enemyMove);
         root = result.newRoot;
-        printMove(root, result.move);
+        printMove(root, result.move, result.amountOfSimulations);
     }
     freeMCTSTree(root);
     freeBoard(board);
