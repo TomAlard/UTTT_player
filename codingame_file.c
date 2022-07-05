@@ -10,6 +10,9 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <emmintrin.h>
+#include <immintrin.h>
+#include <smmintrin.h>
 
 
 
@@ -366,15 +369,13 @@ bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
 }
 
 
-uint16_t winningMasks[8] = {448, 56, 7, 292, 146, 73, 273, 84};  // in order: 3 horizontal, 3 vertical, 2 diagonal
 bool isWin(uint16_t smallBoard) {
-    for (int i = 0; i < 8; i++) {
-        uint16_t winningMask = winningMasks[i];
-        if ((smallBoard & winningMask) == winningMask) {
-            return true;
-        }
-    }
-    return false;
+    const __m128i masks = _mm_setr_epi16(0x7, 0x38, 0x1c0, 0x49, 0x92, 0x124, 0x111, 0x54);
+    const __m128i v1 = _mm_set1_epi16(1);
+    __m128i boards128 = _mm_set1_epi16(smallBoard);
+    __m128i andResult = _mm_and_si128(masks, boards128);
+    __m128i result = _mm_cmpeq_epi16(andResult, masks);
+    return !_mm_test_all_zeros(result, v1);
 }
 
 
@@ -628,9 +629,9 @@ typedef struct MCTSNode {
     int amountOfChildren;
     Player player;
     Square square;
-    double wins;
-    int sims;
-    double UCTValue;
+    float wins;
+    float sims;
+    float UCTValue;
     Square* untriedMoves;
     int amountOfUntriedMoves;
 } MCTSNode;
@@ -694,14 +695,14 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 
 
 #define EXPLORATION_PARAMETER 0.5
-double getUCTValue(MCTSNode* node, double parentLogSims) {
+float getUCTValue(MCTSNode* node, float parentLogSims) {
     if (node->UCTValue) {
         return node->UCTValue;
     }
-    double w = node->wins;
-    double n = node->sims;
-    double c = EXPLORATION_PARAMETER;
-    return w/n + c*sqrt(parentLogSims / n);
+    float w = node->wins;
+    float n = node->sims;
+    float c = EXPLORATION_PARAMETER;
+    return w/n + c*sqrtf(parentLogSims / n);
 }
 
 
@@ -719,12 +720,12 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
     if (node->amountOfUntriedMoves) {
         return expandNode(node, node->amountOfUntriedMoves - 1);
     }
-    double logSims = log(node->sims);
+    float logSims = logf(node->sims);
     MCTSNode* highestUCTChild = NULL;
-    double highestUCT = -100000000000;
+    float highestUCT = -100000000000.0f;
     for (int i = 0; i < node->amountOfChildren; i++) {
         MCTSNode* child = node->children[i];
-        double UCT = getUCTValue(child, logSims);
+        float UCT = getUCTValue(child, logSims);
         if (UCT > highestUCT) {
             highestUCTChild = child;
             highestUCT = UCT;
@@ -765,7 +766,7 @@ void backpropagate(MCTSNode* node, Winner winner) {
     if (playerIsWinner(node->player, winner)) {
         node->wins++;
     } else if (winner == DRAW) {
-        node->wins += 0.5;
+        node->wins += 0.5f;
     }
     if (node->parent != NULL) {
         backpropagate(node->parent, winner);
@@ -794,10 +795,10 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 Square getMostSimulatedChildSquare(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
     MCTSNode* highestSimsChild = NULL;
-    int highestSims = -1;
+    float highestSims = -1;
     for (int i = 0; i < node->amountOfChildren; i++) {
         MCTSNode* child = node->children[i];
-        int sims = child->sims;
+        float sims = child->sims;
         if (sims > highestSims) {
             highestSimsChild = child;
             highestSims = sims;
@@ -808,14 +809,13 @@ Square getMostSimulatedChildSquare(MCTSNode* node, Board* board) {
 
 
 int getSims(MCTSNode* node) {
-    return node->sims;
+    return (int) node->sims;
 }
 
 
 double getWinrate(MCTSNode* node) {
     return node->wins / node->sims;
 }
-
 // END MCTS_NODE
 
 
@@ -969,13 +969,12 @@ void skipMovesInput(FILE* file) {
 }
 
 
-void printMove(MCTSNode* root, Square bestMove) {
+void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
     Square s = toGameNotation(bestMove);
     uint8_t x = s.board;
     uint8_t y = s.position;
     double winrate = getWinrate(root);
-    int sims = getSims(root);
-    printf("%d %d %.4f %d\n", x, y, winrate, sims);
+    printf("%d %d %.4f %d\n", x, y, winrate, amountOfSimulations);
     fflush(stdout);
 }
 
@@ -997,7 +996,7 @@ void playGame(FILE* file, double timePerMove) {
         Square enemyMove = toOurNotation(enemyMoveGameNotation);
         HandleTurnResult result = handleTurn(board, root, &rng, timePerMove, enemyMove);
         root = result.newRoot;
-        printMove(root, result.move);
+        printMove(root, result.move, result.amountOfSimulations);
     }
     freeMCTSTree(root);
     freeBoard(board);
