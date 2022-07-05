@@ -11,7 +11,6 @@
 #include <time.h>
 #include <math.h>
 #include <emmintrin.h>
-#include <immintrin.h>
 #include <smmintrin.h>
 
 
@@ -721,9 +720,9 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
         return expandNode(node, node->amountOfUntriedMoves - 1);
     }
     float logSims = logf(node->sims);
-    MCTSNode* highestUCTChild = NULL;
-    float highestUCT = -100000000000.0f;
-    for (int i = 0; i < node->amountOfChildren; i++) {
+    MCTSNode* highestUCTChild = node->children[0];
+    float highestUCT = getUCTValue(highestUCTChild, logSims);
+    for (int i = 1; i < node->amountOfChildren; i++) {
         MCTSNode* child = node->children[i];
         float UCT = getUCTValue(child, logSims);
         if (UCT > highestUCT) {
