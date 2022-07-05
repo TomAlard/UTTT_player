@@ -7,14 +7,14 @@
 typedef struct MCTSNode {
     MCTSNode* parent;
     MCTSNode** children;
-    int amountOfChildren;
+    int8_t amountOfChildren;
     Player player;
     Square square;
-    double wins;
-    int sims;
-    double UCTValue;
+    float wins;
+    float sims;
+    float UCTValue;
     Square* untriedMoves;
-    int amountOfUntriedMoves;
+    int8_t amountOfUntriedMoves;
 } MCTSNode;
 
 
@@ -60,7 +60,7 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
         Square moves[TOTAL_SMALL_SQUARES];
         int amountOfMoves = generateMoves(board, moves);
         node->amountOfChildren = 0;
-        node->amountOfUntriedMoves = amountOfMoves;
+        node->amountOfUntriedMoves = (int8_t) amountOfMoves;
         node->untriedMoves = safe_malloc(amountOfMoves * sizeof(Square));
         for (int i = 0; i < amountOfMoves; i++) {
             node->untriedMoves[i] = moves[i];
@@ -75,15 +75,15 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 }
 
 
-#define EXPLORATION_PARAMETER 0.5
-double getUCTValue(MCTSNode* node, double parentLogSims) {
+#define EXPLORATION_PARAMETER 0.5f
+float getUCTValue(MCTSNode* node, float parentLogSims) {
     if (node->UCTValue) {
         return node->UCTValue;
     }
-    double w = node->wins;
-    double n = node->sims;
-    double c = EXPLORATION_PARAMETER;
-    return w/n + c*sqrt(parentLogSims / n);
+    float w = node->wins;
+    float n = node->sims;
+    float c = EXPLORATION_PARAMETER;
+    return w/n + c*sqrtf(parentLogSims / n);
 }
 
 
@@ -102,12 +102,12 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
     if (node->amountOfUntriedMoves) {
         return expandNode(node, node->amountOfUntriedMoves - 1);
     }
-    double logSims = log(node->sims);
+    float logSims = logf(node->sims);
     MCTSNode* highestUCTChild = NULL;
-    double highestUCT = -100000000000;
+    float highestUCT = -100000000000.0f;
     for (int i = 0; i < node->amountOfChildren; i++) {
         MCTSNode* child = node->children[i];
-        double UCT = getUCTValue(child, logSims);
+        float UCT = getUCTValue(child, logSims);
         if (UCT > highestUCT) {
             highestUCTChild = child;
             highestUCT = UCT;
@@ -153,7 +153,7 @@ void backpropagate(MCTSNode* node, Winner winner) {
     if (playerIsWinner(node->player, winner)) {
         node->wins++;
     } else if (winner == DRAW) {
-        node->wins += 0.5;
+        node->wins += 0.5f;
     }
     if (node->parent != NULL) {
         backpropagate(node->parent, winner);
@@ -183,10 +183,10 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 Square getMostSimulatedChildSquare(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
     MCTSNode* highestSimsChild = NULL;
-    int highestSims = -1;
+    float highestSims = -1;
     for (int i = 0; i < node->amountOfChildren; i++) {
         MCTSNode* child = node->children[i];
-        int sims = child->sims;
+        float sims = child->sims;
         if (sims > highestSims) {
             highestSimsChild = child;
             highestSims = sims;
@@ -198,7 +198,7 @@ Square getMostSimulatedChildSquare(MCTSNode* node, Board* board) {
 
 
 int getSims(MCTSNode* node) {
-    return node->sims;
+    return (int) node->sims;
 }
 
 
