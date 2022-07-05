@@ -29,14 +29,6 @@ bool squaresAreEqual(Square square1, Square square2);
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))
 
-void* safe_malloc(size_t size);
-
-void* safe_calloc(size_t size);
-
-void* safe_realloc(void* pointer, size_t size);
-
-void safe_free(void* pointer);
-
 void crash(char* errorMessage);
 
 Square toOurNotation(Square rowAndColumn);
@@ -189,45 +181,6 @@ bool squaresAreEqual(Square square1, Square square2) {
 
 
 // START UTIL
-void* safe_malloc(size_t size) {
-    void* ptr = malloc(size);
-    if (ptr == NULL) {
-        fprintf(stderr, "Couldn't allocate %zu bytes of memory!\n", size);
-        exit(1);
-    }
-    return ptr;
-}
-
-
-void* safe_calloc(size_t size) {
-    void* ptr = calloc(1, size);
-    if (ptr == NULL) {
-        fprintf(stderr, "Couldn't allocate %zu bytes of memory!\n", size);
-        exit(1);
-    }
-    return ptr;
-}
-
-
-void* safe_realloc(void* pointer, size_t size) {
-    void* ptr = realloc(pointer, size);
-    if (ptr == NULL) {
-        fprintf(stderr, "Couldn't reallocate %zu bytes of memory!\n", size);
-        exit(1);
-    }
-    return ptr;
-}
-
-
-void safe_free(void* pointer) {
-    if (pointer == NULL) {
-        fprintf(stderr, "Cannot free NULL pointer!\n");
-        exit(1);
-    }
-    free(pointer);
-}
-
-
 void crash(char* errorMessage) {
     fprintf(stderr, "%s\n", errorMessage);
     exit(1);
@@ -339,12 +292,12 @@ typedef struct PlayerBitBoard {
 
 
 PlayerBitBoard* createPlayerBitBoard() {
-    return safe_calloc(sizeof(PlayerBitBoard));
+    return calloc(1, sizeof(PlayerBitBoard));
 }
 
 
 void freePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
-    safe_free(playerBitBoard);
+    free(playerBitBoard);
 }
 
 
@@ -463,7 +416,7 @@ int setOpenSquares(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard)
 
 
 Board* createBoard() {
-    Board* board = safe_malloc(sizeof(Board));
+    Board* board = malloc(sizeof(Board));
     board->player1 = createPlayerBitBoard();
     board->player2 = createPlayerBitBoard();
     board->additionalState.currentPlayer = PLAYER1;
@@ -484,7 +437,7 @@ Board* createBoard() {
 void freeBoard(Board* board) {
     freePlayerBitBoard(board->player1);
     freePlayerBitBoard(board->player2);
-    safe_free(board);
+    free(board);
 }
 
 
@@ -637,7 +590,7 @@ typedef struct MCTSNode {
 
 
 MCTSNode* createMCTSRootNode() {
-    MCTSNode* root = safe_calloc(sizeof(MCTSNode));
+    MCTSNode* root = calloc(1, sizeof(MCTSNode));
     root->amountOfChildren = -1;
     root->player = PLAYER2;
     root->square.board = 9;
@@ -648,7 +601,7 @@ MCTSNode* createMCTSRootNode() {
 
 
 MCTSNode* createMCTSNode(MCTSNode* parent, Square square) {
-    MCTSNode* node = safe_calloc(sizeof(MCTSNode));
+    MCTSNode* node = calloc(1, sizeof(MCTSNode));
     node->parent = parent;
     node->amountOfChildren = -1;
     node->player = otherPlayer(parent->player);
@@ -661,7 +614,7 @@ MCTSNode* createMCTSNode(MCTSNode* parent, Square square) {
 void freeNode(MCTSNode* node) {
     free(node->children);
     free(node->untriedMoves);
-    safe_free(node);
+    free(node);
 }
 
 
@@ -679,7 +632,7 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
         int amountOfMoves = generateMoves(board, moves);
         node->amountOfChildren = 0;
         node->amountOfUntriedMoves = amountOfMoves;
-        node->untriedMoves = safe_malloc(amountOfMoves * sizeof(Square));
+        node->untriedMoves = malloc(amountOfMoves * sizeof(Square));
         for (int i = 0; i < amountOfMoves; i++) {
             node->untriedMoves[i] = moves[i];
         }
@@ -708,7 +661,7 @@ float getUCTValue(MCTSNode* node, float parentLogSims) {
 MCTSNode* expandNode(MCTSNode* node, int childIndex) {
     MCTSNode* newChild = createMCTSNode(node, node->untriedMoves[childIndex]);
     node->amountOfUntriedMoves--;
-    node->children = safe_realloc(node->children, (node->amountOfChildren + 1) * sizeof(MCTSNode*));
+    node->children = realloc(node->children, (node->amountOfChildren + 1) * sizeof(MCTSNode*));
     node->children[node->amountOfChildren++] = newChild;
     return newChild;
 }
