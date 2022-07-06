@@ -180,7 +180,7 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 }
 
 
-Square getMostSimulatedChildSquare(MCTSNode* node, Board* board) {
+Square getMostPromisingMove(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
     MCTSNode* highestSimsChild = NULL;
     float highestSims = -1;
@@ -192,7 +192,7 @@ Square getMostSimulatedChildSquare(MCTSNode* node, Board* board) {
             highestSims = sims;
         }
     }
-    assertMsg(highestSimsChild != NULL, "getMostSimulatedChildSquare: highestSimsChild shouldn't be NULL");
+    assertMsg(highestSimsChild != NULL, "getMostPromisingMove: highestSimsChild shouldn't be NULL");
     return highestSimsChild->square;
 }
 

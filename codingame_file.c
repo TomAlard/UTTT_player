@@ -126,7 +126,7 @@ void visitNode(MCTSNode* node, Board* board);
 
 void setNodeWinner(MCTSNode* node, Winner winner);
 
-Square getMostSimulatedChildSquare(MCTSNode* node, Board* board);
+Square getMostPromisingMove(MCTSNode* node, Board* board);
 
 int getSims(MCTSNode* node);
 
@@ -744,7 +744,7 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 }
 
 
-Square getMostSimulatedChildSquare(MCTSNode* node, Board* board) {
+Square getMostPromisingMove(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
     MCTSNode* highestSimsChild = NULL;
     float highestSims = -1;
@@ -880,7 +880,7 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
 HandleTurnResult handleTurn(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove) {
     root = handleEnemyTurn(board, root, enemyMove);
     int amountOfSimulations = findNextMove(board, root, rng, allocatedTime);
-    Square move = getMostSimulatedChildSquare(root, board);
+    Square move = getMostPromisingMove(root, board);
     MCTSNode* newRoot = updateRoot(root, board, move);
     makePermanentMove(board, move);
     HandleTurnResult result = {move, newRoot, amountOfSimulations};

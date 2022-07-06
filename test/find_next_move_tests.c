@@ -15,7 +15,7 @@ void findNextMoveDoesNotChangeBoard() {
         Square movesBefore[TOTAL_SMALL_SQUARES];
         int amountMovesBefore = generateMoves(board, movesBefore);
         findNextMove(board, root, &rng, 0.005);
-        Square nextMove = getMostSimulatedChildSquare(root, board);
+        Square nextMove = getMostPromisingMove(root, board);
         myAssert(winnerBefore == getWinner(board));
         Square movesAfter[TOTAL_SMALL_SQUARES];
         int amountMovesAfter = generateMoves(board, movesAfter);
@@ -41,7 +41,7 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
         int timeMs = 100;
         gettimeofday(&start, NULL);
         findNextMove(board, root, &rng, timeMs / 1000.0);
-        Square nextMove = getMostSimulatedChildSquare(root, board);
+        Square nextMove = getMostPromisingMove(root, board);
         gettimeofday(&end, NULL);
         double elapsedTime = (double) (end.tv_sec - start.tv_sec) * 1000.0;
         elapsedTime += (double) (end.tv_usec - start.tv_usec) / 1000.0;

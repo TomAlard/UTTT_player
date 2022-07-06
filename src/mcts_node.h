@@ -22,7 +22,7 @@ void visitNode(MCTSNode* node, Board* board);
 
 void setNodeWinner(MCTSNode* node, Winner winner);
 
-Square getMostSimulatedChildSquare(MCTSNode* node, Board* board);
+Square getMostPromisingMove(MCTSNode* node, Board* board);
 
 int getSims(MCTSNode* node);
 

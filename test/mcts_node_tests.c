@@ -76,10 +76,10 @@ void updateRootTest() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     backpropagate(selectNextChild(root, board), DRAW);
-    Square square = getMostSimulatedChildSquare(root, board);
+    Square square = getMostPromisingMove(root, board);
     MCTSNode* newRoot = updateRoot(root, board, square);
     backpropagate(selectNextChild(newRoot, board), DRAW);
-    myAssert(getMostSimulatedChildSquare(newRoot, board).board == square.position);
+    myAssert(getMostPromisingMove(newRoot, board).board == square.position);
     freeBoard(board);
     freeMCTSTree(newRoot);
 }
