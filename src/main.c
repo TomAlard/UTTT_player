@@ -21,7 +21,7 @@ void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
     Square s = toGameNotation(bestMove);
     uint8_t x = s.board;
     uint8_t y = s.position;
-    double winrate = getWinrate(root);
+    float winrate = getWinrate(root);
     printf("%d %d %.4f %d\n", x, y, winrate, amountOfSimulations);
     fflush(stdout);
 }

@@ -202,6 +202,6 @@ int getSims(MCTSNode* node) {
 }
 
 
-double getWinrate(MCTSNode* node) {
+float getWinrate(MCTSNode* node) {
     return node->wins / node->sims;
 }
