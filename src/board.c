@@ -128,31 +128,28 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
 }
 
 
-void verifyWinner(Board* board) {
+Winner calculateWinner(Board* board) {
     uint16_t player1BigBoard = getBigBoard(board->player1);
     uint16_t player2BigBoard = getBigBoard(board->player2);
     uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
     uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
     if (isWin(boardsWonByPlayer1)) {
-        board->additionalState.winner = WIN_P1;
-        return;
+        return WIN_P1;
     }
     uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
     if (isWin(boardsWonByPlayer2)) {
-        board->additionalState.winner = WIN_P2;
-        return;
+        return WIN_P2;
     }
     if ((player1BigBoard | player2BigBoard) == 511) {
         int player1AmountBoardsWon = __builtin_popcount(player1BigBoard);
         int player2AmountBoardsWon = __builtin_popcount(player2BigBoard);
-        board->additionalState.winner = (
-                player1AmountBoardsWon > player2AmountBoardsWon
+        return player1AmountBoardsWon > player2AmountBoardsWon
                     ? WIN_P1
                     : player1AmountBoardsWon < player2AmountBoardsWon
                         ? WIN_P2
-                        : DRAW
-        );
+                        : DRAW;
     }
+    return NONE;
 }
 
 
@@ -168,7 +165,7 @@ void makeTemporaryMove(Board* board, Square square) {
             ? setSquareOccupied(board->player1, board->player2, square)
             : setSquareOccupied(board->player2, board->player1, square);
     if (bigBoardWasUpdated) {
-        verifyWinner(board);
+        board->additionalState.winner = calculateWinner(board);
     }
     board->additionalState.currentPlayer = otherPlayer(board->additionalState.currentPlayer);
     board->additionalState.currentBoard = getNextBoard(board, square.position);
