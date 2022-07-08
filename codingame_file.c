@@ -100,6 +100,10 @@ void freeBoard(Board* board);
 
 int generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]);
 
+bool nextBoardIsEmpty(Board* board);
+
+uint8_t getCurrentBoard(Board* board);
+
 void revertToCheckpoint(Board* board);
 
 void makeTemporaryMove(Board* board, Square square);
@@ -107,6 +111,12 @@ void makeTemporaryMove(Board* board, Square square);
 void makePermanentMove(Board* board, Square square);
 
 Winner getWinner(Board* board);
+
+void setMe(Board* board, Player player);
+
+bool currentPlayerIsMe(Board* board);
+
+uint8_t getPly(Board* board);
 
 typedef struct MCTSNode MCTSNode;
 
@@ -391,6 +401,7 @@ typedef struct AdditionalState {
     Player currentPlayer;
     uint8_t currentBoard;
     Winner winner;
+    uint8_t ply;
 } AdditionalState;
 
 
@@ -401,6 +412,7 @@ typedef struct Board {
     AdditionalState additionalStateCheckpoint;
     Square openSquares[512][9][9];
     int amountOfOpenSquares[512];
+    Player me;
 } Board;
 
 
@@ -422,6 +434,7 @@ Board* createBoard() {
     board->additionalState.currentPlayer = PLAYER1;
     board->additionalState.currentBoard = ANY_BOARD;
     board->additionalState.winner = NONE;
+    board->additionalState.ply = 0;
     board->additionalStateCheckpoint = board->additionalState;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
@@ -429,7 +442,7 @@ Board* createBoard() {
                     setOpenSquares(board->openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
         }
     }
-
+    board->me = PLAYER2;
     return board;
 }
 
@@ -474,6 +487,18 @@ int generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
 }
 
 
+bool nextBoardIsEmpty(Board* board) {
+    uint8_t currentBoard = board->additionalState.currentBoard;
+    return currentBoard != ANY_BOARD
+           && (getSmallBoard(board->player1, currentBoard) | getSmallBoard(board->player2, currentBoard)) == 0;
+}
+
+
+uint8_t getCurrentBoard(Board* board) {
+    return board->additionalState.currentBoard;
+}
+
+
 void revertToCheckpoint(Board* board) {
     revertToPlayerCheckpoint(board->player1);
     revertToPlayerCheckpoint(board->player2);
@@ -508,31 +533,28 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
 }
 
 
-void verifyWinner(Board* board) {
+Winner calculateWinner(Board* board) {
     uint16_t player1BigBoard = getBigBoard(board->player1);
     uint16_t player2BigBoard = getBigBoard(board->player2);
     uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
     uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
     if (isWin(boardsWonByPlayer1)) {
-        board->additionalState.winner = WIN_P1;
-        return;
+        return WIN_P1;
     }
     uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
     if (isWin(boardsWonByPlayer2)) {
-        board->additionalState.winner = WIN_P2;
-        return;
+        return WIN_P2;
     }
     if ((player1BigBoard | player2BigBoard) == 511) {
         int player1AmountBoardsWon = __builtin_popcount(player1BigBoard);
         int player2AmountBoardsWon = __builtin_popcount(player2BigBoard);
-        board->additionalState.winner = (
-                player1AmountBoardsWon > player2AmountBoardsWon
-                ? WIN_P1
-                : player1AmountBoardsWon < player2AmountBoardsWon
-                  ? WIN_P2
-                  : DRAW
-        );
+        return player1AmountBoardsWon > player2AmountBoardsWon
+               ? WIN_P1
+               : player1AmountBoardsWon < player2AmountBoardsWon
+                 ? WIN_P2
+                 : DRAW;
     }
+    return NONE;
 }
 
 
@@ -541,10 +563,11 @@ void makeTemporaryMove(Board* board, Square square) {
                               ? setSquareOccupied(board->player1, board->player2, square)
                               : setSquareOccupied(board->player2, board->player1, square);
     if (bigBoardWasUpdated) {
-        verifyWinner(board);
+        board->additionalState.winner = calculateWinner(board);
     }
     board->additionalState.currentPlayer = otherPlayer(board->additionalState.currentPlayer);
     board->additionalState.currentBoard = getNextBoard(board, square.position);
+    board->additionalState.ply++;
 }
 
 
@@ -558,6 +581,20 @@ Winner getWinner(Board* board) {
     return board->additionalState.winner;
 }
 
+
+void setMe(Board* board, Player player) {
+    board->me = player;
+}
+
+
+bool currentPlayerIsMe(Board* board) {
+    return board->additionalState.currentPlayer == board->me;
+}
+
+
+uint8_t getPly(Board* board) {
+    return board->additionalState.ply;
+}
 // END BOARD
 
 
@@ -628,13 +665,21 @@ void freeMCTSTree(MCTSNode* node) {
 
 void discoverChildNodes(MCTSNode* node, Board* board) {
     if (node->amountOfChildren == -1) {
-        Square moves[TOTAL_SMALL_SQUARES];
-        int amountOfMoves = generateMoves(board, moves);
         node->amountOfChildren = 0;
-        node->amountOfUntriedMoves = amountOfMoves;
-        node->untriedMoves = malloc(amountOfMoves * sizeof(Square));
-        for (int i = 0; i < amountOfMoves; i++) {
-            node->untriedMoves[i] = moves[i];
+        if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
+            node->amountOfUntriedMoves = 1;
+            node->untriedMoves = malloc(sizeof(Square));
+            uint8_t currentBoard = getCurrentBoard(board);
+            Square sameBoard = {currentBoard, currentBoard};
+            node->untriedMoves[0] = sameBoard;
+        } else {
+            Square moves[TOTAL_SMALL_SQUARES];
+            int amountOfMoves = generateMoves(board, moves);
+            node->amountOfUntriedMoves = (int8_t) amountOfMoves;
+            node->untriedMoves = malloc(amountOfMoves * sizeof(Square));
+            for (int i = 0; i < amountOfMoves; i++) {
+                node->untriedMoves[i] = moves[i];
+            }
         }
     }
 }
@@ -869,6 +914,7 @@ int findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double alloc
 // START HANDLE_TURN
 MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
+        setMe(board, PLAYER1);
         return root;
     }
     MCTSNode* newRoot = updateRoot(root, board, enemyMove);
