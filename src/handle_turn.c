@@ -3,6 +3,7 @@
 
 MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
+        setMe(board, PLAYER1);
         return root;
     }
     MCTSNode* newRoot = updateRoot(root, board, enemyMove);

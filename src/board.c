@@ -11,6 +11,7 @@ typedef struct AdditionalState {
     Player currentPlayer;
     uint8_t currentBoard;
     Winner winner;
+    uint8_t ply;
 } AdditionalState;
 
 
@@ -21,6 +22,7 @@ typedef struct Board {
     AdditionalState additionalStateCheckpoint;
     Square openSquares[512][9][9];
     int amountOfOpenSquares[512];
+    Player me;
 } Board;
 
 
@@ -42,6 +44,7 @@ Board* createBoard() {
     board->additionalState.currentPlayer = PLAYER1;
     board->additionalState.currentBoard = ANY_BOARD;
     board->additionalState.winner = NONE;
+    board->additionalState.ply = 0;
     board->additionalStateCheckpoint = board->additionalState;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
@@ -49,7 +52,7 @@ Board* createBoard() {
                     setOpenSquares(board->openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
         }
     }
-
+    board->me = PLAYER2;
     return board;
 }
 
@@ -91,6 +94,18 @@ int generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
     return currentBoard == ANY_BOARD
         ? generateMovesAnyBoard(board, moves)
         : generateMovesSingleBoard(board, currentBoard, moves, 0);
+}
+
+
+bool nextBoardIsEmpty(Board* board) {
+    uint8_t currentBoard = board->additionalState.currentBoard;
+    return currentBoard != ANY_BOARD
+        && (getSmallBoard(board->player1, currentBoard) | getSmallBoard(board->player2, currentBoard)) == 0;
+}
+
+
+uint8_t getCurrentBoard(Board* board) {
+    return board->additionalState.currentBoard;
 }
 
 
@@ -169,6 +184,7 @@ void makeTemporaryMove(Board* board, Square square) {
     }
     board->additionalState.currentPlayer = otherPlayer(board->additionalState.currentPlayer);
     board->additionalState.currentBoard = getNextBoard(board, square.position);
+    board->additionalState.ply++;
 }
 
 
@@ -180,4 +196,19 @@ void makePermanentMove(Board* board, Square square) {
 
 Winner getWinner(Board* board) {
     return board->additionalState.winner;
+}
+
+
+void setMe(Board* board, Player player) {
+    board->me = player;
+}
+
+
+bool currentPlayerIsMe(Board* board) {
+    return board->additionalState.currentPlayer == board->me;
+}
+
+
+uint8_t getPly(Board* board) {
+    return board->additionalState.ply;
 }
