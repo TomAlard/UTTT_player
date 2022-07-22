@@ -5,23 +5,32 @@
 #include "../src/util.h"
 
 
-void anyMoveAllowedOnEmptyBoard(Board* board) {
-    Square moves[TOTAL_SMALL_SQUARES];
-    myAssert(generateMoves(board, moves) == TOTAL_SMALL_SQUARES);
+void anyMoveAllowedOnEmptyBoard() {
+    Board* board = createBoard();
+    Square movesArray[TOTAL_SMALL_SQUARES];
+    int8_t amountOfMoves;
+    generateMoves(board, movesArray, &amountOfMoves);
+    myAssert(amountOfMoves == TOTAL_SMALL_SQUARES);
+    freeBoard(board);
 }
 
 
-void nineOrEightMovesAllowedAfterFirstMove(Board* board) {
-    Square moves[TOTAL_SMALL_SQUARES];
-    int amountOfMoves = generateMoves(board, moves);
-    for (int i = 0; i < amountOfMoves; i++) {
+void nineOrEightMovesAllowedAfterFirstMove() {
+    Board* board = createBoard();
+    Square movesArrayFirstMove[TOTAL_SMALL_SQUARES];
+    int8_t amountOfMovesFirstMove;
+    Square* moves = generateMoves(board, movesArrayFirstMove, &amountOfMovesFirstMove);
+    for (int i = 0; i < amountOfMovesFirstMove; i++) {
         Square move = moves[i];
         makeTemporaryMove(board, move);
         int expectedAmountOfMoves = move.board == move.position? 8 : 9;
-        Square nextMoves[TOTAL_SMALL_SQUARES];
-        myAssert(generateMoves(board, nextMoves) == expectedAmountOfMoves);
+        Square movesArray[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves;
+        generateMoves(board, movesArray, &amountOfMoves);
+        myAssert(amountOfMoves == expectedAmountOfMoves);
         revertToCheckpoint(board);
     }
+    freeBoard(board);
 }
 
 
@@ -30,8 +39,9 @@ void testSecondMoveGeneration() {
     Square firstMove = {1, 0};
     makeTemporaryMove(board, firstMove);
     Square expectedMoves[9] = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {0, 7}, {0, 8}};
-    Square actualMoves[TOTAL_SMALL_SQUARES];
-    generateMoves(board, actualMoves);
+    Square movesArray[TOTAL_SMALL_SQUARES];
+    int8_t amountOfMoves;
+    Square* actualMoves = generateMoves(board, movesArray, &amountOfMoves);
     for (int i = 0; i < 9; i++) {
         myAssert(squaresAreEqual(expectedMoves[i], actualMoves[i]));
     }
@@ -39,14 +49,16 @@ void testSecondMoveGeneration() {
 }
 
 
-void gameSimulation(const int amountOfMoves, const Square* playedMoves, const int* possibleMoves, Winner expectedWinner) {
+void gameSimulation(int totalAmountOfMoves, Square* playedMoves, const int* possibleMoves, Winner expectedWinner) {
     Board* board = createBoard();
-    Square ignoredGeneratedMoves[TOTAL_SMALL_SQUARES];
-    for (int i = 0; i < amountOfMoves; i++) {
-        myAssert(generateMoves(board, ignoredGeneratedMoves) == possibleMoves[i]);
+    Square movesArray[TOTAL_SMALL_SQUARES];
+    for (int i = 0; i < totalAmountOfMoves; i++) {
+        int8_t amountOfMoves;
+        generateMoves(board, movesArray, &amountOfMoves);
+        myAssert(amountOfMoves == possibleMoves[i]);
         Square move = toOurNotation(playedMoves[i]);
         makeTemporaryMove(board, move);
-        myAssert(getWinner(board) == (i != amountOfMoves - 1? NONE : expectedWinner));
+        myAssert(getWinner(board) == (i != totalAmountOfMoves - 1? NONE : expectedWinner));
     }
     freeBoard(board);
 }
@@ -91,9 +103,9 @@ void yurkovVsJacek() {
 void runBoardTests() {
     Board* board = createBoard();
     printf("\tanyMoveAllowedOnEmptyBoard...\n");
-    anyMoveAllowedOnEmptyBoard(board);
+    anyMoveAllowedOnEmptyBoard();
     printf("\tnineOrEightMovesAllowedAfterFirstMove...\n");
-    nineOrEightMovesAllowedAfterFirstMove(board);
+    nineOrEightMovesAllowedAfterFirstMove();
     printf("\ttestSecondMoveGeneration...\n");
     testSecondMoveGeneration();
     printf("\treCurseVsDaFish...\n");

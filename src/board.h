@@ -12,7 +12,7 @@ Board* createBoard();
 
 void freeBoard(Board* board);
 
-int8_t generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]);
+Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
 
 bool nextBoardIsEmpty(Board* board);
 

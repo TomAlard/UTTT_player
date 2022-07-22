@@ -23,8 +23,9 @@ MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
 
 Winner simulate(Board* board, pcg32_random_t* rng) {
     while (getWinner(board) == NONE) {
-        Square validMoves[TOTAL_SMALL_SQUARES];
-        uint8_t amountOfMoves = generateMoves(board, validMoves);
+        Square movesArray[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves;
+        Square* validMoves = generateMoves(board, movesArray, &amountOfMoves);
         Square move = validMoves[pcg32_boundedrand_r(rng, amountOfMoves)];
         makeTemporaryMove(board, move);
     }

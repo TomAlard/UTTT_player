@@ -64,10 +64,15 @@ void freeBoard(Board* board) {
 }
 
 
-int8_t generateMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
-    uint16_t smallBoardPlayer1 = getSmallBoard(board->player1, boardIndex);
-    uint16_t smallBoardPlayer2 = getSmallBoard(board->player2, boardIndex);
-    uint16_t bitBoard = ~(smallBoardPlayer1 | smallBoardPlayer2) & 511;
+Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMoves) {
+    uint16_t bitBoard = ~(getSmallBoard(board->player1, boardIndex) | getSmallBoard(board->player2, boardIndex)) & 511;
+    *amountOfMoves = board->amountOfOpenSquares[bitBoard];
+    return board->openSquares[bitBoard][boardIndex];
+}
+
+
+int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
+    uint16_t bitBoard = ~(getSmallBoard(board->player1, boardIndex) | getSmallBoard(board->player2, boardIndex)) & 511;
     memcpy(&moves[amountOfMoves], board->openSquares[bitBoard][boardIndex],
            board->amountOfOpenSquares[bitBoard] * sizeof(Square));
     return (int8_t)(amountOfMoves + board->amountOfOpenSquares[bitBoard]);
@@ -79,21 +84,24 @@ int8_t generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
     uint16_t undecidedSmallBoards = ~(getBigBoard(board->player1) | getBigBoard(board->player2)) & 511;
     while (undecidedSmallBoards) {
         uint8_t boardIndex = __builtin_ffs(undecidedSmallBoards) - 1;
-        amountOfMoves = generateMovesSingleBoard(board, boardIndex, moves, amountOfMoves);
+        amountOfMoves = copyMovesSingleBoard(board, boardIndex, moves, amountOfMoves);
         undecidedSmallBoards &= undecidedSmallBoards - 1;
     }
     return amountOfMoves;
 }
 
 
-int8_t generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
+Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves) {
     if (board->additionalState.winner != NONE) {
-        return 0;
+        *amountOfMoves = 0;
+        return moves;
     }
     uint8_t currentBoard = board->additionalState.currentBoard;
-    return (int8_t)(currentBoard == ANY_BOARD
-        ? generateMovesAnyBoard(board, moves)
-        : generateMovesSingleBoard(board, currentBoard, moves, 0));
+    if (currentBoard == ANY_BOARD) {
+        *amountOfMoves = generateMovesAnyBoard(board, moves);
+        return moves;
+    }
+    return getMovesSingleBoard(board, currentBoard, amountOfMoves);
 }
 
 

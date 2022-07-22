@@ -12,13 +12,14 @@ void findNextMoveDoesNotChangeBoard() {
     pcg32_srandom_r(&rng, 69, 420);
     while (getWinner(board) == NONE) {
         Winner winnerBefore = getWinner(board);
-        Square movesBefore[TOTAL_SMALL_SQUARES];
-        int amountMovesBefore = generateMoves(board, movesBefore);
+        Square movesArray[TOTAL_SMALL_SQUARES];
+        int8_t amountMovesBefore;
+        Square* movesBefore = generateMoves(board, movesArray, &amountMovesBefore);
         findNextMove(board, root, &rng, 0.005);
         Square nextMove = getMostPromisingMove(root, board);
         myAssert(winnerBefore == getWinner(board));
-        Square movesAfter[TOTAL_SMALL_SQUARES];
-        int amountMovesAfter = generateMoves(board, movesAfter);
+        int8_t amountMovesAfter;
+        Square* movesAfter = generateMoves(board, movesArray, &amountMovesAfter);
         myAssert(amountMovesBefore == amountMovesAfter);
         for (int i = 0; i < amountMovesBefore; i++) {
             myAssert(squaresAreEqual(movesBefore[i], movesAfter[i]));
