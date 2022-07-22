@@ -66,8 +66,8 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             node->untriedMoves[0] = sameBoard;
         } else {
             Square moves[TOTAL_SMALL_SQUARES];
-            int amountOfMoves = generateMoves(board, moves);
-            node->amountOfUntriedMoves = (int8_t) amountOfMoves;
+            int8_t amountOfMoves = generateMoves(board, moves);
+            node->amountOfUntriedMoves = amountOfMoves;
             node->untriedMoves = safe_malloc(amountOfMoves * sizeof(Square));
             for (int i = 0; i < amountOfMoves; i++) {
                 node->untriedMoves[i] = moves[i];

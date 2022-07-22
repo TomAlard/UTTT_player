@@ -21,13 +21,13 @@ typedef struct Board {
     AdditionalState additionalState;
     AdditionalState additionalStateCheckpoint;
     Square openSquares[512][9][9];
-    int amountOfOpenSquares[512];
+    int8_t amountOfOpenSquares[512];
     Player me;
 } Board;
 
 
-int setOpenSquares(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard) {
-    int amountOfMoves = 0;
+int8_t setOpenSquares(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard) {
+    int8_t amountOfMoves = 0;
     while (bitBoard) {
         Square square = {boardIndex, __builtin_ffs(bitBoard) - 1};
         openSquares[amountOfMoves++] = square;
@@ -64,18 +64,18 @@ void freeBoard(Board* board) {
 }
 
 
-int generateMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int amountOfMoves) {
+int8_t generateMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
     uint16_t smallBoardPlayer1 = getSmallBoard(board->player1, boardIndex);
     uint16_t smallBoardPlayer2 = getSmallBoard(board->player2, boardIndex);
     uint16_t bitBoard = ~(smallBoardPlayer1 | smallBoardPlayer2) & 511;
     memcpy(&moves[amountOfMoves], board->openSquares[bitBoard][boardIndex],
            board->amountOfOpenSquares[bitBoard] * sizeof(Square));
-    return amountOfMoves + board->amountOfOpenSquares[bitBoard];
+    return (int8_t)(amountOfMoves + board->amountOfOpenSquares[bitBoard]);
 }
 
 
-int generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
-    int amountOfMoves = 0;
+int8_t generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
+    int8_t amountOfMoves = 0;
     uint16_t undecidedSmallBoards = ~(getBigBoard(board->player1) | getBigBoard(board->player2)) & 511;
     while (undecidedSmallBoards) {
         uint8_t boardIndex = __builtin_ffs(undecidedSmallBoards) - 1;
@@ -86,14 +86,14 @@ int generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
 }
 
 
-int generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
+int8_t generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
     if (board->additionalState.winner != NONE) {
         return 0;
     }
     uint8_t currentBoard = board->additionalState.currentBoard;
-    return currentBoard == ANY_BOARD
+    return (int8_t)(currentBoard == ANY_BOARD
         ? generateMovesAnyBoard(board, moves)
-        : generateMovesSingleBoard(board, currentBoard, moves, 0);
+        : generateMovesSingleBoard(board, currentBoard, moves, 0));
 }
 
 
