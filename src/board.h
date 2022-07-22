@@ -3,6 +3,7 @@
 
 #include "square.h"
 #include "player.h"
+#include "random.h"
 
 #define TOTAL_SMALL_SQUARES 81
 
@@ -13,6 +14,8 @@ Board* createBoard();
 void freeBoard(Board* board);
 
 Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
+
+void makeRandomTemporaryMove(Board* board, pcg32_random_t* rng);
 
 bool nextBoardIsEmpty(Board* board);
 

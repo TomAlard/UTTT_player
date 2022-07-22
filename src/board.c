@@ -12,14 +12,16 @@ typedef struct AdditionalState {
     uint8_t currentBoard;
     Winner winner;
     uint8_t ply;
+    uint8_t totalAmountOfOpenSquares;
+    uint8_t amountOfOpenSquaresBySmallBoard[9];
 } AdditionalState;
 
 
 typedef struct Board {
     PlayerBitBoard* player1;
     PlayerBitBoard* player2;
-    AdditionalState additionalState;
-    AdditionalState additionalStateCheckpoint;
+    AdditionalState AS;
+    AdditionalState ASCheckpoint;
     Square openSquares[512][9][9];
     int8_t amountOfOpenSquares[512];
     Player me;
@@ -41,11 +43,15 @@ Board* createBoard() {
     Board* board = safe_malloc(sizeof(Board));
     board->player1 = createPlayerBitBoard();
     board->player2 = createPlayerBitBoard();
-    board->additionalState.currentPlayer = PLAYER1;
-    board->additionalState.currentBoard = ANY_BOARD;
-    board->additionalState.winner = NONE;
-    board->additionalState.ply = 0;
-    board->additionalStateCheckpoint = board->additionalState;
+    board->AS.currentPlayer = PLAYER1;
+    board->AS.currentBoard = ANY_BOARD;
+    board->AS.winner = NONE;
+    board->AS.ply = 0;
+    board->AS.totalAmountOfOpenSquares = 81;
+    for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
+        board->AS.amountOfOpenSquaresBySmallBoard[boardIndex] = 9;
+    }
+    board->ASCheckpoint = board->AS;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
             board->amountOfOpenSquares[bitBoard] =
@@ -92,11 +98,11 @@ int8_t generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
 
 
 Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves) {
-    if (board->additionalState.winner != NONE) {
+    if (board->AS.winner != NONE) {
         *amountOfMoves = 0;
         return moves;
     }
-    uint8_t currentBoard = board->additionalState.currentBoard;
+    uint8_t currentBoard = board->AS.currentBoard;
     if (currentBoard == ANY_BOARD) {
         *amountOfMoves = generateMovesAnyBoard(board, moves);
         return moves;
@@ -105,29 +111,54 @@ Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* a
 }
 
 
+void makeRandomTemporaryMove(Board* board, pcg32_random_t* rng) {
+    assertMsg(board->AS.winner == NONE, "makeRandomTemporaryMove: there is already a winner");
+    uint8_t currentBoard = board->AS.currentBoard;
+    uint8_t randomMoveIndex;
+    if (currentBoard == ANY_BOARD) {
+        uint8_t randomMultipleBoardMoveIndex = pcg32_boundedrand_r(rng, board->AS.totalAmountOfOpenSquares);
+        int boardIndex = 0;
+        int cumulativeSum = 0;
+        while (boardIndex < 9 && cumulativeSum <= randomMultipleBoardMoveIndex) {
+            cumulativeSum += board->AS.amountOfOpenSquaresBySmallBoard[boardIndex++];
+        }
+        cumulativeSum -= board->AS.amountOfOpenSquaresBySmallBoard[--boardIndex];
+        randomMoveIndex = randomMultipleBoardMoveIndex - cumulativeSum;
+        currentBoard = boardIndex;
+    } else {
+        randomMoveIndex = pcg32_boundedrand_r(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
+    }
+    int8_t amountOfMoves;
+    Square* moves = getMovesSingleBoard(board, currentBoard, &amountOfMoves);
+    assertMsg(amountOfMoves == board->AS.amountOfOpenSquaresBySmallBoard[currentBoard], "2");
+    Square randomMove = moves[randomMoveIndex];
+    makeTemporaryMove(board, randomMove);
+}
+
+
 bool nextBoardIsEmpty(Board* board) {
-    uint8_t currentBoard = board->additionalState.currentBoard;
+    uint8_t currentBoard = board->AS.currentBoard;
     return currentBoard != ANY_BOARD
         && (getSmallBoard(board->player1, currentBoard) | getSmallBoard(board->player2, currentBoard)) == 0;
 }
 
 
 uint8_t getCurrentBoard(Board* board) {
-    return board->additionalState.currentBoard;
+    return board->AS.currentBoard;
 }
 
 
 void revertToCheckpoint(Board* board) {
     revertToPlayerCheckpoint(board->player1);
     revertToPlayerCheckpoint(board->player2);
-    board->additionalState = board->additionalStateCheckpoint;
+    board->AS = board->ASCheckpoint;
 }
 
 
 void updateCheckpoint(Board* board) {
     updatePlayerCheckpoint(board->player1);
     updatePlayerCheckpoint(board->player2);
-    board->additionalStateCheckpoint = board->additionalState;
+    board->ASCheckpoint = board->AS;
 }
 
 
@@ -178,21 +209,26 @@ Winner calculateWinner(Board* board) {
 
 void makeTemporaryMove(Board* board, Square square) {
     assertMsg(
-            square.board == board->additionalState.currentBoard
-            || board->additionalState.currentBoard == ANY_BOARD,
+            square.board == board->AS.currentBoard
+            || board->AS.currentBoard == ANY_BOARD,
             "Can't make a move on that board");
     assertMsg(getSquare(board, square) == UNOCCUPIED, "Can't make a move on a square that is already occupied");
-    assertMsg(board->additionalState.winner == NONE, "Can't make a move when there is already a winner");
+    assertMsg(board->AS.winner == NONE, "Can't make a move when there is already a winner");
 
-    bool bigBoardWasUpdated = board->additionalState.currentPlayer == PLAYER1
+    bool bigBoardWasUpdated = board->AS.currentPlayer == PLAYER1
             ? setSquareOccupied(board->player1, board->player2, square)
             : setSquareOccupied(board->player2, board->player1, square);
     if (bigBoardWasUpdated) {
-        board->additionalState.winner = calculateWinner(board);
+        board->AS.winner = calculateWinner(board);
+        board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
+        board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
+    } else {
+        board->AS.totalAmountOfOpenSquares--;
+        board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    board->additionalState.currentPlayer = otherPlayer(board->additionalState.currentPlayer);
-    board->additionalState.currentBoard = getNextBoard(board, square.position);
-    board->additionalState.ply++;
+    board->AS.currentPlayer = otherPlayer(board->AS.currentPlayer);
+    board->AS.currentBoard = getNextBoard(board, square.position);
+    board->AS.ply++;
 }
 
 
@@ -203,7 +239,7 @@ void makePermanentMove(Board* board, Square square) {
 
 
 Winner getWinner(Board* board) {
-    return board->additionalState.winner;
+    return board->AS.winner;
 }
 
 
@@ -213,10 +249,10 @@ void setMe(Board* board, Player player) {
 
 
 bool currentPlayerIsMe(Board* board) {
-    return board->additionalState.currentPlayer == board->me;
+    return board->AS.currentPlayer == board->me;
 }
 
 
 uint8_t getPly(Board* board) {
-    return board->additionalState.ply;
+    return board->AS.ply;
 }

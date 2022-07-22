@@ -100,6 +100,38 @@ void yurkovVsJacek() {
 }
 
 
+void makeRandomTemporaryMoveMakesSameMoveAsOldGenerateMovesWay() {
+    Board* board = createBoard();
+    pcg32_random_t rng1;
+    pcg32_srandom_r(&rng1, 69, 420);
+    pcg32_random_t rng2;
+    pcg32_srandom_r(&rng2, 69, 420);
+    while (getWinner(board) == NONE) {
+        makeRandomTemporaryMove(board, &rng1);
+        Square movesArray1[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves1;
+        Square* validMoves1 = generateMoves(board, movesArray1, &amountOfMoves1);
+        for (int i = 0; i < amountOfMoves1; i++) {
+            movesArray1[i] = validMoves1[i];
+        }
+        revertToCheckpoint(board);
+        Square movesArray2[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves2;
+        Square* validMoves2 = generateMoves(board, movesArray2, &amountOfMoves2);
+        Square randomMove = validMoves2[pcg32_boundedrand_r(&rng2, amountOfMoves2)];
+        makePermanentMove(board, randomMove);
+        Square movesArray3[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves3;
+        Square* validMoves3 = generateMoves(board, movesArray3, &amountOfMoves3);
+        myAssert(amountOfMoves1 == amountOfMoves3);
+        for (int i = 0; i < amountOfMoves1; i++) {
+            myAssert(squaresAreEqual(movesArray1[i], validMoves3[i]));
+        }
+    }
+    freeBoard(board);
+}
+
+
 void runBoardTests() {
     Board* board = createBoard();
     printf("\tanyMoveAllowedOnEmptyBoard...\n");
@@ -112,5 +144,7 @@ void runBoardTests() {
     reCurseVsDaFish();
     printf("\tyurkovVsJacek...\n");
     yurkovVsJacek();
+    printf("\tmakeRandomTemporaryMoveMakesSameMoveAsOldGenerateMovesWay...\n");
+    makeRandomTemporaryMoveMakesSameMoveAsOldGenerateMovesWay();
     freeBoard(board);
 }
