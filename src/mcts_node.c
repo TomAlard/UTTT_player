@@ -190,9 +190,10 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 
 Square getMostPromisingMove(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
-    MCTSNode* highestSimsChild = NULL;
-    float highestSims = -1;
-    for (int i = 0; i < node->amountOfChildren; i++) {
+    assertMsg(node->amountOfChildren > 0, "getMostPromisingMove: node has no children");
+    MCTSNode* highestSimsChild = node->children[0];
+    float highestSims = highestSimsChild->sims;
+    for (int i = 1; i < node->amountOfChildren; i++) {
         MCTSNode* child = node->children[i];
         float sims = child->sims;
         if (sims > highestSims) {
@@ -200,7 +201,6 @@ Square getMostPromisingMove(MCTSNode* node, Board* board) {
             highestSims = sims;
         }
     }
-    assertMsg(highestSimsChild != NULL, "getMostPromisingMove: highestSimsChild shouldn't be NULL");
     return highestSimsChild->square;
 }
 
