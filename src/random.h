@@ -10,6 +10,6 @@ typedef struct pcg32_random_t {
 
 void pcg32_srandom_r(pcg32_random_t* rng, uint64_t init_state, uint64_t init_seq);
 
-uint32_t pcg32_boundedrand_r(pcg32_random_t* rng, uint32_t bound);
+uint8_t pcg32_boundedrand_r(pcg32_random_t* rng, uint8_t bound);
 
 #endif //UTTT2_RANDOM_H
