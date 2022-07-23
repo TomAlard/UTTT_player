@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "../test/tests_main.h"
 #include "main.h"
 #include "util.h"
@@ -7,12 +8,12 @@
 void skipMovesInput(FILE* file) {
     int validActionCount;
     int amountMatched = fscanf(file, "%d", &validActionCount);  // NOLINT(cert-err34-c)
-    assertMsg(amountMatched == 1, "Incorrect amount of arguments matched");
+    assert(amountMatched == 1 && "Incorrect amount of arguments matched");
     for (int i = 0; i < validActionCount; i++) {
         int row;
         int col;
         amountMatched = fscanf(file, "%d%d", &row, &col);  // NOLINT(cert-err34-c)
-        assertMsg(amountMatched == 2, "Incorrect amount of arguments matched");
+        assert(amountMatched == 2 && "Incorrect amount of arguments matched");
     }
 }
 
@@ -60,7 +61,7 @@ void playGame(FILE* file, double timePerMove) {
 
 #define TIME 0.0999
 int main() {
-    runArena();
-    // runTests();
+    // runArena();
+    runTests();
     // playGame(stdin, TIME);
 }

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 #include "board.h"
 #include "util.h"
 #include "player_bitboard.h"
@@ -112,7 +113,7 @@ Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* a
 
 
 void makeRandomTemporaryMove(Board* board, pcg32_random_t* rng) {
-    assertMsg(board->AS.winner == NONE, "makeRandomTemporaryMove: there is already a winner");
+    assert(board->AS.winner == NONE && "makeRandomTemporaryMove: there is already a winner");
     uint8_t currentBoard = board->AS.currentBoard;
     uint8_t randomMoveIndex;
     if (currentBoard == ANY_BOARD) {
@@ -130,7 +131,6 @@ void makeRandomTemporaryMove(Board* board, pcg32_random_t* rng) {
     }
     int8_t amountOfMoves;
     Square* moves = getMovesSingleBoard(board, currentBoard, &amountOfMoves);
-    assertMsg(amountOfMoves == board->AS.amountOfOpenSquaresBySmallBoard[currentBoard], "2");
     Square randomMove = moves[randomMoveIndex];
     makeTemporaryMove(board, randomMove);
 }
@@ -208,12 +208,12 @@ Winner calculateWinner(Board* board) {
 
 
 void makeTemporaryMove(Board* board, Square square) {
-    assertMsg(
+    assert(
             square.board == board->AS.currentBoard
-            || board->AS.currentBoard == ANY_BOARD,
+            || board->AS.currentBoard == ANY_BOARD &&
             "Can't make a move on that board");
-    assertMsg(getSquare(board, square) == UNOCCUPIED, "Can't make a move on a square that is already occupied");
-    assertMsg(board->AS.winner == NONE, "Can't make a move when there is already a winner");
+    assert(getSquare(board, square) == UNOCCUPIED && "Can't make a move on a square that is already occupied");
+    assert(board->AS.winner == NONE && "Can't make a move when there is already a winner");
 
     bool bigBoardWasUpdated = board->AS.currentPlayer == PLAYER1
             ? setSquareOccupied(board->player1, board->player2, square)

@@ -42,19 +42,6 @@ void safe_free(void* pointer) {
 }
 
 
-void crash(char* errorMessage) {
-    fprintf(stderr, "%s\n", errorMessage);
-    exit(1);
-}
-
-
-void assertMsg(bool condition, char* errorMessage) {
-    if (!condition) {
-        crash(errorMessage);
-    }
-}
-
-
 Square toOurNotation(Square rowAndColumn) {
     uint8_t row = rowAndColumn.board;
     uint8_t column = rowAndColumn.position;

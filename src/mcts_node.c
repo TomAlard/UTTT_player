@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "mcts_node.h"
 #include "util.h"
 
@@ -107,7 +108,7 @@ MCTSNode* expandNode(MCTSNode* node, int childIndex) {
 
 MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
-    assertMsg(isLeafNode(node, board) || node->amountOfChildren > 0, "selectNextChild: node is terminal");
+    assert(isLeafNode(node, board) || node->amountOfChildren > 0 && "selectNextChild: node is terminal");
     if (node->amountOfUntriedMoves) {
         return expandNode(node, node->amountOfUntriedMoves - 1);
     }
@@ -122,19 +123,19 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
             highestUCT = UCT;
         }
     }
-    assertMsg(highestUCTChild != NULL, "selectNextChild: Panic! This should be impossible.");
+    assert(highestUCTChild != NULL && "selectNextChild: Panic! This should be impossible.");
     return highestUCTChild;
 }
 
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     discoverChildNodes(root, board);
-    assertMsg(root->amountOfChildren > 0 || isLeafNode(root, board), "updateRoot: root is terminal");
+    assert(root->amountOfChildren > 0 || isLeafNode(root, board) && "updateRoot: root is terminal");
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = root->children[i];
         if (squaresAreEqual(square, child->square)) {
-            assertMsg(newRoot == NULL, "updateRoot: multiple children with same square found");
+            assert(newRoot == NULL && "updateRoot: multiple children with same square found");
             child->parent = NULL;
             newRoot = child;
         } else {
@@ -151,13 +152,13 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
         }
     }
     freeNode(root);
-    assertMsg(newRoot != NULL, "updateRoot: newRoot shouldn't be NULL");
+    assert(newRoot != NULL && "updateRoot: newRoot shouldn't be NULL");
     return newRoot;
 }
 
 
 void backpropagate(MCTSNode* node, Winner winner) {
-    assertMsg(winner != NONE, "backpropagate: Can't backpropagate a NONE Winner");
+    assert(winner != NONE && "backpropagate: Can't backpropagate a NONE Winner");
     node->sims++;
     if (playerIsWinner(node->player, winner)) {
         node->wins++;
@@ -178,7 +179,7 @@ void visitNode(MCTSNode* node, Board* board) {
 #define UCT_WIN 100000
 #define UCT_LOSS (-UCT_WIN)
 void setNodeWinner(MCTSNode* node, Winner winner) {
-    assertMsg(winner != NONE, "setNodeWinner: Can't set NONE as winner");
+    assert(winner != NONE && "setNodeWinner: Can't set NONE as winner");
     if (winner != DRAW) {
         bool win = playerIsWinner(node->player, winner);
         node->UCTValue = win? UCT_WIN : UCT_LOSS;
@@ -191,7 +192,7 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 
 Square getMostPromisingMove(MCTSNode* node, Board* board) {
     discoverChildNodes(node, board);
-    assertMsg(node->amountOfChildren > 0, "getMostPromisingMove: node has no children");
+    assert(node->amountOfChildren > 0 && "getMostPromisingMove: node has no children");
     MCTSNode* highestSimsChild = node->children[0];
     float highestSims = highestSimsChild->sims;
     for (int i = 1; i < node->amountOfChildren; i++) {

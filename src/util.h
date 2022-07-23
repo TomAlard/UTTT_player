@@ -18,10 +18,6 @@ void* safe_realloc(void* pointer, size_t size);
 
 void safe_free(void* pointer);
 
-void crash(char* errorMessage);
-
-void assertMsg(bool condition, char* errorMessage);
-
 Square toOurNotation(Square rowAndColumn);
 
 Square toGameNotation(Square square);

@@ -1,4 +1,5 @@
 #include <time.h>
+#include <assert.h>
 #include "find_next_move.h"
 #include "util.h"
 
@@ -7,7 +8,7 @@ MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
     MCTSNode* currentNode = root;
     while (!isLeafNode(currentNode, board) && getWinner(board) == NONE) {
         currentNode = selectNextChild(currentNode, board);
-        assertMsg(currentNode != NULL, "selectLeaf: currentNode is NULL!");
+        assert(currentNode != NULL && "selectLeaf: currentNode is NULL!");
         visitNode(currentNode, board);
     }
     return currentNode;

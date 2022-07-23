@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <time.h>
+#include <assert.h>
 #include "player.h"
 #include "main.h"
 #include "arena_opponent.h"
@@ -31,7 +32,7 @@ Winner simulateSingleGame(bool weArePlayer1) {
         makePermanentMove(board, previousMove);
     }
     Winner winner = getWinner(board);
-    assertMsg(winner != NONE, "simulateSingleGame: oops");
+    assert(winner != NONE && "simulateSingleGame: oops");
     freeStateOpponent(stateOpponent);
     freeMCTSTree(root);
     freeBoard(board);
