@@ -250,7 +250,7 @@ void pcg32_srandom_r(pcg32_random_t* rng, uint64_t init_state, uint64_t init_seq
 
 
 uint8_t pcg32_boundedrand_r(pcg32_random_t* rng, uint8_t bound) {
-    return pcg32_random_r(rng) % bound;
+    return ((uint64_t)pcg32_random_r(rng) * (uint64_t)bound) >> 32;
 }
 // END RANDOM
 
