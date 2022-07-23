@@ -8,8 +8,8 @@
 #include "handle_turn.h"
 
 
-#define ROUNDS 100
-#define TIME 0.001
+#define ROUNDS 1000
+#define TIME 0.1
 
 
 Winner simulateSingleGame(bool weArePlayer1) {
@@ -47,6 +47,7 @@ void runArena() {
     int winsGoingSecond = 0;
     int drawsGoingSecond = 0;
     int lossesGoingSecond = 0;
+    #pragma omp parallel for default(none) shared(winsGoingFirst, winsGoingSecond, drawsGoingFirst, drawsGoingSecond, lossesGoingFirst, lossesGoingSecond)
     for (int i = 0; i < ROUNDS/2; i++) {
         Winner winner = simulateSingleGame(true);
         if (winner == WIN_P1) {
@@ -74,4 +75,5 @@ void runArena() {
     printf("\tWon %.2f%% of games\n", 100*winsGoingSecond / denominator);
     printf("\tDrew %.2f%% of games\n", 100*drawsGoingSecond / denominator);
     printf("\tLost %.2f%% of games\n", 100*lossesGoingSecond / denominator);
+    printf("Total score: %f\n", (winsGoingFirst+winsGoingSecond + drawsGoingFirst/2.+drawsGoingSecond/2.) / (double)ROUNDS);
 }
