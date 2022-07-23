@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include "../test/tests_main.h"
-#include "handle_turn.h"
+#include "main.h"
 #include "util.h"
+#include "arena.h"
 
 
 void skipMovesInput(FILE* file) {
@@ -24,6 +24,13 @@ void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
     float winrate = getWinrate(root);
     printf("%d %d %.4f %d\n", x, y, winrate, amountOfSimulations);
     fflush(stdout);
+}
+
+
+Square playTurn(Board* board, MCTSNode** root, pcg32_random_t* rng, double allocatedTime, Square enemyMove) {
+    HandleTurnResult result = handleTurn(board, *root, rng, allocatedTime, enemyMove);
+    *root = result.newRoot;
+    return result.move;
 }
 
 
@@ -53,6 +60,7 @@ void playGame(FILE* file, double timePerMove) {
 
 #define TIME 0.0999
 int main() {
-    runTests();
+    runArena();
+    // runTests();
     // playGame(stdin, TIME);
 }
