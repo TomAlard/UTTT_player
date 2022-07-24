@@ -430,7 +430,7 @@ Board* createBoard() {
     board->AS.currentPlayer = PLAYER1;
     board->AS.currentBoard = ANY_BOARD;
     board->AS.winner = NONE;
-    board->AS.ply = 0;
+    board->AS.ply = 1;
     board->AS.totalAmountOfOpenSquares = 81;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         board->AS.amountOfOpenSquaresBySmallBoard[boardIndex] = 9;
@@ -620,6 +620,8 @@ Winner getWinner(Board* board) {
 
 void setMe(Board* board, Player player) {
     board->me = player;
+    board->AS.ply = player == PLAYER2;
+    board->ASCheckpoint.ply = player == PLAYER2;
 }
 
 
@@ -631,6 +633,7 @@ bool currentPlayerIsMe(Board* board) {
 uint8_t getPly(Board* board) {
     return board->AS.ply;
 }
+
 // END BOARD
 
 
@@ -699,16 +702,30 @@ void freeMCTSTree(MCTSNode* node) {
 }
 
 
+bool handleSpecialCases(MCTSNode* node, Board* board) {
+    if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
+        node->amountOfUntriedMoves = 1;
+        node->untriedMoves = malloc(sizeof(Square));
+        uint8_t currentBoard = getCurrentBoard(board);
+        Square sameBoard = {currentBoard, currentBoard};
+        node->untriedMoves[0] = sameBoard;
+        return true;
+    }
+    if (getPly(board) == 0) {
+        node->amountOfUntriedMoves = 1;
+        node->untriedMoves = malloc(sizeof(Square));
+        Square bestFirstMove = {4, 4};
+        node->untriedMoves[0] = bestFirstMove;
+        return true;
+    }
+    return false;
+}
+
+
 void discoverChildNodes(MCTSNode* node, Board* board) {
     if (node->amountOfChildren == -1) {
         node->amountOfChildren = 0;
-        if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
-            node->amountOfUntriedMoves = 1;
-            node->untriedMoves = malloc(sizeof(Square));
-            uint8_t currentBoard = getCurrentBoard(board);
-            Square sameBoard = {currentBoard, currentBoard};
-            node->untriedMoves[0] = sameBoard;
-        } else {
+        if (!handleSpecialCases(node, board)) {
             Square movesArray[TOTAL_SMALL_SQUARES];
             int8_t amountOfMoves;
             Square* moves = generateMoves(board, movesArray, &amountOfMoves);
