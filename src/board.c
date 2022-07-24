@@ -47,7 +47,7 @@ Board* createBoard() {
     board->AS.currentPlayer = PLAYER1;
     board->AS.currentBoard = ANY_BOARD;
     board->AS.winner = NONE;
-    board->AS.ply = 0;
+    board->AS.ply = 1;
     board->AS.totalAmountOfOpenSquares = 81;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         board->AS.amountOfOpenSquaresBySmallBoard[boardIndex] = 9;
@@ -245,6 +245,8 @@ Winner getWinner(Board* board) {
 
 void setMe(Board* board, Player player) {
     board->me = player;
+    board->AS.ply = player == PLAYER2;
+    board->ASCheckpoint.ply = player == PLAYER2;
 }
 
 

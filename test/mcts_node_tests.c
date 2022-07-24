@@ -85,6 +85,18 @@ void updateRootTest() {
 }
 
 
+void alwaysPlays44WhenGoingFirst() {
+    MCTSNode* root = createMCTSRootNode();
+    Board* board = createBoard();
+    setMe(board, PLAYER1);
+    selectNextChild(root, board);  // to expand at least one child
+    Square expected = {4, 4};
+    myAssert(squaresAreEqual(getMostPromisingMove(root, board), expected));
+    freeBoard(board);
+    freeMCTSTree(root);
+}
+
+
 void runMCTSNodeTests() {
     printf("\trootIsLeafNode...\n");
     rootIsLeafNode();
@@ -96,4 +108,6 @@ void runMCTSNodeTests() {
     selectsChildWithHighChanceOfWin();
     printf("\tupdateRootTest...\n");
     updateRootTest();
+    printf("\talwaysPlays44WhenGoingFirst...\n");
+    alwaysPlays44WhenGoingFirst();
 }

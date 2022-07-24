@@ -55,16 +55,30 @@ void freeMCTSTree(MCTSNode* node) {
 }
 
 
+bool handleSpecialCases(MCTSNode* node, Board* board) {
+    if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
+        node->amountOfUntriedMoves = 1;
+        node->untriedMoves = safe_malloc(sizeof(Square));
+        uint8_t currentBoard = getCurrentBoard(board);
+        Square sameBoard = {currentBoard, currentBoard};
+        node->untriedMoves[0] = sameBoard;
+        return true;
+    }
+    if (getPly(board) == 0) {
+        node->amountOfUntriedMoves = 1;
+        node->untriedMoves = safe_malloc(sizeof(Square));
+        Square bestFirstMove = {4, 4};
+        node->untriedMoves[0] = bestFirstMove;
+        return true;
+    }
+    return false;
+}
+
+
 void discoverChildNodes(MCTSNode* node, Board* board) {
     if (node->amountOfChildren == -1) {
         node->amountOfChildren = 0;
-        if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
-            node->amountOfUntriedMoves = 1;
-            node->untriedMoves = safe_malloc(sizeof(Square));
-            uint8_t currentBoard = getCurrentBoard(board);
-            Square sameBoard = {currentBoard, currentBoard};
-            node->untriedMoves[0] = sameBoard;
-        } else {
+        if (!handleSpecialCases(node, board)) {
             Square movesArray[TOTAL_SMALL_SQUARES];
             int8_t amountOfMoves;
             Square* moves = generateMoves(board, movesArray, &amountOfMoves);
