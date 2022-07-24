@@ -13,7 +13,6 @@ typedef struct MCTSNode {
     Square square;
     float wins;
     float sims;
-    float UCTValue;
     Square* untriedMoves;
     int8_t amountOfUntriedMoves;
 } MCTSNode;
@@ -87,9 +86,6 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 
 #define EXPLORATION_PARAMETER 0.5f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
-    if (node->UCTValue) {
-        return node->UCTValue;
-    }
     float w = node->wins;
     float n = node->sims;
     float c = EXPLORATION_PARAMETER;
@@ -176,15 +172,14 @@ void visitNode(MCTSNode* node, Board* board) {
 }
 
 
-#define UCT_WIN 100000
-#define UCT_LOSS (-UCT_WIN)
+#define A_LOT 100000
 void setNodeWinner(MCTSNode* node, Winner winner) {
     assert(winner != NONE && "setNodeWinner: Can't set NONE as winner");
     if (winner != DRAW) {
         bool win = playerIsWinner(node->player, winner);
-        node->UCTValue = win? UCT_WIN : UCT_LOSS;
+        node->wins = win? A_LOT : -A_LOT;
         if (!win) {
-            node->parent->UCTValue = UCT_WIN;
+            node->parent->wins = A_LOT;
         }
     }
 }

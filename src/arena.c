@@ -8,7 +8,7 @@
 #include "handle_turn.h"
 
 
-#define ROUNDS 1000
+#define ROUNDS 5000
 #define TIME 0.1
 
 
