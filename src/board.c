@@ -162,13 +162,6 @@ void updateCheckpoint(Board* board) {
 }
 
 
-Winner getSmallBoardWinner(Board* board, uint8_t boardIndex) {
-    bool player1Bit = boardIsWon(board->player1, boardIndex);
-    bool player2Bit = boardIsWon(board->player2, boardIndex);
-    return 2*player2Bit + player1Bit;
-}
-
-
 Occupation getSquare(Board* board, Square square) {
     bool player1Bit = squareIsOccupied(board->player1, square);
     bool player2Bit = squareIsOccupied(board->player2, square);
@@ -177,8 +170,8 @@ Occupation getSquare(Board* board, Square square) {
 
 
 uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
-    Winner smallBoardWinner = getSmallBoardWinner(board, previousPosition);
-    return smallBoardWinner == NONE ? previousPosition : ANY_BOARD;
+    bool smallBoardIsDecided = boardIsWon(board->player1, previousPosition) || boardIsWon(board->player2, previousPosition);
+    return smallBoardIsDecided ? ANY_BOARD : previousPosition;
 }
 
 
