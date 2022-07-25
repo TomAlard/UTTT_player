@@ -8,13 +8,12 @@
 typedef struct MCTSNode {
     MCTSNode* parent;
     MCTSNode** children;
-    int8_t amountOfChildren;
-    Player player;
-    Square square;
+    Square* untriedMoves;
     float wins;
     float sims;
-    float UCTValue;
-    Square* untriedMoves;
+    Square square;
+    int8_t player;
+    int8_t amountOfChildren;
     int8_t amountOfUntriedMoves;
 } MCTSNode;
 
@@ -53,6 +52,14 @@ void freeMCTSTree(MCTSNode* node) {
         freeMCTSTree(node->children[i]);
     }
     freeNode(node);
+}
+
+
+void singleChild(MCTSNode* node, Square square) {
+    node->amountOfUntriedMoves = 1;
+    node->untriedMoves = safe_malloc(sizeof(Square));
+    node->untriedMoves[0] = square;
+    node->children = safe_malloc(sizeof(MCTSNode*));
 }
 
 
@@ -104,9 +111,6 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 
 #define EXPLORATION_PARAMETER 0.459375f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
-    if (node->UCTValue) {
-        return node->UCTValue;
-    }
     float w = node->wins;
     float n = node->sims;
     float c = EXPLORATION_PARAMETER;
@@ -192,15 +196,14 @@ void visitNode(MCTSNode* node, Board* board) {
 }
 
 
-#define UCT_WIN 100000
-#define UCT_LOSS (-UCT_WIN)
+#define A_LOT 100000.0f
 void setNodeWinner(MCTSNode* node, Winner winner) {
     assert(winner != NONE && "setNodeWinner: Can't set NONE as winner");
     if (winner != DRAW) {
         bool win = playerIsWinner(node->player, winner);
-        node->UCTValue = win? UCT_WIN : UCT_LOSS;
+        node->wins += win? A_LOT : -A_LOT;
         if (!win) {
-            node->parent->UCTValue = UCT_WIN;
+            node->parent->wins += A_LOT;
         }
     }
 }
