@@ -65,20 +65,14 @@ void singleChild(MCTSNode* node, Square square) {
 
 bool handleSpecialCases(MCTSNode* node, Board* board) {
     if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
-        node->amountOfUntriedMoves = 1;
-        node->untriedMoves = safe_malloc(sizeof(Square));
         uint8_t currentBoard = getCurrentBoard(board);
         Square sameBoard = {currentBoard, currentBoard};
-        node->untriedMoves[0] = sameBoard;
-        node->children = safe_malloc(sizeof(MCTSNode*));
+        singleChild(node, sameBoard);
         return true;
     }
     if (getPly(board) == 0) {
-        node->amountOfUntriedMoves = 1;
-        node->untriedMoves = safe_malloc(sizeof(Square));
         Square bestFirstMove = {4, 4};
-        node->untriedMoves[0] = bestFirstMove;
-        node->children = safe_malloc(sizeof(MCTSNode*));
+        singleChild(node, bestFirstMove);
         return true;
     }
     return false;
