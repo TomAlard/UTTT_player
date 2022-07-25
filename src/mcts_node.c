@@ -99,7 +99,7 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 }
 
 
-#define EXPLORATION_PARAMETER 0.5f
+#define EXPLORATION_PARAMETER 0.459375f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     if (node->UCTValue) {
         return node->UCTValue;
