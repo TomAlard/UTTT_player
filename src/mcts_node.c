@@ -63,6 +63,7 @@ bool handleSpecialCases(MCTSNode* node, Board* board) {
         uint8_t currentBoard = getCurrentBoard(board);
         Square sameBoard = {currentBoard, currentBoard};
         node->untriedMoves[0] = sameBoard;
+        node->children = safe_malloc(sizeof(MCTSNode*));
         return true;
     }
     if (getPly(board) == 0) {
@@ -70,6 +71,7 @@ bool handleSpecialCases(MCTSNode* node, Board* board) {
         node->untriedMoves = safe_malloc(sizeof(Square));
         Square bestFirstMove = {4, 4};
         node->untriedMoves[0] = bestFirstMove;
+        node->children = safe_malloc(sizeof(MCTSNode*));
         return true;
     }
     return false;
@@ -88,6 +90,7 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             for (int i = 0; i < amountOfMoves; i++) {
                 node->untriedMoves[i] = moves[i];
             }
+            node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode*));
         }
     }
 }
@@ -114,7 +117,6 @@ float getUCTValue(MCTSNode* node, float parentLogSims) {
 MCTSNode* expandNode(MCTSNode* node, int childIndex) {
     MCTSNode* newChild = createMCTSNode(node, node->untriedMoves[childIndex]);
     node->amountOfUntriedMoves--;
-    node->children = safe_realloc(node->children, (node->amountOfChildren + 1) * sizeof(MCTSNode*));
     node->children[node->amountOfChildren++] = newChild;
     return newChild;
 }
