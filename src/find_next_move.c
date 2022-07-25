@@ -26,9 +26,7 @@ Winner simulate(Board* board, pcg32_random_t* rng) {
     while (getWinner(board) == NONE) {
         makeRandomTemporaryMove(board, rng);
     }
-    Winner simulationWinner = getWinner(board);
-    revertToCheckpoint(board);
-    return simulationWinner;
+    return getWinner(board);
 }
 
 
@@ -57,9 +55,9 @@ int findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double alloc
             playoutNode = leaf;
             simulationWinner = winner;
             setNodeWinner(playoutNode, winner);
-            revertToCheckpoint(board);
         }
         backpropagate(playoutNode, simulationWinner);
+        revertToCheckpoint(board);
     }
     return amountOfSimulations;
 }
