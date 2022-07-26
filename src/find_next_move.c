@@ -22,7 +22,7 @@ MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
 }
 
 
-Winner simulate(Board* board, pcg32_random_t* rng) {
+Winner simulate(Board* board, RNG* rng) {
     while (getWinner(board) == NONE) {
         makeRandomTemporaryMove(board, rng);
     }
@@ -40,7 +40,7 @@ bool hasTimeRemaining(clock_t deadline) {
 }
 
 
-int findNextMove(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
+int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
     clock_t deadline = getDeadline(allocatedTime);
     int amountOfSimulations = 0;
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(deadline)) {

@@ -4,6 +4,6 @@
 #include <stdio.h>
 #include "handle_turn.h"
 
-Square playTurn(Board* board, MCTSNode** root, pcg32_random_t* rng, double allocatedTime, Square enemyMove);
+Square playTurn(Board* board, MCTSNode** root, RNG* rng, double allocatedTime, Square enemyMove);
 
 #endif //UTTT2_MAIN_H

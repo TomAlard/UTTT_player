@@ -102,10 +102,10 @@ void yurkovVsJacek() {
 
 void makeRandomTemporaryMoveMakesSameMoveAsOldGenerateMovesWay() {
     Board* board = createBoard();
-    pcg32_random_t rng1;
-    pcg32_srandom_r(&rng1, 69, 420);
-    pcg32_random_t rng2;
-    pcg32_srandom_r(&rng2, 69, 420);
+    RNG rng1;
+    seedRNG(&rng1, 69, 420);
+    RNG rng2;
+    seedRNG(&rng2, 69, 420);
     while (getWinner(board) == NONE) {
         makeRandomTemporaryMove(board, &rng1);
         Square movesArray1[TOTAL_SMALL_SQUARES];
@@ -118,7 +118,7 @@ void makeRandomTemporaryMoveMakesSameMoveAsOldGenerateMovesWay() {
         Square movesArray2[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves2;
         Square* validMoves2 = generateMoves(board, movesArray2, &amountOfMoves2);
-        Square randomMove = validMoves2[pcg32_boundedrand_r(&rng2, amountOfMoves2)];
+        Square randomMove = validMoves2[generateBoundedRandomNumber(&rng2, amountOfMoves2)];
         makePermanentMove(board, randomMove);
         Square movesArray3[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves3;

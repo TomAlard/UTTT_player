@@ -6,8 +6,8 @@
 void profileSimulations() {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
-    pcg32_random_t rng;
-    pcg32_srandom_r(&rng, 69, 420);
+    RNG rng;
+    seedRNG(&rng, 69, 420);
     Square square = createSquare(1, 0);
     makePermanentMove(board, square);
     int totalSims = 0;

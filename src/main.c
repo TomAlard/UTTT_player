@@ -28,7 +28,7 @@ void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
 }
 
 
-Square playTurn(Board* board, MCTSNode** root, pcg32_random_t* rng, double allocatedTime, Square enemyMove) {
+Square playTurn(Board* board, MCTSNode** root, RNG* rng, double allocatedTime, Square enemyMove) {
     HandleTurnResult result = handleTurn(board, *root, rng, allocatedTime, enemyMove);
     *root = result.newRoot;
     return result.move;
@@ -38,8 +38,8 @@ Square playTurn(Board* board, MCTSNode** root, pcg32_random_t* rng, double alloc
 void playGame(FILE* file, double timePerMove) {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
-    pcg32_random_t rng;
-    pcg32_srandom_r(&rng, 69, 420);
+    RNG rng;
+    seedRNG(&rng, 69, 420);
     while (true) {
         int enemy_row;
         int enemy_col;

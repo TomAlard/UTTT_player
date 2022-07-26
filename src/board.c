@@ -112,12 +112,12 @@ Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* a
 }
 
 
-void makeRandomTemporaryMove(Board* board, pcg32_random_t* rng) {
+void makeRandomTemporaryMove(Board* board, RNG* rng) {
     assert(board->AS.winner == NONE && "makeRandomTemporaryMove: there is already a winner");
     uint8_t currentBoard = board->AS.currentBoard;
     uint8_t randomMoveIndex;
     if (currentBoard == ANY_BOARD) {
-        uint8_t randomMultipleBoardMoveIndex = pcg32_boundedrand_r(rng, board->AS.totalAmountOfOpenSquares);
+        uint8_t randomMultipleBoardMoveIndex = generateBoundedRandomNumber(rng, board->AS.totalAmountOfOpenSquares);
         int boardIndex = 0;
         int cumulativeSum = 0;
         while (boardIndex < 9 && cumulativeSum <= randomMultipleBoardMoveIndex) {
@@ -127,7 +127,7 @@ void makeRandomTemporaryMove(Board* board, pcg32_random_t* rng) {
         randomMoveIndex = randomMultipleBoardMoveIndex - cumulativeSum;
         currentBoard = boardIndex;
     } else {
-        randomMoveIndex = pcg32_boundedrand_r(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
+        randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
     }
     int8_t amountOfMoves;
     Square* moves = getMovesSingleBoard(board, currentBoard, &amountOfMoves);

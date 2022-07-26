@@ -12,7 +12,7 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
 }
 
 
-HandleTurnResult handleTurn(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove) {
+HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, Square enemyMove) {
     root = handleEnemyTurn(board, root, enemyMove);
     int amountOfSimulations = findNextMove(board, root, rng, allocatedTime);
     Square move = getMostPromisingMove(root);

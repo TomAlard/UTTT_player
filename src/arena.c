@@ -15,8 +15,8 @@
 Winner simulateSingleGame(bool weArePlayer1) {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
-    pcg32_random_t rng;
-    pcg32_srandom_r(&rng, time(NULL), 420);
+    RNG rng;
+    seedRNG(&rng, time(NULL), 420);
     StateOpponent* stateOpponent = initializeStateOpponent();
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;

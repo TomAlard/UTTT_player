@@ -8,8 +8,8 @@
 void findNextMoveDoesNotChangeBoard() {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
-    pcg32_random_t rng;
-    pcg32_srandom_r(&rng, 69, 420);
+    RNG rng;
+    seedRNG(&rng, 69, 420);
     while (getWinner(board) == NONE) {
         Winner winnerBefore = getWinner(board);
         Square movesArray[TOTAL_SMALL_SQUARES];
@@ -35,8 +35,8 @@ void findNextMoveDoesNotChangeBoard() {
 void findNextMoveUsesAsMuchTimeAsWasGiven() {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
-    pcg32_random_t rng;
-    pcg32_srandom_r(&rng, 69, 420);
+    RNG rng;
+    seedRNG(&rng, 69, 420);
     while (getWinner(board) == NONE) {
         struct timeval start, end;
         int timeMs = 100;
