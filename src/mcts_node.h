@@ -12,7 +12,7 @@ void freeMCTSTree(MCTSNode* root);
 
 bool isLeafNode(MCTSNode* node, Board* board);
 
-MCTSNode* selectNextChild(MCTSNode* node, Board* board);
+MCTSNode* selectNextChild(MCTSNode* node);
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
@@ -22,7 +22,7 @@ void visitNode(MCTSNode* node, Board* board);
 
 void setNodeWinner(MCTSNode* node, Winner winner);
 
-Square getMostPromisingMove(MCTSNode* node, Board* board);
+Square getMostPromisingMove(MCTSNode* node);
 
 int getSims(MCTSNode* node);
 

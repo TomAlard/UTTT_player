@@ -7,7 +7,7 @@
 MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
     MCTSNode* currentNode = root;
     while (!isLeafNode(currentNode, board) && getWinner(board) == NONE) {
-        currentNode = selectNextChild(currentNode, board);
+        currentNode = selectNextChild(currentNode);
         assert(currentNode != NULL && "selectLeaf: currentNode is NULL!");
         visitNode(currentNode, board);
     }
@@ -16,7 +16,7 @@ MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
 
 
 MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
-    MCTSNode* nextChild = selectNextChild(leaf, board);
+    MCTSNode* nextChild = selectNextChild(leaf);
     visitNode(nextChild, board);
     return nextChild;
 }

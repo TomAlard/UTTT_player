@@ -19,7 +19,7 @@ void between17And81MovesInOneGame() {
     MCTSNode* node = root;
     int count = 0;
     while (isLeafNode(node, board)) {
-        node = selectNextChild(node, board);
+        node = selectNextChild(node);
         visitNode(node, board);
         count++;
     }
@@ -32,17 +32,18 @@ void between17And81MovesInOneGame() {
 void keepsSelectingSameNodeWhenSetAsWin() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    MCTSNode* node = selectNextChild(root, board);
+    isLeafNode(root, board);  // to discover child nodes
+    MCTSNode* node = selectNextChild(root);
     setNodeWinner(node, WIN_P1);
-    MCTSNode* untriedNode = selectNextChild(root, board);
+    MCTSNode* untriedNode = selectNextChild(root);
     while (getSims(untriedNode) == 0) {
         // backpropagate 100 wins
         for (int i = 0; i < 100; i++) {
             backpropagate(untriedNode, WIN_P1);
         }
-        untriedNode = selectNextChild(root, board);
+        untriedNode = selectNextChild(root);
     }
-    myAssert(selectNextChild(root, board) == node);
+    myAssert(selectNextChild(root) == node);
     freeBoard(board);
     freeMCTSTree(root);
 }
@@ -51,20 +52,21 @@ void keepsSelectingSameNodeWhenSetAsWin() {
 void selectsChildWithHighChanceOfWin() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    MCTSNode* winNode = selectNextChild(root, board);
+    isLeafNode(root, board);  // to discover child nodes
+    MCTSNode* winNode = selectNextChild(root);
     // backpropagate one loss and 99 wins
     backpropagate(winNode, WIN_P2);
     for (int i = 0; i < 99 ; i++) {
         backpropagate(winNode, WIN_P1);
     }
-    MCTSNode* node = selectNextChild(root, board);
+    MCTSNode* node = selectNextChild(root);
     while (getSims(node) == 0) {
         // backpropagate one win and 99 losses
         backpropagate(node, WIN_P1);
         for (int i = 0; i < 99; i++) {
             backpropagate(node, WIN_P2);
         }
-        node = selectNextChild(root, board);
+        node = selectNextChild(root);
     }
     myAssert(node == winNode);
     freeBoard(board);
@@ -75,11 +77,13 @@ void selectsChildWithHighChanceOfWin() {
 void updateRootTest() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    backpropagate(selectNextChild(root, board), DRAW);
-    Square square = getMostPromisingMove(root, board);
+    isLeafNode(root, board);  // to discover child nodes
+    backpropagate(selectNextChild(root), DRAW);
+    Square square = getMostPromisingMove(root);
     MCTSNode* newRoot = updateRoot(root, board, square);
-    backpropagate(selectNextChild(newRoot, board), DRAW);
-    myAssert(getMostPromisingMove(newRoot, board).board == square.position);
+    isLeafNode(newRoot, board);  // to discover child nodes
+    backpropagate(selectNextChild(newRoot), DRAW);
+    myAssert(getMostPromisingMove(newRoot).board == square.position);
     freeBoard(board);
     freeMCTSTree(newRoot);
 }
@@ -89,9 +93,10 @@ void alwaysPlays44WhenGoingFirst() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     setMe(board, PLAYER1);
-    selectNextChild(root, board);  // to expand at least one child
+    isLeafNode(root, board);  // to discover child nodes
+    selectNextChild(root);  // to expand at least one child
     Square expected = {4, 4};
-    myAssert(squaresAreEqual(getMostPromisingMove(root, board), expected));
+    myAssert(squaresAreEqual(getMostPromisingMove(root), expected));
     freeBoard(board);
     freeMCTSTree(root);
 }

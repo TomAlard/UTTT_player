@@ -139,9 +139,8 @@ MCTSNode* expandNode(MCTSNode* node, int childIndex) {
 }
 
 
-MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
-    discoverChildNodes(node, board);
-    assert(isLeafNode(node, board) || node->amountOfChildren > 0 && "selectNextChild: node is terminal");
+MCTSNode* selectNextChild(MCTSNode* node) {
+    assert(node->amountOfUntriedMoves > 0 || node->amountOfChildren > 0 && "selectNextChild: node is terminal");
     if (node->amountOfUntriedMoves) {
         return expandNode(node, node->amountOfUntriedMoves - 1);
     }
@@ -163,7 +162,7 @@ MCTSNode* selectNextChild(MCTSNode* node, Board* board) {
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     discoverChildNodes(root, board);
-    assert(root->amountOfChildren > 0 || isLeafNode(root, board) && "updateRoot: root is terminal");
+    assert(root->amountOfUntriedMoves > 0 || root->amountOfChildren > 0 && "updateRoot: root is terminal");
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &root->children[i];
@@ -222,8 +221,7 @@ void setNodeWinner(MCTSNode* node, Winner winner) {
 }
 
 
-Square getMostPromisingMove(MCTSNode* node, Board* board) {
-    discoverChildNodes(node, board);
+Square getMostPromisingMove(MCTSNode* node) {
     assert(node->amountOfChildren > 0 && "getMostPromisingMove: node has no children");
     MCTSNode* highestSimsChild = &node->children[0];
     float highestSims = highestSimsChild->sims;
