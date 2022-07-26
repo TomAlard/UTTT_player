@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "mcts_node.h"
 #include "util.h"
 
@@ -107,9 +108,7 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             Square* moves = generateMoves(board, movesArray, &amountOfMoves);
             node->amountOfUntriedMoves = amountOfMoves;
             node->untriedMoves = safe_malloc(amountOfMoves * sizeof(Square));
-            for (int i = 0; i < amountOfMoves; i++) {
-                node->untriedMoves[i] = moves[i];
-            }
+            memcpy(node->untriedMoves, moves, amountOfMoves * sizeof(Square));
             node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
         }
     }
