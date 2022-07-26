@@ -62,6 +62,6 @@ void playGame(FILE* file, double timePerMove) {
 #define TIME 0.0999
 int main() {
     runTests();
-    runArena();
+    // runArena();
     // playGame(stdin, TIME);
 }

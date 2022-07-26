@@ -13,7 +13,7 @@ typedef struct MCTSNode {
     float wins;
     float sims;
     Square square;
-    int8_t player;
+    Player player;
     int8_t amountOfChildren;
     int8_t amountOfUntriedMoves;
 } MCTSNode;
@@ -37,7 +37,7 @@ void initializeMCTSNode(MCTSNode* parent, Square square, MCTSNode* node) {
     node->wins = 0.0f;
     node->sims = 0.0f;
     node->square = square;
-    node->player = otherPlayer(parent->player);
+    node->player = OTHER_PLAYER(parent->player);
     node->amountOfChildren = -1;
     node->amountOfUntriedMoves = -1;
 }
@@ -131,11 +131,10 @@ float getUCTValue(MCTSNode* node, float parentLogSims) {
 
 
 MCTSNode* expandNode(MCTSNode* node, int childIndex) {
-    MCTSNode newChild;
-    initializeMCTSNode(node, node->untriedMoves[childIndex], &newChild);
+    MCTSNode* newChild = &node->children[node->amountOfChildren++];
+    initializeMCTSNode(node, node->untriedMoves[childIndex], newChild);
     node->amountOfUntriedMoves--;
-    node->children[node->amountOfChildren] = newChild;
-    return &node->children[node->amountOfChildren++];
+    return newChild;
 }
 
 
@@ -211,7 +210,7 @@ void visitNode(MCTSNode* node, Board* board) {
 void setNodeWinner(MCTSNode* node, Winner winner) {
     assert(winner != NONE && "setNodeWinner: Can't set NONE as winner");
     if (winner != DRAW) {
-        bool win = playerIsWinner(node->player, winner);
+        bool win = node->player + 1 == winner;
         node->wins += win? A_LOT : -A_LOT;
         if (!win) {
             node->parent->wins += A_LOT;

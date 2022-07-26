@@ -162,13 +162,6 @@ void updateCheckpoint(Board* board) {
 }
 
 
-Occupation getSquare(Board* board, Square square) {
-    bool player1Bit = squareIsOccupied(board->player1, square);
-    bool player2Bit = squareIsOccupied(board->player2, square);
-    return 2*player2Bit + player1Bit;
-}
-
-
 uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
     bool smallBoardIsDecided = boardIsWon(board->player1, previousPosition) || boardIsWon(board->player2, previousPosition);
     return smallBoardIsDecided ? ANY_BOARD : previousPosition;
@@ -201,11 +194,11 @@ Winner calculateWinner(Board* board) {
 
 
 void makeTemporaryMove(Board* board, Square square) {
-    assert(
-            square.board == board->AS.currentBoard
+    assert(square.board == board->AS.currentBoard
             || board->AS.currentBoard == ANY_BOARD &&
             "Can't make a move on that board");
-    assert(getSquare(board, square) == UNOCCUPIED && "Can't make a move on a square that is already occupied");
+    assert(!squareIsOccupied(board->player1, square) && !squareIsOccupied(board->player2, square)
+            && "Can't make a move on a square that is already occupied");
     assert(board->AS.winner == NONE && "Can't make a move when there is already a winner");
 
     bool bigBoardWasUpdated = board->AS.currentPlayer == PLAYER1
@@ -219,7 +212,7 @@ void makeTemporaryMove(Board* board, Square square) {
         board->AS.totalAmountOfOpenSquares--;
         board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    board->AS.currentPlayer = otherPlayer(board->AS.currentPlayer);
+    board->AS.currentPlayer = OTHER_PLAYER(board->AS.currentPlayer);
     board->AS.currentBoard = getNextBoard(board, square.position);
     board->AS.ply++;
 }
