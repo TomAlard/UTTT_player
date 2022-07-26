@@ -191,14 +191,13 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
 
 void backpropagate(MCTSNode* node, Winner winner) {
     assert(winner != NONE && "backpropagate: Can't backpropagate a NONE Winner");
-    node->sims++;
-    if (playerIsWinner(node->player, winner)) {
-        node->wins++;
-    } else if (winner == DRAW) {
-        node->wins += 0.5f;
-    }
-    if (node->parent != NULL) {
-        backpropagate(node->parent, winner);
+    MCTSNode* currentNode = node;
+    float reward = winner == DRAW? 0.5f : node->player + 1 == winner? 1.0f : 0.0f;
+    while (currentNode != NULL) {
+        currentNode->sims++;
+        currentNode->wins += reward;
+        reward = 1 - reward;
+        currentNode = currentNode->parent;
     }
 }
 
