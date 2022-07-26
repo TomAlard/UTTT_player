@@ -9,7 +9,6 @@
 typedef struct MCTSNode {
     MCTSNode* parent;
     MCTSNode* children;
-    Square* untriedMoves;
     float wins;
     float sims;
     Square square;
@@ -33,7 +32,6 @@ MCTSNode* createMCTSRootNode() {
 void initializeMCTSNode(MCTSNode* parent, Square square, MCTSNode* node) {
     node->parent = parent;
     node->children = NULL;
-    node->untriedMoves = NULL;
     node->wins = 0.0f;
     node->sims = 0.0f;
     node->square = square;
@@ -47,7 +45,6 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
     MCTSNode* copy = safe_malloc(sizeof(MCTSNode));
     copy->parent = original->parent;
     copy->children = original->children;
-    copy->untriedMoves = original->untriedMoves;
     copy->wins = original->wins;
     copy->sims = original->sims;
     copy->square = original->square;
@@ -61,25 +58,18 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
 }
 
 
-void freeNode(MCTSNode* node) {
-    free(node->children);
-    free(node->untriedMoves);
-}
-
-
 void freeMCTSTree(MCTSNode* node) {
     for (int i = 0; i < node->amountOfChildren; i++) {
         freeMCTSTree(&node->children[i]);
     }
-    freeNode(node);
+    free(node->children);
 }
 
 
 void singleChild(MCTSNode* node, Square square) {
     node->amountOfUntriedMoves = 1;
-    node->untriedMoves = safe_malloc(sizeof(Square));
-    node->untriedMoves[0] = square;
     node->children = safe_malloc(sizeof(MCTSNode));
+    node->children[0].square = square;
 }
 
 
@@ -107,9 +97,10 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             int8_t amountOfMoves;
             Square* moves = generateMoves(board, movesArray, &amountOfMoves);
             node->amountOfUntriedMoves = amountOfMoves;
-            node->untriedMoves = safe_malloc(amountOfMoves * sizeof(Square));
-            memcpy(node->untriedMoves, moves, amountOfMoves * sizeof(Square));
             node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
+            for (int i = 0; i < amountOfMoves; i++) {
+                node->children[i].square = moves[i];
+            }
         }
     }
 }
@@ -131,8 +122,8 @@ float getUCTValue(MCTSNode* node, float parentLogSims) {
 
 
 MCTSNode* expandNode(MCTSNode* node, int childIndex) {
-    MCTSNode* newChild = &node->children[node->amountOfChildren++];
-    initializeMCTSNode(node, node->untriedMoves[childIndex], newChild);
+    MCTSNode* newChild = &node->children[childIndex + node->amountOfChildren++];
+    initializeMCTSNode(node, newChild->square, newChild);
     node->amountOfUntriedMoves--;
     return newChild;
 }
@@ -141,7 +132,7 @@ MCTSNode* expandNode(MCTSNode* node, int childIndex) {
 MCTSNode* selectNextChild(MCTSNode* node) {
     assert(node->amountOfUntriedMoves > 0 || node->amountOfChildren > 0 && "selectNextChild: node is terminal");
     if (node->amountOfUntriedMoves) {
-        return expandNode(node, node->amountOfUntriedMoves - 1);
+        return expandNode(node, 0);
     }
     float logSims = logf(node->sims);
     MCTSNode* highestUCTChild = &node->children[0];
@@ -174,7 +165,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     }
     if (newRoot == NULL) {
         for (int i = 0; i < root->amountOfUntriedMoves; i++) {
-            if (squaresAreEqual(square, root->untriedMoves[i])) {
+            if (squaresAreEqual(square, root->children[root->amountOfChildren + i].square)) {
                 newRoot = expandNode(root, i);
                 break;
             }
@@ -183,7 +174,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     assert(newRoot != NULL && "updateRoot: newRoot shouldn't be NULL");
     newRoot->parent = NULL;
     newRoot = copyMCTSNode(newRoot);
-    freeNode(root);
+    free(root->children);
     return newRoot;
 }
 
