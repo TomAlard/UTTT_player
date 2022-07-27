@@ -1,7 +1,7 @@
-#include <math.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <emmintrin.h>
 #include "mcts_node.h"
 #include "util.h"
 
@@ -11,7 +11,7 @@ typedef struct MCTSNode {
     MCTSNode* children;
     float wins;
     float sims;
-    float winrate;
+    float simsInverted;
     Square square;
     int8_t amountOfChildren;
     int8_t amountOfUntriedMoves;
@@ -33,7 +33,7 @@ void initializeMCTSNode(MCTSNode* parent, Square square, MCTSNode* node) {
     node->children = NULL;
     node->wins = 0.0f;
     node->sims = 0.0f;
-    node->winrate = 0.0f;
+    node->simsInverted = 0.0f;
     node->square = square;
     node->amountOfChildren = -1;
     node->amountOfUntriedMoves = -1;
@@ -46,7 +46,7 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
     copy->children = original->children;
     copy->wins = original->wins;
     copy->sims = original->sims;
-    copy->winrate = original->winrate;
+    copy->simsInverted = original->simsInverted;
     copy->square = original->square;
     copy->amountOfChildren = original->amountOfChildren;
     copy->amountOfUntriedMoves = original->amountOfUntriedMoves;
@@ -111,10 +111,19 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 }
 
 
+void fastSquareRoot(float* restrict pOut, float* restrict pIn) {
+    __m128 in = _mm_load_ss(pIn);
+    _mm_store_ss(pOut, _mm_mul_ss(in, _mm_rsqrt_ss(in)));
+}
+
+
 #define EXPLORATION_PARAMETER 0.459375f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     float c = EXPLORATION_PARAMETER;
-    return node->winrate + c*sqrtf(parentLogSims / node->sims);
+    float sqrtIn = parentLogSims * node->simsInverted;
+    float sqrtOut;
+    fastSquareRoot(&sqrtOut, &sqrtIn);
+    return node->wins*node->simsInverted + c*sqrtOut;
 }
 
 
@@ -190,9 +199,8 @@ void backpropagate(MCTSNode* node, Winner winner, Player player) {
     MCTSNode* currentNode = node;
     float reward = winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
     while (currentNode != NULL) {
-        currentNode->sims++;
         currentNode->wins += reward;
-        currentNode->winrate = currentNode->wins / currentNode->sims;
+        currentNode->simsInverted = 1.0f / ++currentNode->sims;
         reward = 1 - reward;
         currentNode = currentNode->parent;
     }
@@ -210,10 +218,8 @@ void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
     if (winner != DRAW) {
         bool win = player + 1 == winner;
         node->wins += win? A_LOT : -A_LOT;
-        node->winrate = node->wins / node->sims;
         if (!win) {
             node->parent->wins += A_LOT;
-            node->winrate = node->wins / node->sims;
         }
     }
 }
@@ -241,5 +247,5 @@ int getSims(MCTSNode* node) {
 
 
 float getWinrate(MCTSNode* node) {
-    return node->winrate;
+    return node->wins * node->simsInverted;
 }
