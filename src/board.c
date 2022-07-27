@@ -25,6 +25,7 @@ typedef struct Board {
     AdditionalState ASCheckpoint;
     Square openSquares[512][9][9];
     int8_t amountOfOpenSquares[512];
+    Winner precalculatedWinner[512*512];
     Player me;
 } Board;
 
@@ -37,6 +38,29 @@ int8_t setOpenSquares(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoa
         bitBoard &= bitBoard - 1;
     }
     return amountOfMoves;
+}
+
+
+Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard) {
+    uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
+    uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
+    if (isWin(boardsWonByPlayer1)) {
+        return WIN_P1;
+    }
+    uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
+    if (isWin(boardsWonByPlayer2)) {
+        return WIN_P2;
+    }
+    if ((player1BigBoard | player2BigBoard) == 511) {
+        int player1AmountBoardsWon = __builtin_popcount(player1BigBoard);
+        int player2AmountBoardsWon = __builtin_popcount(player2BigBoard);
+        return player1AmountBoardsWon > player2AmountBoardsWon
+               ? WIN_P1
+               : player1AmountBoardsWon < player2AmountBoardsWon
+                 ? WIN_P2
+                 : DRAW;
+    }
+    return NONE;
 }
 
 
@@ -57,6 +81,12 @@ Board* createBoard() {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
             board->amountOfOpenSquares[bitBoard] =
                     setOpenSquares(board->openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
+        }
+    }
+    for (uint16_t player1BigBoard = 0; player1BigBoard < 512; player1BigBoard++) {
+        for (uint16_t player2BigBoard = 0; player2BigBoard < 512; player2BigBoard++) {
+            Winner winner = calculateWinner(player1BigBoard, player2BigBoard);
+            board->precalculatedWinner[(player1BigBoard << 9) + player2BigBoard] = winner;
         }
     }
     board->me = PLAYER2;
@@ -173,31 +203,6 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
 }
 
 
-Winner calculateWinner(Board* board) {
-    uint16_t player1BigBoard = getBigBoard(board->player1);
-    uint16_t player2BigBoard = getBigBoard(board->player2);
-    uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
-    uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
-    if (isWin(boardsWonByPlayer1)) {
-        return WIN_P1;
-    }
-    uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
-    if (isWin(boardsWonByPlayer2)) {
-        return WIN_P2;
-    }
-    if ((player1BigBoard | player2BigBoard) == 511) {
-        int player1AmountBoardsWon = __builtin_popcount(player1BigBoard);
-        int player2AmountBoardsWon = __builtin_popcount(player2BigBoard);
-        return player1AmountBoardsWon > player2AmountBoardsWon
-                    ? WIN_P1
-                    : player1AmountBoardsWon < player2AmountBoardsWon
-                        ? WIN_P2
-                        : DRAW;
-    }
-    return NONE;
-}
-
-
 void makeTemporaryMove(Board* board, Square square) {
     assert(square.board == board->AS.currentBoard
             || board->AS.currentBoard == ANY_BOARD &&
@@ -210,7 +215,7 @@ void makeTemporaryMove(Board* board, Square square) {
             ? setSquareOccupied(board->player1, board->player2, square)
             : setSquareOccupied(board->player2, board->player1, square);
     if (bigBoardWasUpdated) {
-        board->AS.winner = calculateWinner(board);
+        board->AS.winner = board->precalculatedWinner[(getBigBoard(board->player1) << 9) + getBigBoard(board->player2)];
         board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
         board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
     } else {
