@@ -44,27 +44,17 @@ void seedRNG(RNG* rng, uint64_t init_state, uint64_t init_seq);
 
 uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound);
 
-typedef enum Player {
-    PLAYER1,
-    PLAYER2
-} Player;
+#define Player bool
+#define PLAYER1 0
+#define PLAYER2 1
+#define OTHER_PLAYER(p) ((p)^1)
 
-Player otherPlayer(Player player);
+#define Winner uint8_t
+#define NONE 0
+#define WIN_P1 1
+#define WIN_P2 2
+#define DRAW 3
 
-typedef enum Occupation {
-    UNOCCUPIED,
-    OCCUPIED_P1,
-    OCCUPIED_P2
-} Occupation;
-
-typedef enum Winner {
-    NONE,
-    WIN_P1,
-    WIN_P2,
-    DRAW
-} Winner;
-
-bool playerIsWinner(Player player, Winner winner);
 
 typedef struct PlayerBitBoard PlayerBitBoard;
 
@@ -104,6 +94,8 @@ bool nextBoardIsEmpty(Board* board);
 
 uint8_t getCurrentBoard(Board* board);
 
+Player getCurrentPlayer(Board* board);
+
 void revertToCheckpoint(Board* board);
 
 void makeTemporaryMove(Board* board, Square square);
@@ -130,11 +122,11 @@ MCTSNode* selectNextChild(MCTSNode* node);
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
-void backpropagate(MCTSNode* node, Winner winner);
+void backpropagate(MCTSNode* node, Winner winner, Player player);
 
 void visitNode(MCTSNode* node, Board* board);
 
-void setNodeWinner(MCTSNode* node, Winner winner);
+void setNodeWinner(MCTSNode* node, Winner winner, Player player);
 
 Square getMostPromisingMove(MCTSNode* node);
 
@@ -253,30 +245,6 @@ uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound) {
     return ((uint64_t)pcg32_random_r(rng) * (uint64_t)bound) >> 32;
 }
 // END RANDOM
-
-
-
-
-
-
-
-
-
-
-
-// START PLAYER
-Player otherPlayer(Player player) {
-    return player == PLAYER1? PLAYER2 : PLAYER1;
-}
-
-
-bool playerIsWinner(Player player, Winner winner) {
-    return (player == PLAYER1 && winner == WIN_P1) || (player == PLAYER2 && winner == WIN_P2);
-}
-// END PLAYER
-
-
-
 
 
 
@@ -530,6 +498,11 @@ uint8_t getCurrentBoard(Board* board) {
 }
 
 
+Player getCurrentPlayer(Board* board) {
+    return board->AS.currentPlayer;
+}
+
+
 void revertToCheckpoint(Board* board) {
     revertToPlayerCheckpoint(board->player1);
     revertToPlayerCheckpoint(board->player2);
@@ -544,23 +517,9 @@ void updateCheckpoint(Board* board) {
 }
 
 
-Winner getSmallBoardWinner(Board* board, uint8_t boardIndex) {
-    bool player1Bit = boardIsWon(board->player1, boardIndex);
-    bool player2Bit = boardIsWon(board->player2, boardIndex);
-    return 2*player2Bit + player1Bit;
-}
-
-
-Occupation getSquare(Board* board, Square square) {
-    bool player1Bit = squareIsOccupied(board->player1, square);
-    bool player2Bit = squareIsOccupied(board->player2, square);
-    return 2*player2Bit + player1Bit;
-}
-
-
 uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
-    Winner smallBoardWinner = getSmallBoardWinner(board, previousPosition);
-    return smallBoardWinner == NONE ? previousPosition : ANY_BOARD;
+    bool smallBoardIsDecided = boardIsWon(board->player1, previousPosition) || boardIsWon(board->player2, previousPosition);
+    return smallBoardIsDecided ? ANY_BOARD : previousPosition;
 }
 
 
@@ -601,7 +560,7 @@ void makeTemporaryMove(Board* board, Square square) {
         board->AS.totalAmountOfOpenSquares--;
         board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    board->AS.currentPlayer = otherPlayer(board->AS.currentPlayer);
+    board->AS.currentPlayer = OTHER_PLAYER(board->AS.currentPlayer);
     board->AS.currentBoard = getNextBoard(board, square.position);
     board->AS.ply++;
 }
@@ -633,7 +592,6 @@ bool currentPlayerIsMe(Board* board) {
 uint8_t getPly(Board* board) {
     return board->AS.ply;
 }
-
 // END BOARD
 
 
@@ -654,11 +612,10 @@ uint8_t getPly(Board* board) {
 typedef struct MCTSNode {
     MCTSNode* parent;
     MCTSNode* children;
-    Square* untriedMoves;
     float wins;
     float sims;
+    float winrate;
     Square square;
-    int8_t player;
     int8_t amountOfChildren;
     int8_t amountOfUntriedMoves;
 } MCTSNode;
@@ -667,7 +624,6 @@ typedef struct MCTSNode {
 MCTSNode* createMCTSRootNode() {
     MCTSNode* root = calloc(1, sizeof(MCTSNode));
     root->amountOfChildren = -1;
-    root->player = PLAYER2;
     root->square.board = 9;
     root->square.position = 9;
     root->amountOfUntriedMoves = -1;
@@ -678,11 +634,10 @@ MCTSNode* createMCTSRootNode() {
 void initializeMCTSNode(MCTSNode* parent, Square square, MCTSNode* node) {
     node->parent = parent;
     node->children = NULL;
-    node->untriedMoves = NULL;
     node->wins = 0.0f;
     node->sims = 0.0f;
+    node->winrate = 0.0f;
     node->square = square;
-    node->player = otherPlayer(parent->player);
     node->amountOfChildren = -1;
     node->amountOfUntriedMoves = -1;
 }
@@ -692,11 +647,10 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
     MCTSNode* copy = malloc(sizeof(MCTSNode));
     copy->parent = original->parent;
     copy->children = original->children;
-    copy->untriedMoves = original->untriedMoves;
     copy->wins = original->wins;
     copy->sims = original->sims;
+    copy->winrate = original->winrate;
     copy->square = original->square;
-    copy->player = original->player;
     copy->amountOfChildren = original->amountOfChildren;
     copy->amountOfUntriedMoves = original->amountOfUntriedMoves;
     for (int i = 0; i < copy->amountOfChildren; i++) {
@@ -706,25 +660,18 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
 }
 
 
-void freeNode(MCTSNode* node) {
-    free(node->children);
-    free(node->untriedMoves);
-}
-
-
 void freeMCTSTree(MCTSNode* node) {
     for (int i = 0; i < node->amountOfChildren; i++) {
         freeMCTSTree(&node->children[i]);
     }
-    freeNode(node);
+    free(node->children);
 }
 
 
 void singleChild(MCTSNode* node, Square square) {
     node->amountOfUntriedMoves = 1;
-    node->untriedMoves = malloc(sizeof(Square));
-    node->untriedMoves[0] = square;
     node->children = malloc(sizeof(MCTSNode));
+    node->children[0].square = square;
 }
 
 
@@ -752,9 +699,10 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             int8_t amountOfMoves;
             Square* moves = generateMoves(board, movesArray, &amountOfMoves);
             node->amountOfUntriedMoves = amountOfMoves;
-            node->untriedMoves = malloc(amountOfMoves * sizeof(Square));
-            memcpy(node->untriedMoves, moves, amountOfMoves * sizeof(Square));
             node->children = malloc(amountOfMoves * sizeof(MCTSNode));
+            for (int i = 0; i < amountOfMoves; i++) {
+                node->children[i].square = moves[i];
+            }
         }
     }
 }
@@ -768,27 +716,33 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 
 #define EXPLORATION_PARAMETER 0.459375f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
-    float w = node->wins;
-    float n = node->sims;
     float c = EXPLORATION_PARAMETER;
-    return w/n + c*sqrtf(parentLogSims / n);
+    return node->winrate + c*sqrtf(parentLogSims / node->sims);
 }
 
 
 MCTSNode* expandNode(MCTSNode* node, int childIndex) {
-    MCTSNode newChild;
-    initializeMCTSNode(node, node->untriedMoves[childIndex], &newChild);
+    MCTSNode* newChild = &node->children[childIndex + node->amountOfChildren++];
+    initializeMCTSNode(node, newChild->square, newChild);
     node->amountOfUntriedMoves--;
-    node->children[node->amountOfChildren] = newChild;
-    return &node->children[node->amountOfChildren++];
+    return newChild;
+}
+
+
+// From: https://github.com/etheory/fastapprox/blob/master/fastapprox/src/fastlog.h
+float fastLog2(float x) {
+    union { float f; uint32_t i; } vx = { x };
+    float y = (float)vx.i;
+    y *= 1.1920928955078125e-7f;
+    return y - 126.94269504f;
 }
 
 
 MCTSNode* selectNextChild(MCTSNode* node) {
     if (node->amountOfUntriedMoves) {
-        return expandNode(node, node->amountOfUntriedMoves - 1);
+        return expandNode(node, 0);
     }
-    float logSims = logf(node->sims);
+    float logSims = fastLog2(node->sims);
     MCTSNode* highestUCTChild = &node->children[0];
     float highestUCT = getUCTValue(highestUCTChild, logSims);
     for (int i = 1; i < node->amountOfChildren; i++) {
@@ -816,7 +770,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     }
     if (newRoot == NULL) {
         for (int i = 0; i < root->amountOfUntriedMoves; i++) {
-            if (squaresAreEqual(square, root->untriedMoves[i])) {
+            if (squaresAreEqual(square, root->children[root->amountOfChildren + i].square)) {
                 newRoot = expandNode(root, i);
                 break;
             }
@@ -824,17 +778,18 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     }
     newRoot->parent = NULL;
     newRoot = copyMCTSNode(newRoot);
-    freeNode(root);
+    free(root->children);
     return newRoot;
 }
 
 
-void backpropagate(MCTSNode* node, Winner winner) {
+void backpropagate(MCTSNode* node, Winner winner, Player player) {
     MCTSNode* currentNode = node;
-    float reward = winner == DRAW? 0.5f : node->player + 1 == winner? 1.0f : 0.0f;
+    float reward = winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
     while (currentNode != NULL) {
         currentNode->sims++;
         currentNode->wins += reward;
+        currentNode->winrate = currentNode->wins / currentNode->sims;
         reward = 1 - reward;
         currentNode = currentNode->parent;
     }
@@ -847,12 +802,14 @@ void visitNode(MCTSNode* node, Board* board) {
 
 
 #define A_LOT 100000.0f
-void setNodeWinner(MCTSNode* node, Winner winner) {
+void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
     if (winner != DRAW) {
-        bool win = playerIsWinner(node->player, winner);
+        bool win = player + 1 == winner;
         node->wins += win? A_LOT : -A_LOT;
+        node->winrate = node->wins / node->sims;
         if (!win) {
             node->parent->wins += A_LOT;
+            node->winrate = node->wins / node->sims;
         }
     }
 }
@@ -879,7 +836,7 @@ int getSims(MCTSNode* node) {
 
 
 float getWinrate(MCTSNode* node) {
-    return node->wins / node->sims;
+    return node->winrate;
 }
 // END MCTS_NODE
 
@@ -921,9 +878,7 @@ Winner simulate(Board* board, RNG* rng) {
     while (getWinner(board) == NONE) {
         makeRandomTemporaryMove(board, rng);
     }
-    Winner simulationWinner = getWinner(board);
-    revertToCheckpoint(board);
-    return simulationWinner;
+    return getWinner(board);
 }
 
 
@@ -945,16 +900,19 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
         MCTSNode* playoutNode;
         Winner simulationWinner;
         Winner winner = getWinner(board);
+        Player player;
         if (winner == NONE) {
             playoutNode = expandLeaf(board, leaf);
+            player = OTHER_PLAYER(getCurrentPlayer(board));
             simulationWinner = simulate(board, rng);
         } else {
             playoutNode = leaf;
             simulationWinner = winner;
-            setNodeWinner(playoutNode, winner);
-            revertToCheckpoint(board);
+            player = OTHER_PLAYER(getCurrentPlayer(board));
+            setNodeWinner(playoutNode, winner, player);
         }
-        backpropagate(playoutNode, simulationWinner);
+        backpropagate(playoutNode, simulationWinner, player);
+        revertToCheckpoint(board);
     }
     return amountOfSimulations;
 }
