@@ -126,12 +126,21 @@ MCTSNode* expandNode(MCTSNode* node, int childIndex) {
 }
 
 
+// From: https://github.com/etheory/fastapprox/blob/master/fastapprox/src/fastlog.h
+float fastLog2(float x) {
+    union { float f; uint32_t i; } vx = { x };
+    float y = (float)vx.i;
+    y *= 1.1920928955078125e-7f;
+    return y - 126.94269504f;
+}
+
+
 MCTSNode* selectNextChild(MCTSNode* node) {
     assert(node->amountOfUntriedMoves > 0 || node->amountOfChildren > 0 && "selectNextChild: node is terminal");
     if (node->amountOfUntriedMoves) {
         return expandNode(node, 0);
     }
-    float logSims = logf(node->sims);
+    float logSims = fastLog2(node->sims);
     MCTSNode* highestUCTChild = &node->children[0];
     float highestUCT = getUCTValue(highestUCTChild, logSims);
     for (int i = 1; i < node->amountOfChildren; i++) {
