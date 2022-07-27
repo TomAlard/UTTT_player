@@ -21,6 +21,8 @@ bool nextBoardIsEmpty(Board* board);
 
 uint8_t getCurrentBoard(Board* board);
 
+Player getCurrentPlayer(Board* board);
+
 void revertToCheckpoint(Board* board);
 
 void makeTemporaryMove(Board* board, Square square);

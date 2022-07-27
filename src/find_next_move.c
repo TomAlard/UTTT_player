@@ -48,15 +48,18 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
         MCTSNode* playoutNode;
         Winner simulationWinner;
         Winner winner = getWinner(board);
+        Player player;
         if (winner == NONE) {
             playoutNode = expandLeaf(board, leaf);
+            player = OTHER_PLAYER(getCurrentPlayer(board));
             simulationWinner = simulate(board, rng);
         } else {
             playoutNode = leaf;
             simulationWinner = winner;
-            setNodeWinner(playoutNode, winner);
+            player = OTHER_PLAYER(getCurrentPlayer(board));
+            setNodeWinner(playoutNode, winner, player);
         }
-        backpropagate(playoutNode, simulationWinner);
+        backpropagate(playoutNode, simulationWinner, player);
         revertToCheckpoint(board);
     }
     return amountOfSimulations;

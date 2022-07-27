@@ -9,6 +9,7 @@ void profileSimulations() {
     RNG rng;
     seedRNG(&rng, 69, 420);
     Square square = createSquare(1, 0);
+    root = updateRoot(root, board, square);
     makePermanentMove(board, square);
     int totalSims = 0;
     for (int i = 0; i < 10; i++) {

@@ -34,12 +34,12 @@ void keepsSelectingSameNodeWhenSetAsWin() {
     Board* board = createBoard();
     isLeafNode(root, board);  // to discover child nodes
     MCTSNode* node = selectNextChild(root);
-    setNodeWinner(node, WIN_P1);
+    setNodeWinner(node, WIN_P1, getCurrentPlayer(board));
     MCTSNode* untriedNode = selectNextChild(root);
     while (getSims(untriedNode) == 0) {
         // backpropagate 100 wins
         for (int i = 0; i < 100; i++) {
-            backpropagate(untriedNode, WIN_P1);
+            backpropagate(untriedNode, WIN_P1, getCurrentPlayer(board));
         }
         untriedNode = selectNextChild(root);
     }
@@ -55,16 +55,16 @@ void selectsChildWithHighChanceOfWin() {
     isLeafNode(root, board);  // to discover child nodes
     MCTSNode* winNode = selectNextChild(root);
     // backpropagate one loss and 99 wins
-    backpropagate(winNode, WIN_P2);
+    backpropagate(winNode, WIN_P2, getCurrentPlayer(board));
     for (int i = 0; i < 99 ; i++) {
-        backpropagate(winNode, WIN_P1);
+        backpropagate(winNode, WIN_P1, getCurrentPlayer(board));
     }
     MCTSNode* node = selectNextChild(root);
     while (getSims(node) == 0) {
         // backpropagate one win and 99 losses
-        backpropagate(node, WIN_P1);
+        backpropagate(node, WIN_P1, getCurrentPlayer(board));
         for (int i = 0; i < 99; i++) {
-            backpropagate(node, WIN_P2);
+            backpropagate(node, WIN_P2, getCurrentPlayer(board));
         }
         node = selectNextChild(root);
     }
@@ -78,11 +78,12 @@ void updateRootTest() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     isLeafNode(root, board);  // to discover child nodes
-    backpropagate(selectNextChild(root), DRAW);
+    backpropagate(selectNextChild(root), DRAW, getCurrentPlayer(board));
     Square square = getMostPromisingMove(root);
+    makePermanentMove(board, square);
     MCTSNode* newRoot = updateRoot(root, board, square);
     isLeafNode(newRoot, board);  // to discover child nodes
-    backpropagate(selectNextChild(newRoot), DRAW);
+    backpropagate(selectNextChild(newRoot), DRAW, getCurrentPlayer(board));
     myAssert(getMostPromisingMove(newRoot).board == square.position);
     freeBoard(board);
     freeMCTSTree(newRoot);

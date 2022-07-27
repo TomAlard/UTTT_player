@@ -12,7 +12,6 @@ typedef struct MCTSNode {
     float wins;
     float sims;
     Square square;
-    Player player;
     int8_t amountOfChildren;
     int8_t amountOfUntriedMoves;
 } MCTSNode;
@@ -21,7 +20,6 @@ typedef struct MCTSNode {
 MCTSNode* createMCTSRootNode() {
     MCTSNode* root = safe_calloc(sizeof(MCTSNode));
     root->amountOfChildren = -1;
-    root->player = PLAYER2;
     root->square.board = 9;
     root->square.position = 9;
     root->amountOfUntriedMoves = -1;
@@ -35,7 +33,6 @@ void initializeMCTSNode(MCTSNode* parent, Square square, MCTSNode* node) {
     node->wins = 0.0f;
     node->sims = 0.0f;
     node->square = square;
-    node->player = OTHER_PLAYER(parent->player);
     node->amountOfChildren = -1;
     node->amountOfUntriedMoves = -1;
 }
@@ -48,7 +45,6 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
     copy->wins = original->wins;
     copy->sims = original->sims;
     copy->square = original->square;
-    copy->player = original->player;
     copy->amountOfChildren = original->amountOfChildren;
     copy->amountOfUntriedMoves = original->amountOfUntriedMoves;
     for (int i = 0; i < copy->amountOfChildren; i++) {
@@ -179,10 +175,10 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
 }
 
 
-void backpropagate(MCTSNode* node, Winner winner) {
+void backpropagate(MCTSNode* node, Winner winner, Player player) {
     assert(winner != NONE && "backpropagate: Can't backpropagate a NONE Winner");
     MCTSNode* currentNode = node;
-    float reward = winner == DRAW? 0.5f : node->player + 1 == winner? 1.0f : 0.0f;
+    float reward = winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
     while (currentNode != NULL) {
         currentNode->sims++;
         currentNode->wins += reward;
@@ -198,10 +194,10 @@ void visitNode(MCTSNode* node, Board* board) {
 
 
 #define A_LOT 100000.0f
-void setNodeWinner(MCTSNode* node, Winner winner) {
+void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
     assert(winner != NONE && "setNodeWinner: Can't set NONE as winner");
     if (winner != DRAW) {
-        bool win = node->player + 1 == winner;
+        bool win = player + 1 == winner;
         node->wins += win? A_LOT : -A_LOT;
         if (!win) {
             node->parent->wins += A_LOT;

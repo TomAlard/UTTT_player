@@ -16,11 +16,11 @@ MCTSNode* selectNextChild(MCTSNode* node);
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
-void backpropagate(MCTSNode* node, Winner winner);
+void backpropagate(MCTSNode* node, Winner winner, Player player);
 
 void visitNode(MCTSNode* node, Board* board);
 
-void setNodeWinner(MCTSNode* node, Winner winner);
+void setNodeWinner(MCTSNode* node, Winner winner, Player player);
 
 Square getMostPromisingMove(MCTSNode* node);
 

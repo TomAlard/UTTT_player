@@ -148,6 +148,11 @@ uint8_t getCurrentBoard(Board* board) {
 }
 
 
+Player getCurrentPlayer(Board* board) {
+    return board->AS.currentPlayer;
+}
+
+
 void revertToCheckpoint(Board* board) {
     revertToPlayerCheckpoint(board->player1);
     revertToPlayerCheckpoint(board->player2);
