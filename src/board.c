@@ -29,7 +29,7 @@ typedef struct Board {
 
 Square openSquares[512][9][9];
 int8_t amountOfOpenSquares[512];
-Winner precalculatedWinner[512*512];
+Winner winnerByBigBoards[512][512];
 
 
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
@@ -88,7 +88,7 @@ Board* createBoard() {
     for (uint16_t player1BigBoard = 0; player1BigBoard < 512; player1BigBoard++) {
         for (uint16_t player2BigBoard = 0; player2BigBoard < 512; player2BigBoard++) {
             Winner winner = calculateWinner(player1BigBoard, player2BigBoard);
-            precalculatedWinner[(player1BigBoard << 9) + player2BigBoard] = winner;
+            winnerByBigBoards[player1BigBoard][player2BigBoard] = winner;
         }
     }
     board->me = PLAYER2;
@@ -217,7 +217,7 @@ void makeTemporaryMove(Board* board, Square square) {
             ? setSquareOccupied(board->player1, board->player2, square)
             : setSquareOccupied(board->player2, board->player1, square);
     if (bigBoardWasUpdated) {
-        board->AS.winner = precalculatedWinner[(getBigBoard(board->player1) << 9) + getBigBoard(board->player2)];
+        board->AS.winner = winnerByBigBoards[getBigBoard(board->player1)][getBigBoard(board->player2)];
         board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
         board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
     } else {
