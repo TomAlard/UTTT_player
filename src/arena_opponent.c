@@ -66,57 +66,57 @@ typedef enum Winner {
 
 bool playerIsWinner2(Player player, Winner winner);
 
-typedef struct PlayerBitBoard PlayerBitBoard;
+typedef struct PlayerBitBoard2 PlayerBitBoard2;
 
-PlayerBitBoard* createPlayerBitBoard2();
+PlayerBitBoard2* createPlayerBitBoard22();
 
-void freePlayerBitBoard2(PlayerBitBoard* playerBitBoard);
+void freePlayerBitBoard22(PlayerBitBoard2* playerBitBoard2);
 
-uint16_t getBigBoard2(PlayerBitBoard* playerBitBoard);
+uint16_t getBigBoard22(PlayerBitBoard2* playerBitBoard2);
 
-bool boardIsWon2(PlayerBitBoard* playerBitBoard, uint8_t board);
+bool boardIsWon2(PlayerBitBoard2* playerBitBoard2, uint8_t board);
 
-uint16_t getSmallBoard2(PlayerBitBoard* playerBitBoard, uint8_t board);
+uint16_t getSmallBoard22(PlayerBitBoard2* playerBitBoard2, uint8_t board);
 
-bool squareIsOccupied2(PlayerBitBoard* playerBitBoard, Square square);
+bool squareIsOccupied2(PlayerBitBoard2* playerBitBoard2, Square square);
 
-bool isWin2(uint16_t smallBoard);
+bool isWin2(uint16_t smallBoard2);
 
-bool setSquareOccupied2(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayer2BitBoard, Square square);
+bool setSquareOccupied2(PlayerBitBoard2* playerBitBoard2, PlayerBitBoard2* otherPlayer2BitBoard2, Square square);
 
-void revertToPlayerCheckpoint2(PlayerBitBoard* playerBitBoard);
+void revertToPlayerCheckpoint2(PlayerBitBoard2* playerBitBoard2);
 
-void updatePlayerCheckpoint2(PlayerBitBoard* playerBitBoard);
+void updatePlayerCheckpoint2(PlayerBitBoard2* playerBitBoard2);
 
 #define TOTAL_SMALL_SQUARES 81
 
-typedef struct Board Board;
+typedef struct Board2 Board2;
 
-Board* createBoard2();
+Board2* createBoard22();
 
-void freeBoard2(Board* board);
+void freeBoard22(Board2* board);
 
-Square* generateMoves2(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
+Square* generateMoves2(Board2* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
 
-void makeRandomTemporaryMove2(Board* board, pcg32_random_t* rng);
+void makeRandomTemporaryMove2(Board2* board, pcg32_random_t* rng);
 
-bool nextBoardIsEmpty2(Board* board);
+bool nextBoard2IsEmpty2(Board2* board);
 
-uint8_t getCurrentBoard2(Board* board);
+uint8_t getCurrentBoard22(Board2* board);
 
-void revertToCheckpoint2(Board* board);
+void revertToCheckpoint2(Board2* board);
 
-void makeTemporaryMove2(Board* board, Square square);
+void makeTemporaryMove2(Board2* board, Square square);
 
-void makePermanentMove2(Board* board, Square square);
+void makePermanentMove2(Board2* board, Square square);
 
-Winner getWinner2(Board* board);
+Winner getWinner2(Board2* board);
 
-void setMe2(Board* board, Player player);
+void setMe2(Board2* board, Player player);
 
-bool currentPlayerIsMe2(Board* board);
+bool currentPlayerIsMe2(Board2* board);
 
-uint8_t getPly2(Board* board);
+uint8_t getPly2(Board2* board);
 
 typedef struct MCTSNode MCTSNode;
 
@@ -124,25 +124,25 @@ MCTSNode* createMCTSRootNode2();
 
 void freeMCTSTree2(MCTSNode* node);
 
-bool isLeafNode2(MCTSNode* node, Board* board);
+bool isLeafNode2(MCTSNode* node, Board2* board);
 
-MCTSNode* selectNextChild2(MCTSNode* node, Board* board);
+MCTSNode* selectNextChild2(MCTSNode* node, Board2* board);
 
-MCTSNode* updateRoot2(MCTSNode* root, Board* board, Square square);
+MCTSNode* updateRoot2(MCTSNode* root, Board2* board, Square square);
 
 void backpropagate2(MCTSNode* node, Winner winner);
 
-void visitNode2(MCTSNode* node, Board* board);
+void visitNode2(MCTSNode* node, Board2* board);
 
 void setNodeWinner2(MCTSNode* node, Winner winner);
 
-Square getMostPromisingMove2(MCTSNode* node, Board* board);
+Square getMostPromisingMove2(MCTSNode* node, Board2* board);
 
 int getSims2(MCTSNode* node);
 
 float getWinrate2(MCTSNode* node);
 
-int findNextMove2(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime);
+int findNextMove2(Board2* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime);
 
 typedef struct HandleTurnResult {
     Square move;
@@ -150,7 +150,7 @@ typedef struct HandleTurnResult {
     int amountOfSimulations;
 } HandleTurnResult;
 
-HandleTurnResult handleTurn2(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove);
+HandleTurnResult handleTurn2(Board2* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove);
 
 // END HEADERS
 
@@ -287,88 +287,88 @@ bool playerIsWinner2(Player player, Winner winner) {
 
 
 // START PLAYER_BIT_BOARD
-typedef struct PlayerBitBoard {
-    uint16_t smallBoards[9];
-    uint16_t bigBoard;
-    uint16_t checkpointSmallBoards[9];
-    uint16_t checkpointBigBoard;
-} PlayerBitBoard;
+typedef struct PlayerBitBoard2 {
+    uint16_t smallBoard2s[9];
+    uint16_t bigBoard2;
+    uint16_t checkpointSmallBoard2s[9];
+    uint16_t checkpointBigBoard2;
+} PlayerBitBoard2;
 
 
-PlayerBitBoard* createPlayerBitBoard2() {
-    return calloc(1, sizeof(PlayerBitBoard));
+PlayerBitBoard2* createPlayerBitBoard22() {
+    return calloc(1, sizeof(PlayerBitBoard2));
 }
 
 
-void freePlayerBitBoard2(PlayerBitBoard* playerBitBoard) {
-    free(playerBitBoard);
+void freePlayerBitBoard22(PlayerBitBoard2* playerBitBoard2) {
+    free(playerBitBoard2);
 }
 
 
-uint16_t getBigBoard2(PlayerBitBoard* playerBitBoard) {
-    return playerBitBoard->bigBoard;
+uint16_t getBigBoard22(PlayerBitBoard2* playerBitBoard2) {
+    return playerBitBoard2->bigBoard2;
 }
 
 
-bool boardIsWon2(PlayerBitBoard* playerBitBoard, uint8_t board) {
-    return BIT_CHECK2(playerBitBoard->bigBoard, board);
+bool boardIsWon2(PlayerBitBoard2* playerBitBoard2, uint8_t board) {
+    return BIT_CHECK2(playerBitBoard2->bigBoard2, board);
 }
 
 
-uint16_t getSmallBoard2(PlayerBitBoard* playerBitBoard, uint8_t board) {
-    return playerBitBoard->smallBoards[board];
+uint16_t getSmallBoard22(PlayerBitBoard2* playerBitBoard2, uint8_t board) {
+    return playerBitBoard2->smallBoard2s[board];
 }
 
 
-bool squareIsOccupied2(PlayerBitBoard* playerBitBoard, Square square) {
-    return BIT_CHECK2(playerBitBoard->smallBoards[square.board], square.position);
+bool squareIsOccupied2(PlayerBitBoard2* playerBitBoard2, Square square) {
+    return BIT_CHECK2(playerBitBoard2->smallBoard2s[square.board], square.position);
 }
 
 
-bool isWin2(uint16_t smallBoard) {
+bool isWin2(uint16_t smallBoard2) {
     const __m128i masks = _mm_setr_epi16(0x7, 0x38, 0x1c0, 0x49, 0x92, 0x124, 0x111, 0x54);
     const __m128i v1 = _mm_set1_epi16(1);
-    __m128i boards128 = _mm_set1_epi16((short) smallBoard);
+    __m128i boards128 = _mm_set1_epi16((short) smallBoard2);
     __m128i andResult = _mm_and_si128(masks, boards128);
     __m128i result = _mm_cmpeq_epi16(andResult, masks);
     return !_mm_test_all_zeros(result, v1);
 }
 
 
-bool isDraw2(uint16_t smallBoard, uint16_t otherPlayer2SmallBoard) {
-    return (smallBoard | otherPlayer2SmallBoard) == 511;
+bool isDraw2(uint16_t smallBoard2, uint16_t otherPlayer2SmallBoard2) {
+    return (smallBoard2 | otherPlayer2SmallBoard2) == 511;
 }
 
 
-bool setSquareOccupied2(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayer2BitBoard, Square square) {
-    BIT_SET2(playerBitBoard->smallBoards[square.board], square.position);
-    uint16_t smallBoard = playerBitBoard->smallBoards[square.board];
-    uint16_t otherPlayer2SmallBoard = otherPlayer2BitBoard->smallBoards[square.board];
-    if (isWin2(smallBoard)) {
-        BIT_SET2(playerBitBoard->bigBoard, square.board);
+bool setSquareOccupied2(PlayerBitBoard2* playerBitBoard2, PlayerBitBoard2* otherPlayer2BitBoard2, Square square) {
+    BIT_SET2(playerBitBoard2->smallBoard2s[square.board], square.position);
+    uint16_t smallBoard2 = playerBitBoard2->smallBoard2s[square.board];
+    uint16_t otherPlayer2SmallBoard2 = otherPlayer2BitBoard2->smallBoard2s[square.board];
+    if (isWin2(smallBoard2)) {
+        BIT_SET2(playerBitBoard2->bigBoard2, square.board);
         return true;
-    } if (isDraw2(smallBoard, otherPlayer2SmallBoard)) {
-        BIT_SET2(playerBitBoard->bigBoard, square.board);
-        BIT_SET2(otherPlayer2BitBoard->bigBoard, square.board);
+    } if (isDraw2(smallBoard2, otherPlayer2SmallBoard2)) {
+        BIT_SET2(playerBitBoard2->bigBoard2, square.board);
+        BIT_SET2(otherPlayer2BitBoard2->bigBoard2, square.board);
         return true;
     }
     return false;
 }
 
 
-void revertToPlayerCheckpoint2(PlayerBitBoard* playerBitBoard) {
+void revertToPlayerCheckpoint2(PlayerBitBoard2* playerBitBoard2) {
     for (int i = 0; i < 9; i++) {
-        playerBitBoard->smallBoards[i] = playerBitBoard->checkpointSmallBoards[i];
+        playerBitBoard2->smallBoard2s[i] = playerBitBoard2->checkpointSmallBoard2s[i];
     }
-    playerBitBoard->bigBoard = playerBitBoard->checkpointBigBoard;
+    playerBitBoard2->bigBoard2 = playerBitBoard2->checkpointBigBoard2;
 }
 
 
-void updatePlayerCheckpoint2(PlayerBitBoard* playerBitBoard) {
+void updatePlayerCheckpoint2(PlayerBitBoard2* playerBitBoard2) {
     for (int i = 0; i < 9; i++) {
-        playerBitBoard->checkpointSmallBoards[i] = playerBitBoard->smallBoards[i];
+        playerBitBoard2->checkpointSmallBoard2s[i] = playerBitBoard2->smallBoard2s[i];
     }
-    playerBitBoard->checkpointBigBoard = playerBitBoard->bigBoard;
+    playerBitBoard2->checkpointBigBoard2 = playerBitBoard2->bigBoard2;
 }
 // END PLAYER_BIT_BOARD
 
@@ -393,53 +393,53 @@ void updatePlayerCheckpoint2(PlayerBitBoard* playerBitBoard) {
 
 typedef struct AdditionalState {
     Player currentPlayer;
-    uint8_t currentBoard;
+    uint8_t currentBoard2;
     Winner winner;
     uint8_t ply;
     uint8_t totalAmountOfOpenSquares;
-    uint8_t amountOfOpenSquaresBySmallBoard[9];
+    uint8_t amountOfOpenSquaresBySmallBoard2[9];
 } AdditionalState;
 
 
-typedef struct Board {
-    PlayerBitBoard* player1;
-    PlayerBitBoard* player2;
+typedef struct Board2 {
+    PlayerBitBoard2* player1;
+    PlayerBitBoard2* player2;
     AdditionalState AS;
     AdditionalState ASCheckpoint;
     Square openSquares[512][9][9];
     int8_t amountOfOpenSquares[512];
     Player me;
-} Board;
+} Board2;
 
 
-int8_t setOpenSquares2(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard) {
+int8_t setOpenSquares2(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard2) {
     int8_t amountOfMoves = 0;
-    while (bitBoard) {
-        Square square = {boardIndex, __builtin_ffs(bitBoard) - 1};
+    while (bitBoard2) {
+        Square square = {boardIndex, __builtin_ffs(bitBoard2) - 1};
         openSquares[amountOfMoves++] = square;
-        bitBoard &= bitBoard - 1;
+        bitBoard2 &= bitBoard2 - 1;
     }
     return amountOfMoves;
 }
 
 
-Board* createBoard2() {
-    Board* board = malloc(sizeof(Board));
-    board->player1 = createPlayerBitBoard2();
-    board->player2 = createPlayerBitBoard2();
+Board2* createBoard22() {
+    Board2* board = malloc(sizeof(Board2));
+    board->player1 = createPlayerBitBoard22();
+    board->player2 = createPlayerBitBoard22();
     board->AS.currentPlayer = PLAYER1;
-    board->AS.currentBoard = ANY_BOARD;
+    board->AS.currentBoard2 = ANY_BOARD;
     board->AS.winner = NONE;
     board->AS.ply = 0;
     board->AS.totalAmountOfOpenSquares = 81;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
-        board->AS.amountOfOpenSquaresBySmallBoard[boardIndex] = 9;
+        board->AS.amountOfOpenSquaresBySmallBoard2[boardIndex] = 9;
     }
     board->ASCheckpoint = board->AS;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
-        for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
-            board->amountOfOpenSquares[bitBoard] =
-                    setOpenSquares2(board->openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
+        for (int bitBoard2 = 0; bitBoard2 < 512; bitBoard2++) {
+            board->amountOfOpenSquares[bitBoard2] =
+                    setOpenSquares2(board->openSquares[bitBoard2][boardIndex], boardIndex, bitBoard2);
         }
     }
     board->me = PLAYER2;
@@ -447,141 +447,141 @@ Board* createBoard2() {
 }
 
 
-void freeBoard2(Board* board) {
-    freePlayerBitBoard2(board->player1);
-    freePlayerBitBoard2(board->player2);
+void freeBoard22(Board2* board) {
+    freePlayerBitBoard22(board->player1);
+    freePlayerBitBoard22(board->player2);
     free(board);
 }
 
 
-Square* getMovesSingleBoard2(Board* board, uint8_t boardIndex, int8_t* amountOfMoves) {
-    uint16_t bitBoard = ~(getSmallBoard2(board->player1, boardIndex) | getSmallBoard2(board->player2, boardIndex)) & 511;
-    *amountOfMoves = board->amountOfOpenSquares[bitBoard];
-    return board->openSquares[bitBoard][boardIndex];
+Square* getMovesSingleBoard22(Board2* board, uint8_t boardIndex, int8_t* amountOfMoves) {
+    uint16_t bitBoard2 = ~(getSmallBoard22(board->player1, boardIndex) | getSmallBoard22(board->player2, boardIndex)) & 511;
+    *amountOfMoves = board->amountOfOpenSquares[bitBoard2];
+    return board->openSquares[bitBoard2][boardIndex];
 }
 
 
-int8_t copyMovesSingleBoard2(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
-    uint16_t bitBoard = ~(getSmallBoard2(board->player1, boardIndex) | getSmallBoard2(board->player2, boardIndex)) & 511;
-    memcpy(&moves[amountOfMoves], board->openSquares[bitBoard][boardIndex],
-           board->amountOfOpenSquares[bitBoard] * sizeof(Square));
-    return (int8_t)(amountOfMoves + board->amountOfOpenSquares[bitBoard]);
+int8_t copyMovesSingleBoard22(Board2* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
+    uint16_t bitBoard2 = ~(getSmallBoard22(board->player1, boardIndex) | getSmallBoard22(board->player2, boardIndex)) & 511;
+    memcpy(&moves[amountOfMoves], board->openSquares[bitBoard2][boardIndex],
+           board->amountOfOpenSquares[bitBoard2] * sizeof(Square));
+    return (int8_t)(amountOfMoves + board->amountOfOpenSquares[bitBoard2]);
 }
 
 
-int8_t generateMoves2AnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
+int8_t generateMoves2AnyBoard2(Board2* board, Square moves[TOTAL_SMALL_SQUARES]) {
     int8_t amountOfMoves = 0;
-    uint16_t undecidedSmallBoards = ~(getBigBoard2(board->player1) | getBigBoard2(board->player2)) & 511;
-    while (undecidedSmallBoards) {
-        uint8_t boardIndex = __builtin_ffs(undecidedSmallBoards) - 1;
-        amountOfMoves = copyMovesSingleBoard2(board, boardIndex, moves, amountOfMoves);
-        undecidedSmallBoards &= undecidedSmallBoards - 1;
+    uint16_t undecidedSmallBoard2s = ~(getBigBoard22(board->player1) | getBigBoard22(board->player2)) & 511;
+    while (undecidedSmallBoard2s) {
+        uint8_t boardIndex = __builtin_ffs(undecidedSmallBoard2s) - 1;
+        amountOfMoves = copyMovesSingleBoard22(board, boardIndex, moves, amountOfMoves);
+        undecidedSmallBoard2s &= undecidedSmallBoard2s - 1;
     }
     return amountOfMoves;
 }
 
 
-Square* generateMoves2(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves) {
+Square* generateMoves2(Board2* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves) {
     if (board->AS.winner != NONE) {
         *amountOfMoves = 0;
         return moves;
     }
-    uint8_t currentBoard = board->AS.currentBoard;
-    if (currentBoard == ANY_BOARD) {
-        *amountOfMoves = generateMoves2AnyBoard(board, moves);
+    uint8_t currentBoard2 = board->AS.currentBoard2;
+    if (currentBoard2 == ANY_BOARD) {
+        *amountOfMoves = generateMoves2AnyBoard2(board, moves);
         return moves;
     }
-    return getMovesSingleBoard2(board, currentBoard, amountOfMoves);
+    return getMovesSingleBoard22(board, currentBoard2, amountOfMoves);
 }
 
 
-void makeRandomTemporaryMove2(Board* board, pcg32_random_t* rng) {
-    uint8_t currentBoard = board->AS.currentBoard;
+void makeRandomTemporaryMove2(Board2* board, pcg32_random_t* rng) {
+    uint8_t currentBoard2 = board->AS.currentBoard2;
     uint8_t randomMoveIndex;
-    if (currentBoard == ANY_BOARD) {
-        uint8_t randomMultipleBoardMoveIndex = pcg32_boundedrand_r2(rng, board->AS.totalAmountOfOpenSquares);
+    if (currentBoard2 == ANY_BOARD) {
+        uint8_t randomMultipleBoard2MoveIndex = pcg32_boundedrand_r2(rng, board->AS.totalAmountOfOpenSquares);
         int boardIndex = 0;
         int cumulativeSum = 0;
-        while (boardIndex < 9 && cumulativeSum <= randomMultipleBoardMoveIndex) {
-            cumulativeSum += board->AS.amountOfOpenSquaresBySmallBoard[boardIndex++];
+        while (boardIndex < 9 && cumulativeSum <= randomMultipleBoard2MoveIndex) {
+            cumulativeSum += board->AS.amountOfOpenSquaresBySmallBoard2[boardIndex++];
         }
-        cumulativeSum -= board->AS.amountOfOpenSquaresBySmallBoard[--boardIndex];
-        randomMoveIndex = randomMultipleBoardMoveIndex - cumulativeSum;
-        currentBoard = boardIndex;
+        cumulativeSum -= board->AS.amountOfOpenSquaresBySmallBoard2[--boardIndex];
+        randomMoveIndex = randomMultipleBoard2MoveIndex - cumulativeSum;
+        currentBoard2 = boardIndex;
     } else {
-        randomMoveIndex = pcg32_boundedrand_r2(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
+        randomMoveIndex = pcg32_boundedrand_r2(rng, board->AS.amountOfOpenSquaresBySmallBoard2[currentBoard2]);
     }
     int8_t amountOfMoves;
-    Square* moves = getMovesSingleBoard2(board, currentBoard, &amountOfMoves);
+    Square* moves = getMovesSingleBoard22(board, currentBoard2, &amountOfMoves);
     Square randomMove = moves[randomMoveIndex];
     makeTemporaryMove2(board, randomMove);
 }
 
 
-bool nextBoardIsEmpty2(Board* board) {
-    uint8_t currentBoard = board->AS.currentBoard;
-    return currentBoard != ANY_BOARD
-           && (getSmallBoard2(board->player1, currentBoard) | getSmallBoard2(board->player2, currentBoard)) == 0;
+bool nextBoard2IsEmpty2(Board2* board) {
+    uint8_t currentBoard2 = board->AS.currentBoard2;
+    return currentBoard2 != ANY_BOARD
+           && (getSmallBoard22(board->player1, currentBoard2) | getSmallBoard22(board->player2, currentBoard2)) == 0;
 }
 
 
-uint8_t getCurrentBoard2(Board* board) {
-    return board->AS.currentBoard;
+uint8_t getCurrentBoard22(Board2* board) {
+    return board->AS.currentBoard2;
 }
 
 
-void revertToCheckpoint2(Board* board) {
+void revertToCheckpoint2(Board2* board) {
     revertToPlayerCheckpoint2(board->player1);
     revertToPlayerCheckpoint2(board->player2);
     board->AS = board->ASCheckpoint;
 }
 
 
-void updateCheckpoint2(Board* board) {
+void updateCheckpoint2(Board2* board) {
     updatePlayerCheckpoint2(board->player1);
     updatePlayerCheckpoint2(board->player2);
     board->ASCheckpoint = board->AS;
 }
 
 
-Winner getSmallBoard2Winner(Board* board, uint8_t boardIndex) {
+Winner getSmallBoard22Winner(Board2* board, uint8_t boardIndex) {
     bool player1Bit = boardIsWon2(board->player1, boardIndex);
     bool player2Bit = boardIsWon2(board->player2, boardIndex);
     return 2*player2Bit + player1Bit;
 }
 
 
-Occupation getSquare2(Board* board, Square square) {
+Occupation getSquare2(Board2* board, Square square) {
     bool player1Bit = squareIsOccupied2(board->player1, square);
     bool player2Bit = squareIsOccupied2(board->player2, square);
     return 2*player2Bit + player1Bit;
 }
 
 
-uint8_t getNextBoard2(Board* board, uint8_t previousPosition) {
-    Winner smallBoardWinner = getSmallBoard2Winner(board, previousPosition);
-    return smallBoardWinner == NONE ? previousPosition : ANY_BOARD;
+uint8_t getNextBoard22(Board2* board, uint8_t previousPosition) {
+    Winner smallBoard2Winner = getSmallBoard22Winner(board, previousPosition);
+    return smallBoard2Winner == NONE ? previousPosition : ANY_BOARD;
 }
 
 
-Winner calculateWinner2(Board* board) {
-    uint16_t player1BigBoard = getBigBoard2(board->player1);
-    uint16_t player2BigBoard = getBigBoard2(board->player2);
-    uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
-    uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
+Winner calculateWinner2(Board2* board) {
+    uint16_t player1BigBoard2 = getBigBoard22(board->player1);
+    uint16_t player2BigBoard2 = getBigBoard22(board->player2);
+    uint16_t decisiveBoard2s = player1BigBoard2 ^ player2BigBoard2;
+    uint16_t boardsWonByPlayer1 = player1BigBoard2 & decisiveBoard2s;
     if (isWin2(boardsWonByPlayer1)) {
         return WIN_P1;
     }
-    uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
+    uint16_t boardsWonByPlayer2 = player2BigBoard2 & decisiveBoard2s;
     if (isWin2(boardsWonByPlayer2)) {
         return WIN_P2;
     }
-    if ((player1BigBoard | player2BigBoard) == 511) {
-        int player1AmountBoardsWon = __builtin_popcount(player1BigBoard);
-        int player2AmountBoardsWon = __builtin_popcount(player2BigBoard);
-        return player1AmountBoardsWon > player2AmountBoardsWon
+    if ((player1BigBoard2 | player2BigBoard2) == 511) {
+        int player1AmountBoard2sWon = __builtin_popcount(player1BigBoard2);
+        int player2AmountBoard2sWon = __builtin_popcount(player2BigBoard2);
+        return player1AmountBoard2sWon > player2AmountBoard2sWon
                ? WIN_P1
-               : player1AmountBoardsWon < player2AmountBoardsWon
+               : player1AmountBoard2sWon < player2AmountBoard2sWon
                  ? WIN_P2
                  : DRAW;
     }
@@ -589,46 +589,46 @@ Winner calculateWinner2(Board* board) {
 }
 
 
-void makeTemporaryMove2(Board* board, Square square) {
-    bool bigBoardWasUpdated = board->AS.currentPlayer == PLAYER1
+void makeTemporaryMove2(Board2* board, Square square) {
+    bool bigBoard2WasUpdated = board->AS.currentPlayer == PLAYER1
                               ? setSquareOccupied2(board->player1, board->player2, square)
                               : setSquareOccupied2(board->player2, board->player1, square);
-    if (bigBoardWasUpdated) {
+    if (bigBoard2WasUpdated) {
         board->AS.winner = calculateWinner2(board);
-        board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
-        board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
+        board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard2[square.board];
+        board->AS.amountOfOpenSquaresBySmallBoard2[square.board] = 0;
     } else {
         board->AS.totalAmountOfOpenSquares--;
-        board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
+        board->AS.amountOfOpenSquaresBySmallBoard2[square.board]--;
     }
     board->AS.currentPlayer = otherPlayer2(board->AS.currentPlayer);
-    board->AS.currentBoard = getNextBoard2(board, square.position);
+    board->AS.currentBoard2 = getNextBoard22(board, square.position);
     board->AS.ply++;
 }
 
 
-void makePermanentMove2(Board* board, Square square) {
+void makePermanentMove2(Board2* board, Square square) {
     makeTemporaryMove2(board, square);
     updateCheckpoint2(board);
 }
 
 
-Winner getWinner2(Board* board) {
+Winner getWinner2(Board2* board) {
     return board->AS.winner;
 }
 
 
-void setMe2(Board* board, Player player) {
+void setMe2(Board2* board, Player player) {
     board->me = player;
 }
 
 
-bool currentPlayerIsMe2(Board* board) {
+bool currentPlayerIsMe2(Board2* board) {
     return board->AS.currentPlayer == board->me;
 }
 
 
-uint8_t getPly2(Board* board) {
+uint8_t getPly2(Board2* board) {
     return board->AS.ply;
 }
 // END BOARD
@@ -699,15 +699,15 @@ void freeMCTSTree2(MCTSNode* node) {
 }
 
 
-void discoverChildNodes2(MCTSNode* node, Board* board) {
+void discoverChildNodes2(MCTSNode* node, Board2* board) {
     if (node->amountOfChildren == -1) {
         node->amountOfChildren = 0;
-        if (nextBoardIsEmpty2(board) && currentPlayerIsMe2(board) && getPly2(board) <= 20) {
+        if (nextBoard2IsEmpty2(board) && currentPlayerIsMe2(board) && getPly2(board) <= 20) {
             node->amountOfUntriedMoves = 1;
             node->untriedMoves = malloc(sizeof(Square));
-            uint8_t currentBoard = getCurrentBoard2(board);
-            Square sameBoard = {currentBoard, currentBoard};
-            node->untriedMoves[0] = sameBoard;
+            uint8_t currentBoard2 = getCurrentBoard22(board);
+            Square sameBoard2 = {currentBoard2, currentBoard2};
+            node->untriedMoves[0] = sameBoard2;
         } else {
             Square movesArray[TOTAL_SMALL_SQUARES];
             int8_t amountOfMoves;
@@ -722,7 +722,7 @@ void discoverChildNodes2(MCTSNode* node, Board* board) {
 }
 
 
-bool isLeafNode2(MCTSNode* node, Board* board) {
+bool isLeafNode2(MCTSNode* node, Board2* board) {
     discoverChildNodes2(node, board);
     return node->amountOfUntriedMoves > 0;
 }
@@ -749,7 +749,7 @@ MCTSNode* expandNode2(MCTSNode* node, int childIndex) {
 }
 
 
-MCTSNode* selectNextChild2(MCTSNode* node, Board* board) {
+MCTSNode* selectNextChild2(MCTSNode* node, Board2* board) {
     discoverChildNodes2(node, board);
     if (node->amountOfUntriedMoves) {
         return expandNode2(node, node->amountOfUntriedMoves - 1);
@@ -769,7 +769,7 @@ MCTSNode* selectNextChild2(MCTSNode* node, Board* board) {
 }
 
 
-MCTSNode* updateRoot2(MCTSNode* root, Board* board, Square square) {
+MCTSNode* updateRoot2(MCTSNode* root, Board2* board, Square square) {
     discoverChildNodes2(root, board);
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
@@ -808,7 +808,7 @@ void backpropagate2(MCTSNode* node, Winner winner) {
 }
 
 
-void visitNode2(MCTSNode* node, Board* board) {
+void visitNode2(MCTSNode* node, Board2* board) {
     makeTemporaryMove2(board, node->square);
 }
 
@@ -826,7 +826,7 @@ void setNodeWinner2(MCTSNode* node, Winner winner) {
 }
 
 
-Square getMostPromisingMove2(MCTSNode* node, Board* board) {
+Square getMostPromisingMove2(MCTSNode* node, Board2* board) {
     discoverChildNodes2(node, board);
     MCTSNode* highestSimsChild = node->children[0];
     float highestSims = highestSimsChild->sims;
@@ -869,7 +869,7 @@ float getWinrate2(MCTSNode* node) {
 
 
 // START FIND_NEXT_MOVE
-MCTSNode* selectLeaf2(Board* board, MCTSNode* root) {
+MCTSNode* selectLeaf2(Board2* board, MCTSNode* root) {
     MCTSNode* currentNode = root;
     while (!isLeafNode2(currentNode, board) && getWinner2(board) == NONE) {
         currentNode = selectNextChild2(currentNode, board);
@@ -879,14 +879,14 @@ MCTSNode* selectLeaf2(Board* board, MCTSNode* root) {
 }
 
 
-MCTSNode* expandLeaf2(Board* board, MCTSNode* leaf) {
+MCTSNode* expandLeaf2(Board2* board, MCTSNode* leaf) {
     MCTSNode* nextChild = selectNextChild2(leaf, board);
     visitNode2(nextChild, board);
     return nextChild;
 }
 
 
-Winner simulate2(Board* board, pcg32_random_t* rng) {
+Winner simulate2(Board2* board, pcg32_random_t* rng) {
     while (getWinner2(board) == NONE) {
         makeRandomTemporaryMove2(board, rng);
     }
@@ -906,7 +906,7 @@ bool hasTimeRemaining2(clock_t deadline) {
 }
 
 
-int findNextMove2(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
+int findNextMove2(Board2* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime) {
     clock_t deadline = getDeadline2(allocatedTime);
     int amountOfSimulations = 0;
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining2(deadline)) {
@@ -946,7 +946,7 @@ int findNextMove2(Board* board, MCTSNode* root, pcg32_random_t* rng, double allo
 
 
 // START HANDLE_TURN
-MCTSNode* handleEnemyTurn2(Board* board, MCTSNode* root, Square enemyMove) {
+MCTSNode* handleEnemyTurn2(Board2* board, MCTSNode* root, Square enemyMove) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
         setMe2(board, PLAYER1);
         return root;
@@ -957,7 +957,7 @@ MCTSNode* handleEnemyTurn2(Board* board, MCTSNode* root, Square enemyMove) {
 }
 
 
-HandleTurnResult handleTurn2(Board* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove) {
+HandleTurnResult handleTurn2(Board2* board, MCTSNode* root, pcg32_random_t* rng, double allocatedTime, Square enemyMove) {
     root = handleEnemyTurn2(board, root, enemyMove);
     int amountOfSimulations = findNextMove2(board, root, rng, allocatedTime);
     Square move = getMostPromisingMove2(root, board);
@@ -1012,7 +1012,7 @@ void printMoveOpponent(MCTSNode* root, Square bestMove, int amountOfSimulations)
 
 
 typedef struct StateOpponent {
-    Board* board;
+    Board2* board;
     MCTSNode* root;
     pcg32_random_t rng;
 } StateOpponent;
@@ -1020,7 +1020,7 @@ typedef struct StateOpponent {
 
 StateOpponent* initializeStateOpponent() {
     StateOpponent* state = malloc(sizeof(StateOpponent));
-    state->board = createBoard2();
+    state->board = createBoard22();
     state->root = createMCTSRootNode2();
     pcg32_srandom_r2(&state->rng, 69, 420);
     return state;
@@ -1031,7 +1031,7 @@ void freeStateOpponent(StateOpponent* stateOpponent) {
     if (stateOpponent == NULL) {
         return;
     }
-    freeBoard2(stateOpponent->board);
+    freeBoard22(stateOpponent->board);
     freeMCTSTree2(stateOpponent->root);
     free(stateOpponent);
 }
@@ -1049,7 +1049,7 @@ Square playTurnOpponent(StateOpponent** state, double allocatedTime, Square enem
 
 
 void playGameOpponent(FILE* file, double timePerMove) {
-    Board* board = createBoard2();
+    Board2* board = createBoard22();
     MCTSNode* root = createMCTSRootNode2();
     pcg32_random_t rng;
     pcg32_srandom_r2(&rng, time(NULL), 420);
@@ -1068,6 +1068,6 @@ void playGameOpponent(FILE* file, double timePerMove) {
         printMoveOpponent(root, result.move, result.amountOfSimulations);
     }
     freeMCTSTree2(root);
-    freeBoard2(board);
+    freeBoard22(board);
 }
 // END MAIN
