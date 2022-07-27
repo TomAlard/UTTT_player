@@ -11,6 +11,7 @@ typedef struct MCTSNode {
     MCTSNode* children;
     float wins;
     float sims;
+    float winrate;
     Square square;
     int8_t amountOfChildren;
     int8_t amountOfUntriedMoves;
@@ -32,6 +33,7 @@ void initializeMCTSNode(MCTSNode* parent, Square square, MCTSNode* node) {
     node->children = NULL;
     node->wins = 0.0f;
     node->sims = 0.0f;
+    node->winrate = 0.0f;
     node->square = square;
     node->amountOfChildren = -1;
     node->amountOfUntriedMoves = -1;
@@ -44,6 +46,7 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
     copy->children = original->children;
     copy->wins = original->wins;
     copy->sims = original->sims;
+    copy->winrate = original->winrate;
     copy->square = original->square;
     copy->amountOfChildren = original->amountOfChildren;
     copy->amountOfUntriedMoves = original->amountOfUntriedMoves;
@@ -110,10 +113,8 @@ bool isLeafNode(MCTSNode* node, Board* board) {
 
 #define EXPLORATION_PARAMETER 0.459375f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
-    float w = node->wins;
-    float n = node->sims;
     float c = EXPLORATION_PARAMETER;
-    return w/n + c*sqrtf(parentLogSims / n);
+    return node->winrate + c*sqrtf(parentLogSims / node->sims);
 }
 
 
@@ -182,6 +183,7 @@ void backpropagate(MCTSNode* node, Winner winner, Player player) {
     while (currentNode != NULL) {
         currentNode->sims++;
         currentNode->wins += reward;
+        currentNode->winrate = currentNode->wins / currentNode->sims;
         reward = 1 - reward;
         currentNode = currentNode->parent;
     }
@@ -199,8 +201,10 @@ void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
     if (winner != DRAW) {
         bool win = player + 1 == winner;
         node->wins += win? A_LOT : -A_LOT;
+        node->winrate = node->wins / node->sims;
         if (!win) {
             node->parent->wins += A_LOT;
+            node->winrate = node->wins / node->sims;
         }
     }
 }
@@ -228,5 +232,5 @@ int getSims(MCTSNode* node) {
 
 
 float getWinrate(MCTSNode* node) {
-    return node->wins / node->sims;
+    return node->winrate;
 }
