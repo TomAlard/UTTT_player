@@ -8,11 +8,10 @@
 #define PLAYER2 1
 #define OTHER_PLAYER(p) ((p)^1)
 
-typedef enum Winner {
-    NONE,
-    WIN_P1,
-    WIN_P2,
-    DRAW
-} Winner;
+#define Winner uint8_t
+#define NONE 0
+#define WIN_P1 1
+#define WIN_P2 2
+#define DRAW 3
 
 #endif //UTTT2_PLAYER_H
