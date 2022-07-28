@@ -8,8 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include <time.h>
-#include <math.h>
+#include <sys/time.h>
 #include <emmintrin.h>
 #include <smmintrin.h>
 
@@ -56,17 +55,20 @@ uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound);
 #define DRAW 3
 
 
-typedef struct PlayerBitBoard PlayerBitBoard;
+typedef struct PlayerBitBoard {
+    uint16_t smallBoards[9];
+    uint16_t bigBoard;
+    uint16_t checkpointSmallBoards[9];
+    uint16_t checkpointBigBoard;
+} PlayerBitBoard;
 
 PlayerBitBoard* createPlayerBitBoard();
 
+void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard);
+
 void freePlayerBitBoard(PlayerBitBoard* playerBitBoard);
 
-uint16_t getBigBoard(PlayerBitBoard* playerBitBoard);
-
 bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board);
-
-uint16_t getSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t board);
 
 bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
 
@@ -255,16 +257,35 @@ uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound) {
 
 
 // START PLAYER_BIT_BOARD
-typedef struct PlayerBitBoard {
-    uint16_t smallBoards[9];
-    uint16_t bigBoard;
-    uint16_t checkpointSmallBoards[9];
-    uint16_t checkpointBigBoard;
-} PlayerBitBoard;
+bool precalculatedIsWin[512];
+bool isWin_(uint16_t smallBoard) {
+    __m128i masks = _mm_setr_epi16(0x7, 0x38, 0x1c0, 0x49, 0x92, 0x124, 0x111, 0x54);
+    __m128i v1 = _mm_set1_epi16(1);
+    __m128i boards128 = _mm_set1_epi16((short) smallBoard);
+    __m128i andResult = _mm_and_si128(masks, boards128);
+    __m128i result = _mm_cmpeq_epi16(andResult, masks);
+    return !_mm_test_all_zeros(result, v1);
+}
+
+
+bool isWin(uint16_t smallBoard) {
+    return precalculatedIsWin[smallBoard];
+}
 
 
 PlayerBitBoard* createPlayerBitBoard() {
+    for (uint16_t i = 0; i < 512; i++) {
+        precalculatedIsWin[i] = isWin_(i);
+    }
     return calloc(1, sizeof(PlayerBitBoard));
+}
+
+
+void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
+    for (uint16_t i = 0; i < 512; i++) {
+        precalculatedIsWin[i] = isWin_(i);
+    }
+    memset(playerBitBoard, 0, sizeof(PlayerBitBoard));
 }
 
 
@@ -273,33 +294,13 @@ void freePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
 }
 
 
-uint16_t getBigBoard(PlayerBitBoard* playerBitBoard) {
-    return playerBitBoard->bigBoard;
-}
-
-
 bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board) {
     return BIT_CHECK(playerBitBoard->bigBoard, board);
 }
 
 
-uint16_t getSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t board) {
-    return playerBitBoard->smallBoards[board];
-}
-
-
 bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
     return BIT_CHECK(playerBitBoard->smallBoards[square.board], square.position);
-}
-
-
-bool isWin(uint16_t smallBoard) {
-    const __m128i masks = _mm_setr_epi16(0x7, 0x38, 0x1c0, 0x49, 0x92, 0x124, 0x111, 0x54);
-    const __m128i v1 = _mm_set1_epi16(1);
-    __m128i boards128 = _mm_set1_epi16(smallBoard);
-    __m128i andResult = _mm_and_si128(masks, boards128);
-    __m128i result = _mm_cmpeq_epi16(andResult, masks);
-    return !_mm_test_all_zeros(result, v1);
 }
 
 
@@ -325,17 +326,13 @@ bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
 
 
 void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
-    for (int i = 0; i < 9; i++) {
-        playerBitBoard->smallBoards[i] = playerBitBoard->checkpointSmallBoards[i];
-    }
+    memcpy(playerBitBoard->smallBoards, playerBitBoard->checkpointSmallBoards, 9 * sizeof(uint16_t));
     playerBitBoard->bigBoard = playerBitBoard->checkpointBigBoard;
 }
 
 
 void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
-    for (int i = 0; i < 9; i++) {
-        playerBitBoard->checkpointSmallBoards[i] = playerBitBoard->smallBoards[i];
-    }
+    memcpy(playerBitBoard->checkpointSmallBoards, playerBitBoard->smallBoards, 9 * sizeof(uint16_t));
     playerBitBoard->checkpointBigBoard = playerBitBoard->bigBoard;
 }
 // END PLAYER_BIT_BOARD
@@ -370,22 +367,24 @@ typedef struct AdditionalState {
 
 
 typedef struct Board {
-    PlayerBitBoard* player1;
-    PlayerBitBoard* player2;
+    PlayerBitBoard player1;
+    PlayerBitBoard player2;
     AdditionalState AS;
     AdditionalState ASCheckpoint;
-    Square openSquares[512][9][9];
-    int8_t amountOfOpenSquares[512];
-    Winner precalculatedWinner[262144];
     Player me;
 } Board;
 
 
-int8_t setOpenSquares(Square openSquares[9], uint8_t boardIndex, uint16_t bitBoard) {
+Square openSquares[512][9][9];
+int8_t amountOfOpenSquares[512];
+Winner winnerByBigBoards[512][512];
+
+
+int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
     int8_t amountOfMoves = 0;
     while (bitBoard) {
         Square square = {boardIndex, __builtin_ffs(bitBoard) - 1};
-        openSquares[amountOfMoves++] = square;
+        openSquares_[amountOfMoves++] = square;
         bitBoard &= bitBoard - 1;
     }
     return amountOfMoves;
@@ -417,12 +416,12 @@ Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard) {
 
 Board* createBoard() {
     Board* board = malloc(sizeof(Board));
-    board->player1 = createPlayerBitBoard();
-    board->player2 = createPlayerBitBoard();
+    initializePlayerBitBoard(&board->player1);
+    initializePlayerBitBoard(&board->player2);
     board->AS.currentPlayer = PLAYER1;
     board->AS.currentBoard = ANY_BOARD;
     board->AS.winner = NONE;
-    board->AS.ply = 1;
+    board->AS.ply = 0;
     board->AS.totalAmountOfOpenSquares = 81;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         board->AS.amountOfOpenSquaresBySmallBoard[boardIndex] = 9;
@@ -430,14 +429,14 @@ Board* createBoard() {
     board->ASCheckpoint = board->AS;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
-            board->amountOfOpenSquares[bitBoard] =
-                    setOpenSquares(board->openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
+            amountOfOpenSquares[bitBoard] =
+                    setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
         }
     }
     for (uint16_t player1BigBoard = 0; player1BigBoard < 512; player1BigBoard++) {
         for (uint16_t player2BigBoard = 0; player2BigBoard < 512; player2BigBoard++) {
             Winner winner = calculateWinner(player1BigBoard, player2BigBoard);
-            board->precalculatedWinner[(player1BigBoard << 9) + player2BigBoard] = winner;
+            winnerByBigBoards[player1BigBoard][player2BigBoard] = winner;
         }
     }
     board->me = PLAYER2;
@@ -446,30 +445,28 @@ Board* createBoard() {
 
 
 void freeBoard(Board* board) {
-    freePlayerBitBoard(board->player1);
-    freePlayerBitBoard(board->player2);
     free(board);
 }
 
 
 Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMoves) {
-    uint16_t bitBoard = ~(getSmallBoard(board->player1, boardIndex) | getSmallBoard(board->player2, boardIndex)) & 511;
-    *amountOfMoves = board->amountOfOpenSquares[bitBoard];
-    return board->openSquares[bitBoard][boardIndex];
+    uint16_t bitBoard = ~(board->player1.smallBoards[boardIndex] | board->player2.smallBoards[boardIndex]) & 511;
+    *amountOfMoves = amountOfOpenSquares[bitBoard];
+    return openSquares[bitBoard][boardIndex];
 }
 
 
 int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
-    uint16_t bitBoard = ~(getSmallBoard(board->player1, boardIndex) | getSmallBoard(board->player2, boardIndex)) & 511;
-    memcpy(&moves[amountOfMoves], board->openSquares[bitBoard][boardIndex],
-           board->amountOfOpenSquares[bitBoard] * sizeof(Square));
-    return (int8_t)(amountOfMoves + board->amountOfOpenSquares[bitBoard]);
+    uint16_t bitBoard = ~(board->player1.smallBoards[boardIndex] | board->player2.smallBoards[boardIndex]) & 511;
+    memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex],
+           amountOfOpenSquares[bitBoard] * sizeof(Square));
+    return (int8_t)(amountOfMoves + amountOfOpenSquares[bitBoard]);
 }
 
 
 int8_t generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
     int8_t amountOfMoves = 0;
-    uint16_t undecidedSmallBoards = ~(getBigBoard(board->player1) | getBigBoard(board->player2)) & 511;
+    uint16_t undecidedSmallBoards = ~(board->player1.bigBoard | board->player2.bigBoard) & 511;
     while (undecidedSmallBoards) {
         uint8_t boardIndex = __builtin_ffs(undecidedSmallBoards) - 1;
         amountOfMoves = copyMovesSingleBoard(board, boardIndex, moves, amountOfMoves);
@@ -519,7 +516,7 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 bool nextBoardIsEmpty(Board* board) {
     uint8_t currentBoard = board->AS.currentBoard;
     return currentBoard != ANY_BOARD
-           && (getSmallBoard(board->player1, currentBoard) | getSmallBoard(board->player2, currentBoard)) == 0;
+           && (board->player1.smallBoards[currentBoard] | board->player2.smallBoards[currentBoard]) == 0;
 }
 
 
@@ -534,38 +531,38 @@ Player getCurrentPlayer(Board* board) {
 
 
 void revertToCheckpoint(Board* board) {
-    revertToPlayerCheckpoint(board->player1);
-    revertToPlayerCheckpoint(board->player2);
+    revertToPlayerCheckpoint(&board->player1);
+    revertToPlayerCheckpoint(&board->player2);
     board->AS = board->ASCheckpoint;
 }
 
 
 void updateCheckpoint(Board* board) {
-    updatePlayerCheckpoint(board->player1);
-    updatePlayerCheckpoint(board->player2);
+    updatePlayerCheckpoint(&board->player1);
+    updatePlayerCheckpoint(&board->player2);
     board->ASCheckpoint = board->AS;
 }
 
 
 uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
-    bool smallBoardIsDecided = boardIsWon(board->player1, previousPosition) || boardIsWon(board->player2, previousPosition);
+    bool smallBoardIsDecided = boardIsWon(&board->player1, previousPosition) || boardIsWon(&board->player2, previousPosition);
     return smallBoardIsDecided ? ANY_BOARD : previousPosition;
 }
 
 
 void makeTemporaryMove(Board* board, Square square) {
     bool bigBoardWasUpdated = board->AS.currentPlayer == PLAYER1
-                              ? setSquareOccupied(board->player1, board->player2, square)
-                              : setSquareOccupied(board->player2, board->player1, square);
+                              ? setSquareOccupied(&board->player1, &board->player2, square)
+                              : setSquareOccupied(&board->player2, &board->player1, square);
     if (bigBoardWasUpdated) {
-        board->AS.winner = board->precalculatedWinner[(getBigBoard(board->player1) << 9) + getBigBoard(board->player2)];
+        board->AS.winner = winnerByBigBoards[board->player1.bigBoard][board->player2.bigBoard];
         board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
         board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
     } else {
         board->AS.totalAmountOfOpenSquares--;
         board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    board->AS.currentPlayer = OTHER_PLAYER(board->AS.currentPlayer);
+    board->AS.currentPlayer ^= 1;
     board->AS.currentBoard = getNextBoard(board, square.position);
     board->AS.ply++;
 }
@@ -584,8 +581,6 @@ Winner getWinner(Board* board) {
 
 void setMe(Board* board, Player player) {
     board->me = player;
-    board->AS.ply = player == PLAYER2;
-    board->ASCheckpoint.ply = player == PLAYER2;
 }
 
 
@@ -687,7 +682,7 @@ bool handleSpecialCases(MCTSNode* node, Board* board) {
         singleChild(node, sameBoard);
         return true;
     }
-    if (getPly(board) == 0) {
+    if (currentPlayerIsMe(board) && getPly(board) == 0) {
         Square bestFirstMove = {4, 4};
         singleChild(node, bestFirstMove);
         return true;
@@ -893,20 +888,19 @@ Winner simulate(Board* board, RNG* rng) {
 }
 
 
-clock_t getDeadline(double time) {
-    return clock() + (clock_t)(time*CLOCKS_PER_SEC);
-}
-
-
-bool hasTimeRemaining(clock_t deadline) {
-    return clock() < deadline;
+bool hasTimeRemaining(struct timeval start, double allocatedTime) {
+    struct timeval end;
+    gettimeofday(&end, NULL);
+    double timePassed = (double) (end.tv_usec - start.tv_usec) / 1000000 + (double) (end.tv_sec - start.tv_sec);
+    return timePassed < allocatedTime;
 }
 
 
 int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
-    clock_t deadline = getDeadline(allocatedTime);
     int amountOfSimulations = 0;
-    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(deadline)) {
+    struct timeval start;
+    gettimeofday(&start, NULL);
+    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
         MCTSNode* leaf = selectLeaf(board, root);
         MCTSNode* playoutNode;
         Winner simulationWinner;
@@ -1035,7 +1029,7 @@ void playGame(FILE* file, double timePerMove) {
 }
 
 
-#define TIME 0.085
+#define TIME 0.090
 int main() {
     // runTests();
     playGame(stdin, TIME);
