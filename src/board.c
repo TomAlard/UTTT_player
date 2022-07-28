@@ -148,19 +148,16 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
     uint8_t randomMoveIndex;
     if (currentBoard == ANY_BOARD) {
         randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.totalAmountOfOpenSquares);
-        int boardIndex = 0;
-        while (boardIndex < 9 && randomMoveIndex < 128) {
-            randomMoveIndex -= board->AS.amountOfOpenSquaresBySmallBoard[boardIndex++];
+        currentBoard = 0;
+        while (currentBoard < 9 && randomMoveIndex < 128) {
+            randomMoveIndex -= board->AS.amountOfOpenSquaresBySmallBoard[currentBoard++];
         }
-        randomMoveIndex += board->AS.amountOfOpenSquaresBySmallBoard[--boardIndex];
-        currentBoard = boardIndex;
+        randomMoveIndex += board->AS.amountOfOpenSquaresBySmallBoard[--currentBoard];
     } else {
         randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
     }
-    int8_t amountOfMoves;
-    Square* moves = getMovesSingleBoard(board, currentBoard, &amountOfMoves);
-    Square randomMove = moves[randomMoveIndex];
-    makeTemporaryMove(board, randomMove);
+    uint16_t bitBoard = ~(board->player1.smallBoards[currentBoard] | board->player2.smallBoards[currentBoard]) & 511;
+    makeTemporaryMove(board, openSquares[bitBoard][currentBoard][randomMoveIndex]);
 }
 
 
@@ -209,10 +206,8 @@ void makeTemporaryMove(Board* board, Square square) {
             && "Can't make a move on a square that is already occupied");
     assert(board->AS.winner == NONE && "Can't make a move when there is already a winner");
 
-    bool bigBoardWasUpdated = board->AS.currentPlayer == PLAYER1
-            ? setSquareOccupied(&board->player1, &board->player2, square)
-            : setSquareOccupied(&board->player2, &board->player1, square);
-    if (bigBoardWasUpdated) {
+    PlayerBitBoard* p1 = &board->player1;
+    if (setSquareOccupied(p1 + board->AS.currentPlayer, p1 + !board->AS.currentPlayer, square)) {
         board->AS.winner = winnerByBigBoards[board->player1.bigBoard][board->player2.bigBoard];
         board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
         board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
