@@ -102,14 +102,14 @@ void freeBoard(Board* board) {
 
 
 Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMoves) {
-    uint16_t bitBoard = ~(getSmallBoard(&board->player1, boardIndex) | getSmallBoard(&board->player2, boardIndex)) & 511;
+    uint16_t bitBoard = ~(board->player1.smallBoards[boardIndex] | board->player2.smallBoards[boardIndex]) & 511;
     *amountOfMoves = amountOfOpenSquares[bitBoard];
     return openSquares[bitBoard][boardIndex];
 }
 
 
 int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
-    uint16_t bitBoard = ~(getSmallBoard(&board->player1, boardIndex) | getSmallBoard(&board->player2, boardIndex)) & 511;
+    uint16_t bitBoard = ~(board->player1.smallBoards[boardIndex] | board->player2.smallBoards[boardIndex]) & 511;
     memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex],
            amountOfOpenSquares[bitBoard] * sizeof(Square));
     return (int8_t)(amountOfMoves + amountOfOpenSquares[bitBoard]);
@@ -118,7 +118,7 @@ int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL
 
 int8_t generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
     int8_t amountOfMoves = 0;
-    uint16_t undecidedSmallBoards = ~(getBigBoard(&board->player1) | getBigBoard(&board->player2)) & 511;
+    uint16_t undecidedSmallBoards = ~(board->player1.bigBoard | board->player2.bigBoard) & 511;
     while (undecidedSmallBoards) {
         uint8_t boardIndex = __builtin_ffs(undecidedSmallBoards) - 1;
         amountOfMoves = copyMovesSingleBoard(board, boardIndex, moves, amountOfMoves);
@@ -169,7 +169,7 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 bool nextBoardIsEmpty(Board* board) {
     uint8_t currentBoard = board->AS.currentBoard;
     return currentBoard != ANY_BOARD
-        && (getSmallBoard(&board->player1, currentBoard) | getSmallBoard(&board->player2, currentBoard)) == 0;
+        && (board->player1.smallBoards[currentBoard] | board->player2.smallBoards[currentBoard]) == 0;
 }
 
 
@@ -215,7 +215,7 @@ void makeTemporaryMove(Board* board, Square square) {
             ? setSquareOccupied(&board->player1, &board->player2, square)
             : setSquareOccupied(&board->player2, &board->player1, square);
     if (bigBoardWasUpdated) {
-        board->AS.winner = winnerByBigBoards[getBigBoard(&board->player1)][getBigBoard(&board->player2)];
+        board->AS.winner = winnerByBigBoards[board->player1.bigBoard][board->player2.bigBoard];
         board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
         board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
     } else {
