@@ -1,5 +1,5 @@
-#include <time.h>
 #include <assert.h>
+#include <sys/time.h>
 #include "find_next_move.h"
 #include "util.h"
 
@@ -30,20 +30,19 @@ Winner simulate(Board* board, RNG* rng) {
 }
 
 
-clock_t getDeadline(double time) {
-    return clock() + (clock_t)(time*CLOCKS_PER_SEC);
-}
-
-
-bool hasTimeRemaining(clock_t deadline) {
-    return clock() < deadline;
+bool hasTimeRemaining(struct timeval start, double allocatedTime) {
+    struct timeval end;
+    gettimeofday(&end, NULL);
+    double timePassed = (double) (end.tv_usec - start.tv_usec) / 1000000 + (double) (end.tv_sec - start.tv_sec);
+    return timePassed < allocatedTime;
 }
 
 
 int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
-    clock_t deadline = getDeadline(allocatedTime);
     int amountOfSimulations = 0;
-    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(deadline)) {
+    struct timeval start;
+    gettimeofday(&start, NULL);
+    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
         MCTSNode* leaf = selectLeaf(board, root);
         MCTSNode* playoutNode;
         Winner simulationWinner;
