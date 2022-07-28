@@ -79,7 +79,7 @@ bool handleSpecialCases(MCTSNode* node, Board* board) {
         singleChild(node, sameBoard);
         return true;
     }
-    if (getPly(board) == 0) {
+    if (currentPlayerIsMe(board) && getPly(board) == 0) {
         Square bestFirstMove = {4, 4};
         singleChild(node, bestFirstMove);
         return true;
