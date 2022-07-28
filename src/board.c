@@ -222,7 +222,7 @@ void makeTemporaryMove(Board* board, Square square) {
         board->AS.totalAmountOfOpenSquares--;
         board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    board->AS.currentPlayer = OTHER_PLAYER(board->AS.currentPlayer);
+    board->AS.currentPlayer ^= 1;
     board->AS.currentBoard = getNextBoard(board, square.position);
     board->AS.ply++;
 }
