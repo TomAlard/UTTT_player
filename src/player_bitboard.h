@@ -5,9 +5,16 @@
 #include "player.h"
 #include <stdbool.h>
 
-typedef struct PlayerBitBoard PlayerBitBoard;
+typedef struct PlayerBitBoard {
+    uint16_t smallBoards[9];
+    uint16_t bigBoard;
+    uint16_t checkpointSmallBoards[9];
+    uint16_t checkpointBigBoard;
+} PlayerBitBoard;
 
 PlayerBitBoard* createPlayerBitBoard();
+
+void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard);
 
 void freePlayerBitBoard(PlayerBitBoard* playerBitBoard);
 

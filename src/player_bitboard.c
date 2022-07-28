@@ -3,16 +3,9 @@
 
 #include <emmintrin.h>
 #include <smmintrin.h>
+#include <string.h>
 #include "player_bitboard.h"
 #include "util.h"
-
-
-typedef struct PlayerBitBoard {
-    uint16_t smallBoards[9];
-    uint16_t bigBoard;
-    uint16_t checkpointSmallBoards[9];
-    uint16_t checkpointBigBoard;
-} PlayerBitBoard;
 
 
 bool precalculatedIsWin[512];
@@ -36,6 +29,14 @@ PlayerBitBoard* createPlayerBitBoard() {
         precalculatedIsWin[i] = isWin_(i);
     }
     return safe_calloc(sizeof(PlayerBitBoard));
+}
+
+
+void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
+    for (uint16_t i = 0; i < 512; i++) {
+        precalculatedIsWin[i] = isWin_(i);
+    }
+    memset(playerBitBoard, 0, sizeof(PlayerBitBoard));
 }
 
 
