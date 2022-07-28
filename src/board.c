@@ -147,14 +147,12 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
     uint8_t currentBoard = board->AS.currentBoard;
     uint8_t randomMoveIndex;
     if (currentBoard == ANY_BOARD) {
-        uint8_t randomMultipleBoardMoveIndex = generateBoundedRandomNumber(rng, board->AS.totalAmountOfOpenSquares);
+        randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.totalAmountOfOpenSquares);
         int boardIndex = 0;
-        int cumulativeSum = 0;
-        while (boardIndex < 9 && cumulativeSum <= randomMultipleBoardMoveIndex) {
-            cumulativeSum += board->AS.amountOfOpenSquaresBySmallBoard[boardIndex++];
+        while (boardIndex < 9 && randomMoveIndex < 128) {
+            randomMoveIndex -= board->AS.amountOfOpenSquaresBySmallBoard[boardIndex++];
         }
-        cumulativeSum -= board->AS.amountOfOpenSquaresBySmallBoard[--boardIndex];
-        randomMoveIndex = randomMultipleBoardMoveIndex - cumulativeSum;
+        randomMoveIndex += board->AS.amountOfOpenSquaresBySmallBoard[--boardIndex];
         currentBoard = boardIndex;
     } else {
         randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
@@ -207,7 +205,7 @@ void makeTemporaryMove(Board* board, Square square) {
     assert(square.board == board->AS.currentBoard
             || board->AS.currentBoard == ANY_BOARD &&
             "Can't make a move on that board");
-    assert(!squareIsOccupied(board->player1, square) && !squareIsOccupied(board->player2, square)
+    assert(!squareIsOccupied(&board->player1, square) && !squareIsOccupied(&board->player2, square)
             && "Can't make a move on a square that is already occupied");
     assert(board->AS.winner == NONE && "Can't make a move when there is already a winner");
 
