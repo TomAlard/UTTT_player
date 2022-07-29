@@ -156,19 +156,17 @@ void makeRolloutTemporaryMove(Board* board, RolloutState* RS, Square square) {
            && "Can't make a move on a square that is already occupied");
     assert(board->AS.winner == NONE && "Can't make a move when there is already a winner");
 
-    PlayerBitBoard* playerBitBoard = &board->player1 + board->AS.currentPlayer;
-    PlayerBitBoard* otherPlayerBitBoard = &board->player1 + !board->AS.currentPlayer;
-    if (setSquareOccupied(playerBitBoard, otherPlayerBitBoard, square)) {
+    PlayerBitBoard* p1 = &board->player1;
+    if (setSquareOccupied(p1 + board->AS.currentPlayer, p1 + !board->AS.currentPlayer, square)) {
         board->AS.winner = winnerByBigBoards[board->player1.bigBoard][board->player2.bigBoard];
         board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
         board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
-        updateBigBoardState(RS, playerBitBoard->bigBoard, otherPlayerBitBoard->bigBoard, board->AS.currentPlayer);
+        updateBigBoardState(RS, board->player1.bigBoard, board->player2.bigBoard);
     } else {
         board->AS.totalAmountOfOpenSquares--;
         board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    updateSmallBoardState(RS, square.board, playerBitBoard->smallBoards[square.board],
-                          otherPlayerBitBoard->smallBoards[square.board], board->AS.currentPlayer);
+    updateSmallBoardState(RS, square.board, board->player1.smallBoards[square.board], board->player2.smallBoards[square.board]);
     board->AS.currentPlayer ^= 1;
     board->AS.currentBoard = getNextBoard(board, square.position);
     board->AS.ply++;

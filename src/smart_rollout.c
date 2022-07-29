@@ -66,13 +66,13 @@ bool hasWinningMove(RolloutState* RS, uint8_t currentBoard, Player player) {
 }
 
 
-void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t smallBoard, uint16_t otherSmallBoard, Player player) {
-    BIT_CHANGE(RS->instantWinSmallBoards[player], boardIndex, smallBoardHasInstantWinMove(smallBoard, otherSmallBoard));
-    BIT_CHANGE(RS->instantWinSmallBoards[OTHER_PLAYER(player)], boardIndex, smallBoardHasInstantWinMove(otherSmallBoard, smallBoard));
+void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t player1SmallBoard, uint16_t player2SmallBoard) {
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER1], boardIndex, smallBoardHasInstantWinMove(player1SmallBoard, player2SmallBoard));
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER2], boardIndex, smallBoardHasInstantWinMove(player2SmallBoard, player1SmallBoard));
 }
 
 
-void updateBigBoardState(RolloutState* RS, uint16_t bigBoard, uint16_t otherBigBoard, Player player) {
-    RS->instantWinBoards[player] = calculateInstantWinBoards(bigBoard, otherBigBoard);
-    RS->instantWinBoards[OTHER_PLAYER(player)] = calculateInstantWinBoards(otherBigBoard, bigBoard);
+void updateBigBoardState(RolloutState* RS, uint16_t player1BigBoard, uint16_t player2BigBoard) {
+    RS->instantWinBoards[PLAYER1] = calculateInstantWinBoards(player1BigBoard, player2BigBoard);
+    RS->instantWinBoards[PLAYER2] = calculateInstantWinBoards(player2BigBoard, player1BigBoard);
 }

@@ -36,9 +36,9 @@ void hasWinningMoveTest() {
         PlayerBitBoard* otherPlayer = currentPlayer == PLAYER1? &player2 : &player1;
         bool bigBoardWasUpdated = setSquareOccupied(player, otherPlayer, move);
         if (bigBoardWasUpdated) {
-            updateBigBoardState(&RS, player->bigBoard, otherPlayer->bigBoard, currentPlayer);
+            updateBigBoardState(&RS, player1.bigBoard, player2.bigBoard);
         }
-        updateSmallBoardState(&RS, move.board, player->smallBoards[move.board], otherPlayer->smallBoards[move.board], currentPlayer);
+        updateSmallBoardState(&RS, move.board, player1.smallBoards[move.board], player2.smallBoards[move.board]);
         makePermanentMove(board, move);
     }
     freeBoard(board);

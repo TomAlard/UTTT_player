@@ -15,8 +15,8 @@ void initializeRolloutState(RolloutState* RS);
 
 bool hasWinningMove(RolloutState* RS, uint8_t currentBoard, Player player);
 
-void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t smallBoard, uint16_t otherSmallBoard, Player player);
+void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t player1SmallBoard, uint16_t player2SmallBoard);
 
-void updateBigBoardState(RolloutState* RS, uint16_t bigBoard, uint16_t otherBigBoard, Player player);
+void updateBigBoardState(RolloutState* RS, uint16_t player1BigBoard, uint16_t player2BigBoard);
 
 #endif //UTTT2_SMART_ROLLOUT_H
