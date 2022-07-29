@@ -23,8 +23,10 @@ MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
 
 
 Winner simulate(Board* board, RNG* rng) {
+    RolloutState RS;
+    initializeRolloutState(&RS);
     while (getWinner(board) == NONE) {
-        makeRandomTemporaryMove(board, rng);
+        makeRandomTemporaryMove(board, &RS, rng);
     }
     return getWinner(board);
 }

@@ -4,6 +4,7 @@
 #include "square.h"
 #include "player.h"
 #include "random.h"
+#include "smart_rollout.h"
 
 #define TOTAL_SMALL_SQUARES 81
 
@@ -15,7 +16,7 @@ void freeBoard(Board* board);
 
 Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
 
-void makeRandomTemporaryMove(Board* board, RNG* rng);
+void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng);
 
 bool nextBoardIsEmpty(Board* board);
 

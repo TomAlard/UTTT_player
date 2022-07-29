@@ -106,8 +106,13 @@ void makeRandomTemporaryMoveMakesSameMoveAsOldGenerateMovesWay() {
     seedRNG(&rng1, 69, 420);
     RNG rng2;
     seedRNG(&rng2, 69, 420);
+    RolloutState RS;
+    initializeRolloutState(&RS);
     while (getWinner(board) == NONE) {
-        makeRandomTemporaryMove(board, &rng1);
+        makeRandomTemporaryMove(board, &RS, &rng1);
+        if (getWinner(board) != NONE) {
+            break;
+        }
         Square movesArray1[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves1;
         Square* validMoves1 = generateMoves(board, movesArray1, &amountOfMoves1);
