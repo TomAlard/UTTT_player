@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <assert.h>
+#include <sys/time.h>
 #include "player.h"
 #include "main.h"
 #include "arena_opponent.h"
@@ -17,14 +18,22 @@ Winner simulateSingleGame(bool weArePlayer1) {
     MCTSNode* root = createMCTSRootNode();
     RNG rng;
     seedRNG(&rng, time(NULL), 420);
+    initializeLookupTable();
     StateOpponent* stateOpponent = initializeStateOpponent();
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;
     while (getWinner(board) == NONE && stateOpponent != NULL) {
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
         if (weAreCurrentPlayer) {
             previousMove = playTurn(board, &root, &rng, TIME, previousMove);
         } else {
             previousMove = playTurnOpponent(&stateOpponent, TIME, previousMove);
+        }
+        gettimeofday(&end, NULL);
+        double timePassed = (double) (end.tv_usec - start.tv_usec) / 1000000 + (double) (end.tv_sec - start.tv_sec);
+        if (timePassed > TIME*1.15) {
+            fprintf(stderr, weAreCurrentPlayer? "We used too much time!\n" : "Opponent used too much time!\n");
         }
         weAreCurrentPlayer = !weAreCurrentPlayer;
     }
