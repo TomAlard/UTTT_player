@@ -62,6 +62,9 @@ void freeMCTSTree(MCTSNode* node) {
         freeMCTSTree(&node->children[i]);
     }
     free(node->children);
+    if (node->parent == NULL) {
+        free(node);
+    }
 }
 
 
@@ -190,6 +193,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     newRoot->parent = NULL;
     newRoot = copyMCTSNode(newRoot);
     free(root->children);
+    free(root);
     return newRoot;
 }
 
