@@ -2,34 +2,6 @@
 #include <assert.h>
 #include "board.h"
 #include "../misc/util.h"
-#include "player_bitboard.h"
-
-
-#define ANY_BOARD 9
-
-
-typedef struct AdditionalState {
-    Player currentPlayer;
-    uint8_t currentBoard;
-    Winner winner;
-    uint8_t ply;
-    uint8_t totalAmountOfOpenSquares;
-    uint8_t amountOfOpenSquaresBySmallBoard[9];
-} AdditionalState;
-
-
-typedef struct Board {
-    PlayerBitBoard player1;
-    PlayerBitBoard player2;
-    AdditionalState AS;
-    AdditionalState ASCheckpoint;
-    Player me;
-} Board;
-
-
-Square openSquares[512][9][9];
-int8_t amountOfOpenSquares[512];
-Winner winnerByBigBoards[512][512];
 
 
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {

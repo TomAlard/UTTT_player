@@ -5,8 +5,31 @@
 #include "../misc/player.h"
 #include "../misc/random.h"
 #include "smart_rollout.h"
+#include "player_bitboard.h"
 
 #define TOTAL_SMALL_SQUARES 81
+#define ANY_BOARD 9
+
+typedef struct AdditionalState {
+    Player currentPlayer;
+    uint8_t currentBoard;
+    Winner winner;
+    uint8_t ply;
+    uint8_t totalAmountOfOpenSquares;
+    uint8_t amountOfOpenSquaresBySmallBoard[9];
+} AdditionalState;
+
+typedef struct Board {
+    PlayerBitBoard player1;
+    PlayerBitBoard player2;
+    AdditionalState AS;
+    AdditionalState ASCheckpoint;
+    Player me;
+} Board;
+
+Square openSquares[512][9][9];
+int8_t amountOfOpenSquares[512];
+Winner winnerByBigBoards[512][512];
 
 typedef struct Board Board;
 
