@@ -2,7 +2,7 @@
 #define UTTT2_PLAYER_BITBOARD_H
 
 #include "square.h"
-#include "player.h"
+#include "../misc/player.h"
 #include <stdbool.h>
 
 typedef struct PlayerBitBoard {

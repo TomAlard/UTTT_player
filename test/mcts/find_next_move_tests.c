@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include "find_next_move_tests.h"
-#include "../src/find_next_move.h"
-#include "test_util.h"
+#include "../../src/mcts/find_next_move.h"
+#include "../test_util.h"
 
 
 void findNextMoveDoesNotChangeBoard() {

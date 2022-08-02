@@ -5,7 +5,7 @@
 #include <smmintrin.h>
 #include <string.h>
 #include "player_bitboard.h"
-#include "util.h"
+#include "../misc/util.h"
 
 
 bool precalculatedIsWin[512];

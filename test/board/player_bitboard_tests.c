@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "player_bitboard_tests.h"
-#include "../src/player_bitboard.h"
-#include "test_util.h"
+#include "../../src/board/player_bitboard.h"
+#include "../test_util.h"
 
 
 void boardInitiallyEmpty(PlayerBitBoard* playerBitBoard) {

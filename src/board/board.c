@@ -1,7 +1,7 @@
 #include <string.h>
 #include <assert.h>
 #include "board.h"
-#include "util.h"
+#include "../misc/util.h"
 #include "player_bitboard.h"
 
 

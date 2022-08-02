@@ -2,11 +2,11 @@
 #include <time.h>
 #include <assert.h>
 #include <sys/time.h>
-#include "player.h"
-#include "main.h"
+#include "../misc/player.h"
+#include "../main.h"
 #include "arena_opponent.h"
-#include "util.h"
-#include "handle_turn.h"
+#include "../misc/util.h"
+#include "../handle_turn.h"
 
 
 #define ROUNDS 5000

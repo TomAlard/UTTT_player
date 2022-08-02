@@ -2,8 +2,8 @@
 #define UTTT2_BOARD_H
 
 #include "square.h"
-#include "player.h"
-#include "random.h"
+#include "../misc/player.h"
+#include "../misc/random.h"
 #include "smart_rollout.h"
 
 #define TOTAL_SMALL_SQUARES 81

@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include <emmintrin.h>
 #include <smmintrin.h>
-#include "square.h"
+#include "../board/square.h"
 
 
 

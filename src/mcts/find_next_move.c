@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include "find_next_move.h"
-#include "util.h"
+#include "../misc/util.h"
 
 
 MCTSNode* selectLeaf(Board* board, MCTSNode* root) {

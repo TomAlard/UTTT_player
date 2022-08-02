@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "square.h"
+#include "../board/square.h"
 
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))

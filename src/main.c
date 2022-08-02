@@ -1,8 +1,8 @@
 #include <assert.h>
 #include "../test/tests_main.h"
 #include "main.h"
-#include "util.h"
-#include "arena.h"
+#include "misc/util.h"
+#include "arena/arena.h"
 
 
 void skipMovesInput(FILE* file) {

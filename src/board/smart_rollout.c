@@ -1,6 +1,6 @@
 #include <string.h>
 #include "smart_rollout.h"
-#include "util.h"
+#include "../misc/util.h"
 
 
 uint16_t precalculatedInstantWinBoards[512];

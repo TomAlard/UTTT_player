@@ -3,7 +3,7 @@
 #include <string.h>
 #include <emmintrin.h>
 #include "mcts_node.h"
-#include "util.h"
+#include "../misc/util.h"
 
 
 typedef struct MCTSNode {

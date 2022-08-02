@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include "smart_rollout_tests.h"
-#include "../src/smart_rollout.h"
-#include "../src/board.h"
-#include "test_util.h"
-#include "../src/player_bitboard.h"
+#include "../../src/board/smart_rollout.h"
+#include "../../src/board/board.h"
+#include "../test_util.h"
+#include "../../src/board/player_bitboard.h"
 
 
 void hasWinningMoveTest() {

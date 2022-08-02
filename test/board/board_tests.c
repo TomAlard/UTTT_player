@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "board_tests.h"
-#include "../src/board.h"
-#include "test_util.h"
-#include "../src/util.h"
+#include "../../src/board/board.h"
+#include "../test_util.h"
+#include "../../src/misc/util.h"
 
 
 void anyMoveAllowedOnEmptyBoard() {

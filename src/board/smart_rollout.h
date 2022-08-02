@@ -2,7 +2,7 @@
 #define UTTT2_SMART_ROLLOUT_H
 
 #include <stdint.h>
-#include "player.h"
+#include "../misc/player.h"
 
 typedef struct RolloutState {
     uint16_t instantWinBoards[2];

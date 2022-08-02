@@ -2,7 +2,7 @@
 #define UTTT2_MCTS_NODE_H
 
 #include <stdbool.h>
-#include "board.h"
+#include "../board/board.h"
 
 typedef struct MCTSNode MCTSNode;
 

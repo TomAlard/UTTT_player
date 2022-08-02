@@ -2,7 +2,7 @@
 #define UTTT2_ARENA_OPPONENT_H
 
 #include <stdio.h>
-#include "square.h"
+#include "../board/square.h"
 
 typedef struct StateOpponent StateOpponent;
 

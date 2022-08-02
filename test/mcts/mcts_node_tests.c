@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "mcts_node_tests.h"
-#include "../src/mcts_node.h"
-#include "test_util.h"
+#include "../../src/mcts/mcts_node.h"
+#include "../test_util.h"
 
 
 void rootIsLeafNode() {
