@@ -40,7 +40,6 @@ void playGame(FILE* file, double timePerMove) {
     MCTSNode* root = createMCTSRootNode();
     RNG rng;
     seedRNG(&rng, 69, 420);
-    initializeLookupTable();
     while (true) {
         int enemy_row;
         int enemy_col;

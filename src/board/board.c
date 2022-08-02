@@ -92,6 +92,7 @@ Board* createBoard() {
         }
     }
     board->me = PLAYER2;
+    initializeLookupTable();
     return board;
 }
 

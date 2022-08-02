@@ -18,7 +18,6 @@ Winner simulateSingleGame(bool weArePlayer1) {
     MCTSNode* root = createMCTSRootNode();
     RNG rng;
     seedRNG(&rng, time(NULL), 420);
-    initializeLookupTable();
     StateOpponent* stateOpponent = initializeStateOpponent();
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;

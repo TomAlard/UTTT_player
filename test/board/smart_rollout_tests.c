@@ -16,7 +16,6 @@ void hasWinningMoveTest() {
     initializePlayerBitBoard(&player1);
     PlayerBitBoard player2;
     initializePlayerBitBoard(&player2);
-    initializeLookupTable();
     while (getWinner(board) == NONE) {
         int8_t amountOfMoves;
         Square movesArray[TOTAL_SMALL_SQUARES];
