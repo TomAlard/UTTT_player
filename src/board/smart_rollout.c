@@ -83,7 +83,7 @@ bool canWinLastBoard(uint16_t lastBoard, uint8_t currentBoard, uint16_t instantW
 }
 
 
-bool hasMoreSmallBoardsThanOpponentWin(Board* board, Player player) {
+bool hasMoreSmallBoardsThanOpponent(Board* board, Player player) {
     int player1SmallBoards = __builtin_popcount(board->player1.bigBoard) + !player;
     int player2SmallBoards = __builtin_popcount(board->player2.bigBoard) + player;
     return (player == PLAYER1 && player1SmallBoards > player2SmallBoards)
@@ -91,16 +91,11 @@ bool hasMoreSmallBoardsThanOpponentWin(Board* board, Player player) {
 }
 
 
-bool winsGameByWinningLastBoard(Board* board, uint16_t lastBoard, uint8_t currentBoard, uint16_t instantWinSmallBoards, Player player) {
-    return canWinLastBoard(lastBoard, currentBoard, instantWinSmallBoards)
-        && hasMoreSmallBoardsThanOpponentWin(board, player);
-}
-
-
 bool canWinWithMoreSmallBoards(Board* board, uint8_t currentBoard, uint16_t instantWinSmallBoards, Player player) {
     uint16_t openSmallBoards = 511 - (board->player1.bigBoard | board->player2.bigBoard);
     return onlyOneSmallBoardOpen(openSmallBoards)
-           && winsGameByWinningLastBoard(board, openSmallBoards, currentBoard, instantWinSmallBoards, player);
+        && canWinLastBoard(openSmallBoards, currentBoard, instantWinSmallBoards)
+        && hasMoreSmallBoardsThanOpponent(board, player);
 }
 
 
