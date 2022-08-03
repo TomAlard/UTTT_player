@@ -39,12 +39,12 @@ uint16_t calculateInstantWinBoards_(uint16_t bigBoard) {
 
 
 uint16_t calculateInstantWinBoards(uint16_t bigBoard, uint16_t otherPlayerBigBoard) {
-    return precalculatedInstantWinBoards[bigBoard] & ~otherPlayerBigBoard;
+    return precalculatedInstantWinBoards[bigBoard & ~otherPlayerBigBoard] & ~otherPlayerBigBoard;
 }
 
 
 bool smallBoardHasInstantWinMove(uint16_t smallBoard, uint16_t otherSmallBoard) {
-    return (precalculatedInstantWinBoards[smallBoard] & ~otherSmallBoard) != 0;
+    return calculateInstantWinBoards(smallBoard, otherSmallBoard) != 0;
 }
 
 
@@ -60,9 +60,78 @@ void initializeRolloutState(RolloutState* RS) {
 }
 
 
-bool hasWinningMove(RolloutState* RS, uint8_t currentBoard, Player player) {
+bool canWinWith3InARow(uint8_t currentBoard, uint16_t smallBoardsWithWinningMove) {
+    return (currentBoard == ANY_BOARD && smallBoardsWithWinningMove)
+        || BIT_CHECK(smallBoardsWithWinningMove, currentBoard);
+}
+
+
+// https://stackoverflow.com/a/28303898
+bool numberIsPowerOf2(uint16_t n) {
+    return (n & (n - 1)) == 0;
+}
+
+
+bool onlyOneSmallBoardOpen(uint16_t openSmallBoards) {
+    return numberIsPowerOf2(openSmallBoards);
+}
+
+
+bool canWinLastBoard(uint16_t lastBoard, uint8_t currentBoard, uint16_t instantWinSmallBoards) {
+    return (instantWinSmallBoards & lastBoard)
+        && (currentBoard == ANY_BOARD || BIT_CHECK(lastBoard, currentBoard));
+}
+
+
+bool canDrawLastBoard(Board* board, uint16_t lastBoard) {
+    uint8_t lastBoardIndex = __builtin_ffs(lastBoard) - 1;
+    uint16_t openSquares_ = 511 - (board->player1.smallBoards[lastBoardIndex] | board->player2.smallBoards[lastBoardIndex]);
+    return numberIsPowerOf2(openSquares_);
+}
+
+
+bool hasMoreSmallBoardsThanOpponentWin(Board* board, Player player) {
+    int player1SmallBoards = __builtin_popcount(board->player1.bigBoard) + !player;
+    int player2SmallBoards = __builtin_popcount(board->player2.bigBoard) + player;
+    return (player == PLAYER1 && player1SmallBoards > player2SmallBoards)
+        || (player == PLAYER2 && player1SmallBoards < player2SmallBoards);
+}
+
+
+bool hasMoreSmallBoardsThanOpponentDraw(Board* board, Player player) {
+    int player1SmallBoards = __builtin_popcount(board->player1.bigBoard);
+    int player2SmallBoards = __builtin_popcount(board->player2.bigBoard);
+    return (player == PLAYER1 && player1SmallBoards > player2SmallBoards)
+        || (player == PLAYER2 && player1SmallBoards < player2SmallBoards);
+}
+
+
+bool winsGameByWinningLastBoard(Board* board, uint16_t lastBoard, uint8_t currentBoard, uint16_t instantWinSmallBoards, Player player) {
+    return canWinLastBoard(lastBoard, currentBoard, instantWinSmallBoards)
+        && hasMoreSmallBoardsThanOpponentWin(board, player);
+}
+
+
+bool winsGameByDrawingLastBoard(Board* board, uint16_t lastBoard, Player player) {
+    return canDrawLastBoard(board, lastBoard)
+        && hasMoreSmallBoardsThanOpponentDraw(board, player);
+}
+
+
+bool canWinWithMoreSmallBoards(Board* board, uint8_t currentBoard, uint16_t instantWinSmallBoards, Player player) {
+    uint16_t openSmallBoards = 511 - (board->player1.bigBoard | board->player2.bigBoard);
+    return onlyOneSmallBoardOpen(openSmallBoards)
+           && (winsGameByWinningLastBoard(board, openSmallBoards, currentBoard, instantWinSmallBoards, player)
+           || winsGameByDrawingLastBoard(board, openSmallBoards, player));
+}
+
+
+bool hasWinningMove(Board* board, RolloutState* RS) {
+    Player player = getCurrentPlayer(board);
+    uint8_t currentBoard = getCurrentBoard(board);
     uint16_t smallBoardsWithWinningMove = RS->instantWinBoards[player] & RS->instantWinSmallBoards[player];
-    return (currentBoard == 9 && smallBoardsWithWinningMove) || BIT_CHECK(smallBoardsWithWinningMove, currentBoard);
+    return canWinWith3InARow(currentBoard, smallBoardsWithWinningMove)
+        || canWinWithMoreSmallBoards(board, currentBoard, RS->instantWinSmallBoards[player], player);
 }
 
 

@@ -4,7 +4,6 @@
 #include "square.h"
 #include "../misc/player.h"
 #include "../misc/random.h"
-#include "smart_rollout.h"
 #include "player_bitboard.h"
 
 #define TOTAL_SMALL_SQUARES 81

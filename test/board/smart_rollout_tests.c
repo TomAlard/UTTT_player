@@ -1,14 +1,13 @@
 #include <stdio.h>
 #include "smart_rollout_tests.h"
 #include "../../src/board/smart_rollout.h"
-#include "../../src/board/board.h"
 #include "../test_util.h"
 
 
 void hasWinningMoveTest() {
     RNG rng;
     seedRNG(&rng, 69, 420);
-    for (int _ = 0; _ < 10; _++) {
+    for (int _ = 0; _ < 100; _++) {
         RolloutState RS;
         initializeRolloutState(&RS);
         Board* board = createBoard();
@@ -29,7 +28,7 @@ void hasWinningMoveTest() {
                 }
                 revertToCheckpoint(board);
             }
-            myAssert(hasWinningMove(&RS, getCurrentBoard(board), currentPlayer) == winningMoveExists);
+            myAssert(hasWinningMove(board, &RS) == winningMoveExists);
             Square move = moves[generateBoundedRandomNumber(&rng, amountOfMoves)];
             PlayerBitBoard* player = currentPlayer == PLAYER1? &player1 : &player2;
             PlayerBitBoard* otherPlayer = currentPlayer == PLAYER1? &player2 : &player1;

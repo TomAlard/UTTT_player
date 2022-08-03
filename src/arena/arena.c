@@ -6,10 +6,9 @@
 #include "../main.h"
 #include "arena_opponent.h"
 #include "../misc/util.h"
-#include "../handle_turn.h"
 
 
-#define ROUNDS 5000
+#define ROUNDS 1000
 #define TIME 0.1
 
 
@@ -31,7 +30,7 @@ Winner simulateSingleGame(bool weArePlayer1) {
         }
         gettimeofday(&end, NULL);
         double timePassed = (double) (end.tv_usec - start.tv_usec) / 1000000 + (double) (end.tv_sec - start.tv_sec);
-        if (timePassed > TIME*1.15) {
+        if (timePassed > TIME*2) {
             fprintf(stderr, weAreCurrentPlayer? "We used too much time!\n" : "Opponent used too much time!\n");
         }
         weAreCurrentPlayer = !weAreCurrentPlayer;

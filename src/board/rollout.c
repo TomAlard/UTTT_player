@@ -30,7 +30,7 @@ void makeRolloutTemporaryMove(Board* board, RolloutState* RS, Square square) {
 void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng) {
     assert(board->AS.winner == NONE && "makeRandomTemporaryMove: there is already a winner");
     uint8_t currentBoard = board->AS.currentBoard;
-    if (hasWinningMove(RS, currentBoard, board->AS.currentPlayer)) {
+    if (hasWinningMove(board, RS)) {
         board->AS.winner = board->AS.currentPlayer + 1;
         return;
     }

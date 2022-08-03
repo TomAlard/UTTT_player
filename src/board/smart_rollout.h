@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "../misc/player.h"
+#include "board.h"
 
 typedef struct RolloutState {
     uint16_t instantWinBoards[2];
@@ -13,7 +14,7 @@ void initializeLookupTable();
 
 void initializeRolloutState(RolloutState* RS);
 
-bool hasWinningMove(RolloutState* RS, uint8_t currentBoard, Player player);
+bool hasWinningMove(Board* board, RolloutState* RS);
 
 void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t player1SmallBoard, uint16_t player2SmallBoard);
 

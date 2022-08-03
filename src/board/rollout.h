@@ -2,6 +2,7 @@
 #define UTTT2_ROLLOUT_H
 
 #include "board.h"
+#include "smart_rollout.h"
 
 void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng);
 

@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "board.h"
 #include "../misc/util.h"
+#include "smart_rollout.h"
 
 
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
