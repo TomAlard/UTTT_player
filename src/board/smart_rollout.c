@@ -83,24 +83,9 @@ bool canWinLastBoard(uint16_t lastBoard, uint8_t currentBoard, uint16_t instantW
 }
 
 
-bool canDrawLastBoard(Board* board, uint16_t lastBoard) {
-    uint8_t lastBoardIndex = __builtin_ffs(lastBoard) - 1;
-    uint16_t openSquares_ = 511 - (board->player1.smallBoards[lastBoardIndex] | board->player2.smallBoards[lastBoardIndex]);
-    return numberIsPowerOf2(openSquares_);
-}
-
-
 bool hasMoreSmallBoardsThanOpponentWin(Board* board, Player player) {
     int player1SmallBoards = __builtin_popcount(board->player1.bigBoard) + !player;
     int player2SmallBoards = __builtin_popcount(board->player2.bigBoard) + player;
-    return (player == PLAYER1 && player1SmallBoards > player2SmallBoards)
-        || (player == PLAYER2 && player1SmallBoards < player2SmallBoards);
-}
-
-
-bool hasMoreSmallBoardsThanOpponentDraw(Board* board, Player player) {
-    int player1SmallBoards = __builtin_popcount(board->player1.bigBoard);
-    int player2SmallBoards = __builtin_popcount(board->player2.bigBoard);
     return (player == PLAYER1 && player1SmallBoards > player2SmallBoards)
         || (player == PLAYER2 && player1SmallBoards < player2SmallBoards);
 }
@@ -112,17 +97,10 @@ bool winsGameByWinningLastBoard(Board* board, uint16_t lastBoard, uint8_t curren
 }
 
 
-bool winsGameByDrawingLastBoard(Board* board, uint16_t lastBoard, Player player) {
-    return canDrawLastBoard(board, lastBoard)
-        && hasMoreSmallBoardsThanOpponentDraw(board, player);
-}
-
-
 bool canWinWithMoreSmallBoards(Board* board, uint8_t currentBoard, uint16_t instantWinSmallBoards, Player player) {
     uint16_t openSmallBoards = 511 - (board->player1.bigBoard | board->player2.bigBoard);
     return onlyOneSmallBoardOpen(openSmallBoards)
-           && (winsGameByWinningLastBoard(board, openSmallBoards, currentBoard, instantWinSmallBoards, player)
-           || winsGameByDrawingLastBoard(board, openSmallBoards, player));
+           && winsGameByWinningLastBoard(board, openSmallBoards, currentBoard, instantWinSmallBoards, player);
 }
 
 
