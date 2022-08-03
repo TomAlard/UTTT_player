@@ -18,7 +18,7 @@ void initializeRolloutState(RolloutState* RS);
 
 bool hasWinningMove(Board* board, RolloutState* RS);
 
-void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t player1SmallBoard, uint16_t player2SmallBoard);
+void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex);
 
 void updateBigBoardState(Board* board, RolloutState* RS);
 

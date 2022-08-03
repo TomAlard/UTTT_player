@@ -32,7 +32,7 @@ void hasWinningMoveTest() {
             if (bigBoardWasUpdated) {
                 updateBigBoardState(board, &RS);
             }
-            updateSmallBoardState(&RS, move.board, board->player1.smallBoards[move.board], board->player2.smallBoards[move.board]);
+            updateSmallBoardState(board, &RS, move.board);
             makePermanentMove(board, move);
         }
         freeBoard(board);

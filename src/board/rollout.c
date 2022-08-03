@@ -20,7 +20,7 @@ void makeRolloutTemporaryMove(Board* board, RolloutState* RS, Square square) {
         board->AS.totalAmountOfOpenSquares--;
         board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    updateSmallBoardState(RS, square.board, board->player1.smallBoards[square.board], board->player2.smallBoards[square.board]);
+    updateSmallBoardState(board, RS, square.board);
     board->AS.currentPlayer ^= 1;
     board->AS.currentBoard = getNextBoard(board, square.position);
     board->AS.ply++;

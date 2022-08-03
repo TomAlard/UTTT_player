@@ -88,9 +88,11 @@ bool hasWinningMove(Board* board, RolloutState* RS) {
 }
 
 
-void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t player1SmallBoard, uint16_t player2SmallBoard) {
-    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER1], boardIndex, smallBoardHasInstantWinMove(player1SmallBoard, player2SmallBoard));
-    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER2], boardIndex, smallBoardHasInstantWinMove(player2SmallBoard, player1SmallBoard));
+void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex) {
+    uint16_t p1 = board->player1.smallBoards[boardIndex];
+    uint16_t p2 = board->player2.smallBoards[boardIndex];
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER1], boardIndex, smallBoardHasInstantWinMove(p1, p2));
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER2], boardIndex, smallBoardHasInstantWinMove(p2, p1));
 }
 
 
