@@ -2,6 +2,7 @@
 #include <sys/time.h>
 #include "find_next_move.h"
 #include "../misc/util.h"
+#include "../board/rollout.h"
 
 
 MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
@@ -19,16 +20,6 @@ MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
     MCTSNode* nextChild = selectNextChild(leaf);
     visitNode(nextChild, board);
     return nextChild;
-}
-
-
-Winner simulate(Board* board, RNG* rng) {
-    RolloutState RS;
-    initializeRolloutState(&RS);
-    while (getWinner(board) == NONE) {
-        makeRandomTemporaryMove(board, &RS, rng);
-    }
-    return getWinner(board);
 }
 
 
@@ -53,7 +44,7 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
         if (winner == NONE) {
             playoutNode = expandLeaf(board, leaf);
             player = OTHER_PLAYER(getCurrentPlayer(board));
-            simulationWinner = simulate(board, rng);
+            simulationWinner = rollout(board, rng);
         } else {
             playoutNode = leaf;
             simulationWinner = winner;

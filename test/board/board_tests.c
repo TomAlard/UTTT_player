@@ -3,6 +3,7 @@
 #include "../../src/board/board.h"
 #include "../test_util.h"
 #include "../../src/misc/util.h"
+#include "../../src/board/rollout.h"
 
 
 void anyMoveAllowedOnEmptyBoard() {

@@ -39,7 +39,7 @@ void freeBoard(Board* board);
 
 Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
 
-void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng);
+uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 
 bool nextBoardIsEmpty(Board* board);
 

@@ -11,13 +11,13 @@
 void runTests() {
     printf("PlayerBitBoard tests...\n");
     runPlayerBitBoardTests();
-    printf("runSmartRolloutTests...\n");
+    printf("SmartRollout tests...\n");
     runSmartRolloutTests();
     printf("Board tests...\n");
     runBoardTests();
     printf("MCTSNode tests...\n");
     runMCTSNodeTests();
-    printf("runFindNextMoveTests...\n");
+    printf("FindNextMove tests...\n");
     runFindNextMoveTests();
     printf("Amount of simulations on second move: ");
     profileSimulations();
