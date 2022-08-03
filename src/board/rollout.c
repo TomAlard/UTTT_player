@@ -15,7 +15,7 @@ void makeRolloutTemporaryMove(Board* board, RolloutState* RS, Square square) {
         board->AS.winner = winnerByBigBoards[board->player1.bigBoard][board->player2.bigBoard];
         board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
         board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
-        updateBigBoardState(RS, board->player1.bigBoard, board->player2.bigBoard);
+        updateBigBoardState(board, RS);
     } else {
         board->AS.totalAmountOfOpenSquares--;
         board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;

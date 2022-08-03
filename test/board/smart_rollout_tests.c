@@ -11,10 +11,6 @@ void hasWinningMoveTest() {
         RolloutState RS;
         initializeRolloutState(&RS);
         Board* board = createBoard();
-        PlayerBitBoard player1;
-        initializePlayerBitBoard(&player1);
-        PlayerBitBoard player2;
-        initializePlayerBitBoard(&player2);
         while (getWinner(board) == NONE) {
             int8_t amountOfMoves;
             Square movesArray[TOTAL_SMALL_SQUARES];
@@ -30,13 +26,13 @@ void hasWinningMoveTest() {
             }
             myAssert((hasWinningMove(board, &RS) == winningMoveExists) || board->AS.totalAmountOfOpenSquares == 1);
             Square move = moves[generateBoundedRandomNumber(&rng, amountOfMoves)];
-            PlayerBitBoard* player = currentPlayer == PLAYER1? &player1 : &player2;
-            PlayerBitBoard* otherPlayer = currentPlayer == PLAYER1? &player2 : &player1;
+            PlayerBitBoard* player = currentPlayer == PLAYER1? &board->player1 : &board->player2;
+            PlayerBitBoard* otherPlayer = currentPlayer == PLAYER1? &board->player2 : &board->player1;
             bool bigBoardWasUpdated = setSquareOccupied(player, otherPlayer, move);
             if (bigBoardWasUpdated) {
-                updateBigBoardState(&RS, player1.bigBoard, player2.bigBoard);
+                updateBigBoardState(board, &RS);
             }
-            updateSmallBoardState(&RS, move.board, player1.smallBoards[move.board], player2.smallBoards[move.board]);
+            updateSmallBoardState(&RS, move.board, board->player1.smallBoards[move.board], board->player2.smallBoards[move.board]);
             makePermanentMove(board, move);
         }
         freeBoard(board);
