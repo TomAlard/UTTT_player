@@ -4,7 +4,16 @@
 #include <stdbool.h>
 #include "../board/board.h"
 
-typedef struct MCTSNode MCTSNode;
+typedef struct MCTSNode {
+    struct MCTSNode* parent;
+    struct MCTSNode* children;
+    float wins;
+    float sims;
+    float simsInverted;
+    Square square;
+    int8_t amountOfChildren;
+    int8_t amountOfUntriedMoves;
+} MCTSNode;
 
 MCTSNode* createMCTSRootNode();
 
@@ -19,8 +28,6 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 void backpropagate(MCTSNode* node, Winner winner, Player player);
 
 void visitNode(MCTSNode* node, Board* board);
-
-void setNodeWinner(MCTSNode* node, Winner winner, Player player);
 
 Square getMostPromisingMove(MCTSNode* node);
 

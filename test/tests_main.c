@@ -6,6 +6,7 @@
 #include "mcts/find_next_move_tests.h"
 #include "profile_simulations.h"
 #include "board/smart_rollout_tests.h"
+#include "mcts/solver_tests.h"
 
 
 void runTests() {
@@ -17,6 +18,8 @@ void runTests() {
     runBoardTests();
     printf("MCTSNode tests...\n");
     runMCTSNodeTests();
+    printf("Solver tests...\n");
+    runSolverTests();
     printf("FindNextMove tests...\n");
     runFindNextMoveTests();
     printf("Amount of simulations on second move: ");

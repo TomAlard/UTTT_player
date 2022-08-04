@@ -2,6 +2,7 @@
 #include "mcts_node_tests.h"
 #include "../../src/mcts/mcts_node.h"
 #include "../test_util.h"
+#include "../../src/mcts/solver.h"
 
 
 void rootIsLeafNode() {
@@ -24,26 +25,6 @@ void between17And81MovesInOneGame() {
         count++;
     }
     myAssert(count >= 17 && count <= 81);
-    freeBoard(board);
-    freeMCTSTree(root);
-}
-
-
-void keepsSelectingSameNodeWhenSetAsWin() {
-    MCTSNode* root = createMCTSRootNode();
-    Board* board = createBoard();
-    isLeafNode(root, board);  // to discover child nodes
-    MCTSNode* node = selectNextChild(root);
-    setNodeWinner(node, WIN_P1, getCurrentPlayer(board));
-    MCTSNode* untriedNode = selectNextChild(root);
-    while (getSims(untriedNode) == 0) {
-        // backpropagate 100 wins
-        for (int i = 0; i < 100; i++) {
-            backpropagate(untriedNode, WIN_P1, getCurrentPlayer(board));
-        }
-        untriedNode = selectNextChild(root);
-    }
-    myAssert(selectNextChild(root) == node);
     freeBoard(board);
     freeMCTSTree(root);
 }
@@ -108,8 +89,6 @@ void runMCTSNodeTests() {
     rootIsLeafNode();
     printf("\tbetween17And81MovesInOneGame...\n");
     between17And81MovesInOneGame();
-    printf("\tkeepsSelectingSameNodeWhenSetAsWin...\n");
-    keepsSelectingSameNodeWhenSetAsWin();
     printf("\tselectsChildWithHighChanceOfWin...\n");
     selectsChildWithHighChanceOfWin();
     printf("\tupdateRootTest...\n");

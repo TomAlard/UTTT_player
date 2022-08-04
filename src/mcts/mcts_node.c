@@ -6,18 +6,6 @@
 #include "../misc/util.h"
 
 
-typedef struct MCTSNode {
-    MCTSNode* parent;
-    MCTSNode* children;
-    float wins;
-    float sims;
-    float simsInverted;
-    Square square;
-    int8_t amountOfChildren;
-    int8_t amountOfUntriedMoves;
-} MCTSNode;
-
-
 MCTSNode* createMCTSRootNode() {
     MCTSNode* root = safe_calloc(sizeof(MCTSNode));
     root->amountOfChildren = -1;
@@ -213,19 +201,6 @@ void backpropagate(MCTSNode* node, Winner winner, Player player) {
 
 void visitNode(MCTSNode* node, Board* board) {
     makeTemporaryMove(board, node->square);
-}
-
-
-#define A_LOT 100000.0f
-void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
-    assert(winner != NONE && "setNodeWinner: Can't set NONE as winner");
-    if (winner != DRAW) {
-        bool win = player + 1 == winner;
-        node->wins += win? A_LOT : -A_LOT;
-        if (!win) {
-            node->parent->wins += A_LOT;
-        }
-    }
 }
 
 

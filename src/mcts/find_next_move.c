@@ -3,6 +3,7 @@
 #include "find_next_move.h"
 #include "../misc/util.h"
 #include "../board/rollout.h"
+#include "solver.h"
 
 
 MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
