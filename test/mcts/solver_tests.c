@@ -9,14 +9,14 @@ void keepsSelectingSameNodeWhenSetAsWin() {
     Board* board = createBoard();
     isLeafNode(root, board);  // to discover child nodes
     MCTSNode* node = selectNextChild(root);
-    setNodeWinner(node, WIN_P1, getCurrentPlayer(board));
-    MCTSNode* untriedNode = selectNextChild(root);
-    while (getSims(untriedNode) == 0) {
+    backpropagate(node, WIN_P1, PLAYER1);
+    setNodeWinner(node, WIN_P1, PLAYER1);
+    while (isLeafNode(root, board)) {
         // backpropagate 100 wins
+        MCTSNode* untriedNode = selectNextChild(root);
         for (int i = 0; i < 100; i++) {
-            backpropagate(untriedNode, WIN_P1, getCurrentPlayer(board));
+            backpropagate(untriedNode, WIN_P1, PLAYER1);
         }
-        untriedNode = selectNextChild(root);
     }
     myAssert(selectNextChild(root) == node);
     freeBoard(board);
@@ -24,38 +24,52 @@ void keepsSelectingSameNodeWhenSetAsWin() {
 }
 
 
-void parentIsWinIfOneChildIsSetAsLoss() {
+void parentIsLossIfOneChildIsSetAsWin() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     isLeafNode(root, board);  // to discover child nodes
-    setNodeWinner(selectNextChild(root), WIN_P2, PLAYER1);
-    myAssert(root->wins == root->sims && root->wins > 0);
-    freeBoard(board);
-    freeMCTSTree(root);
-}
-
-
-void parentIsLossIfAllChildrenAreSetAsWin() {
-    MCTSNode* root = createMCTSRootNode();
-    Board* board = createBoard();
-    while (isLeafNode(root, board)) {
-        setNodeWinner(selectNextChild(root), WIN_P1, PLAYER1);
-    }
+    setNodeWinner(selectNextChild(root), WIN_P2, PLAYER2);
     myAssert(root->wins == 0 && root->sims > 0);
     freeBoard(board);
     freeMCTSTree(root);
 }
 
 
-void parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreWin() {
+void parentIsWinIfAllChildrenAreSetAsLoss() {
+    MCTSNode* root = createMCTSRootNode();
+    Board* board = createBoard();
+    while (isLeafNode(root, board)) {
+        setNodeWinner(selectNextChild(root), WIN_P2, PLAYER1);
+    }
+    myAssert(root->wins == root->sims && root->wins > 0);
+    freeBoard(board);
+    freeMCTSTree(root);
+}
+
+
+void parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreLoss() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     isLeafNode(root, board);  // to discover child nodes
     setNodeWinner(selectNextChild(root), DRAW, PLAYER1);
     while (isLeafNode(root, board)) {
-        setNodeWinner(selectNextChild(root), WIN_P1, PLAYER1);
+        setNodeWinner(selectNextChild(root), WIN_P2, PLAYER1);
     }
     myAssert(root->wins / root->sims == 0.5f);
+    freeBoard(board);
+    freeMCTSTree(root);
+}
+
+
+void parentIsLossIfAllGrandchildrenOfOneChildAreLoss() {
+    MCTSNode* root = createMCTSRootNode();
+    Board* board = createBoard();
+    isLeafNode(root, board);  // to discover child nodes
+    MCTSNode* child = selectNextChild(root);
+    while (isLeafNode(child, board)) {
+        setNodeWinner(selectNextChild(child), WIN_P1, PLAYER2);
+    }
+    myAssert(root->wins == 0 && root->sims > 0);
     freeBoard(board);
     freeMCTSTree(root);
 }
@@ -64,10 +78,12 @@ void parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreWin() {
 void runSolverTests() {
     printf("\tkeepsSelectingSameNodeWhenSetAsWin...\n");
     keepsSelectingSameNodeWhenSetAsWin();
-    printf("\tparentIsWinIfChildIsSetAsLoss...\n");
-    parentIsWinIfOneChildIsSetAsLoss();
-    printf("\tparentIsLossIfAllChildrenAreSetAsWin...\n");
-    parentIsLossIfAllChildrenAreSetAsWin();
-    printf("\tparentIsDrawIfAtLeastOneChildIsDrawAndOthersAreWin...\n");
-    parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreWin();
+    printf("\tparentIsLossIfOneChildIsSetAsWin...\n");
+    parentIsLossIfOneChildIsSetAsWin();
+    printf("\tparentIsWinIfAllChildrenAreSetAsLoss...\n");
+    parentIsWinIfAllChildrenAreSetAsLoss();
+    printf("\tparentIsDrawIfAtLeastOneChildIsDrawAndOthersAreLoss...\n");
+    parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreLoss();
+    printf("\tparentIsLossIfAllGrandchildrenOfOneChildAreLoss...\n");
+    parentIsLossIfAllGrandchildrenOfOneChildAreLoss();
 }

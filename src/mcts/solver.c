@@ -2,7 +2,7 @@
 #include <assert.h>
 #include "solver.h"
 
-#define BIG_FLOAT 10000000000000.0f
+#define BIG_FLOAT 5000000.0f
 
 
 void checkAllSet(MCTSNode* node) {
@@ -13,21 +13,20 @@ void checkAllSet(MCTSNode* node) {
     bool hasDraw = false;
     for (int i = 0; i < node->amountOfChildren; i++) {
         MCTSNode child = node->children[i];
-        if (child.sims < BIG_FLOAT || child.wins == 0) {
+        if (child.sims < BIG_FLOAT || child.wins == child.sims) {
             return;
         }
-        if (!hasDraw && child.wins != child.sims) {
+        if (!hasDraw && child.wins > 0) {
             hasDraw = true;
         }
     }
-    node->sims = BIG_FLOAT;
-    node->wins = hasDraw? BIG_FLOAT / 2.0f : 0;
-    checkAllSet(node->parent);
+    assert(node->sims < BIG_FLOAT || (node->wins / node->sims == 0.5f && hasDraw) || (node->wins == node->sims && !hasDraw));
+    setNodeWinner(node, hasDraw? DRAW : WIN_P1, PLAYER1);
 }
 
 
 void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
-    if (node->sims >= BIG_FLOAT) {
+    if (node == NULL || node->sims >= BIG_FLOAT) {
         return;
     }
     node->sims = BIG_FLOAT;
@@ -36,12 +35,9 @@ void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
         checkAllSet(node->parent);
     } else if (player + 1 == winner) {
         node->wins = BIG_FLOAT;
-        checkAllSet(node->parent);
+        setNodeWinner(node->parent, winner, OTHER_PLAYER(player));
     } else {
         node->wins = 0;
-        if (node->parent != NULL) {
-            node->parent->wins = BIG_FLOAT;
-            checkAllSet(node->parent->parent);
-        }
+        checkAllSet(node->parent);
     }
 }
