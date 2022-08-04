@@ -35,6 +35,7 @@ void hasWinningMoveTest() {
                 updateBigBoardState(board, &RS);
             }
             updateSmallBoardState(board, &RS, move.board);
+            revertToCheckpoint(board);
             makePermanentMove(board, move);
         }
         freeBoard(board);
