@@ -1189,7 +1189,7 @@ void playGame(FILE* file, double timePerMove) {
 }
 
 
-#define TIME 0.090
+#define TIME 0.095
 int main() {
     // runTests();
     playGame(stdin, TIME);
