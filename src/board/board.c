@@ -117,7 +117,7 @@ Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* a
 
 
 uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
-    bool smallBoardIsDecided = boardIsWon(&board->player1, previousPosition) || boardIsWon(&board->player2, previousPosition);
+    bool smallBoardIsDecided = BIT_CHECK(board->player1.bigBoard | board->player2.bigBoard, previousPosition);
     return smallBoardIsDecided ? ANY_BOARD : previousPosition;
 }
 
