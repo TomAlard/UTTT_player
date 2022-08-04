@@ -6,10 +6,8 @@
 #include "board.h"
 
 typedef struct RolloutState {
-    uint16_t lastBoard;
     uint16_t instantWinBoards[2];
     uint16_t instantWinSmallBoards[2];
-    bool hasMoreSmallBoardsThanOpponent[2];
 } RolloutState;
 
 void initializeLookupTable();

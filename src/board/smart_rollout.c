@@ -60,45 +60,21 @@ void initializeRolloutState(RolloutState* RS) {
 }
 
 
-bool canWinWith3InARow(uint8_t currentBoard, uint16_t smallBoardsWithWinningMove) {
+bool hasWinningMove(Board* board, RolloutState* RS) {
+    Player player = board->AS.currentPlayer;
+    uint8_t currentBoard = board->AS.currentBoard;
+    uint16_t smallBoardsWithWinningMove = RS->instantWinBoards[player] & RS->instantWinSmallBoards[player];
     return (currentBoard == ANY_BOARD && smallBoardsWithWinningMove)
         || BIT_CHECK(smallBoardsWithWinningMove, currentBoard);
-}
-
-
-bool canWinLastBoard(uint16_t lastBoard, uint8_t currentBoard, uint16_t instantWinSmallBoards) {
-    return (instantWinSmallBoards & lastBoard)
-        && (currentBoard == ANY_BOARD || BIT_CHECK(lastBoard, currentBoard));
-}
-
-
-bool canWinWithMoreSmallBoards(RolloutState* RS, uint8_t currentBoard, Player player) {
-    return RS->lastBoard != 0
-        && canWinLastBoard(RS->lastBoard, currentBoard, RS->instantWinSmallBoards[player])
-        && RS->hasMoreSmallBoardsThanOpponent[player];
-}
-
-
-bool hasWinningMove(Board* board, RolloutState* RS) {
-    Player player = getCurrentPlayer(board);
-    uint8_t currentBoard = getCurrentBoard(board);
-    uint16_t smallBoardsWithWinningMove = RS->instantWinBoards[player] & RS->instantWinSmallBoards[player];
-    return canWinWith3InARow(currentBoard, smallBoardsWithWinningMove)
-        || canWinWithMoreSmallBoards(RS, currentBoard, player);
 }
 
 
 void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex) {
     uint16_t p1 = board->player1.smallBoards[boardIndex];
     uint16_t p2 = board->player2.smallBoards[boardIndex];
-    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER1], boardIndex, smallBoardHasInstantWinMove(p1, p2));
-    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER2], boardIndex, smallBoardHasInstantWinMove(p2, p1));
-}
-
-
-// https://stackoverflow.com/a/28303898
-bool numberIsPowerOf2(uint16_t n) {
-    return (n & (n - 1)) == 0;
+    uint16_t mask = 1ULL << boardIndex;
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER1], mask, smallBoardHasInstantWinMove(p1, p2));
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER2], mask, smallBoardHasInstantWinMove(p2, p1));
 }
 
 
@@ -107,10 +83,4 @@ void updateBigBoardState(Board* board, RolloutState* RS) {
     uint16_t p2 = board->player2.bigBoard;
     RS->instantWinBoards[PLAYER1] = calculateInstantWinBoards(p1, p2);
     RS->instantWinBoards[PLAYER2] = calculateInstantWinBoards(p2, p1);
-    int p1Boards = __builtin_popcount(p1);
-    int p2Boards = __builtin_popcount(p2);
-    RS->hasMoreSmallBoardsThanOpponent[PLAYER1] = p1Boards + 1 > p2Boards;
-    RS->hasMoreSmallBoardsThanOpponent[PLAYER2] = p1Boards < p2Boards + 1;
-    uint16_t openSmallBoards = 511 - (p1 | p2);
-    RS->lastBoard = numberIsPowerOf2(openSmallBoards)? openSmallBoards : 0;
 }

@@ -9,7 +9,7 @@
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))
-#define BIT_CHANGE(a,b,c) ((a) ^= (-(c) ^ (a)) & (1ULL << (b)))
+#define BIT_CHANGE(a,b,c) ((a) = (a) & ~(b) | (-(c) & (b)))
 
 void* safe_malloc(size_t size);
 
