@@ -206,17 +206,17 @@ void visitNode(MCTSNode* node, Board* board) {
 
 Square getMostPromisingMove(MCTSNode* node) {
     assert(node->amountOfChildren > 0 && "getMostPromisingMove: node has no children");
-    MCTSNode* highestSimsChild = &node->children[0];
-    float highestSims = highestSimsChild->sims;
+    MCTSNode* highestWinrateChild = &node->children[0];
+    float highestWinrate = getWinrate(highestWinrateChild);
     for (int i = 1; i < node->amountOfChildren; i++) {
         MCTSNode* child = &node->children[i];
-        float sims = child->sims;
-        if (sims > highestSims) {
-            highestSimsChild = child;
-            highestSims = sims;
+        float winrate = getWinrate(child);
+        if (winrate > highestWinrate) {
+            highestWinrateChild = child;
+            highestWinrate = winrate;
         }
     }
-    return highestSimsChild->square;
+    return highestWinrateChild->square;
 }
 
 
