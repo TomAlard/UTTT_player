@@ -154,7 +154,16 @@ void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng);
 
 Winner rollout(Board* board, RNG* rng);
 
-typedef struct MCTSNode MCTSNode;
+typedef struct MCTSNode {
+    struct MCTSNode* parent;
+    struct MCTSNode* children;
+    float wins;
+    float sims;
+    float simsInverted;
+    Square square;
+    int8_t amountOfChildren;
+    int8_t amountOfUntriedMoves;
+} MCTSNode;
 
 MCTSNode* createMCTSRootNode();
 
@@ -170,13 +179,13 @@ void backpropagate(MCTSNode* node, Winner winner, Player player);
 
 void visitNode(MCTSNode* node, Board* board);
 
-void setNodeWinner(MCTSNode* node, Winner winner, Player player);
-
 Square getMostPromisingMove(MCTSNode* node);
 
 int getSims(MCTSNode* node);
 
 float getWinrate(MCTSNode* node);
+
+void setNodeWinner(MCTSNode* node, Winner winner, Player player);
 
 int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime);
 
@@ -756,18 +765,6 @@ uint8_t getPly(Board* board) {
 
 
 // START MCTS_NODE
-typedef struct MCTSNode {
-    MCTSNode* parent;
-    MCTSNode* children;
-    float wins;
-    float sims;
-    float simsInverted;
-    Square square;
-    int8_t amountOfChildren;
-    int8_t amountOfUntriedMoves;
-} MCTSNode;
-
-
 MCTSNode* createMCTSRootNode() {
     MCTSNode* root = calloc(1, sizeof(MCTSNode));
     root->amountOfChildren = -1;
@@ -960,30 +957,18 @@ void visitNode(MCTSNode* node, Board* board) {
 }
 
 
-#define A_LOT 100000.0f
-void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
-    if (winner != DRAW) {
-        bool win = player + 1 == winner;
-        node->wins += win? A_LOT : -A_LOT;
-        if (!win) {
-            node->parent->wins += A_LOT;
-        }
-    }
-}
-
-
 Square getMostPromisingMove(MCTSNode* node) {
-    MCTSNode* highestSimsChild = &node->children[0];
-    float highestSims = highestSimsChild->sims;
+    MCTSNode* highestWinrateChild = &node->children[0];
+    float highestWinrate = getWinrate(highestWinrateChild);
     for (int i = 1; i < node->amountOfChildren; i++) {
         MCTSNode* child = &node->children[i];
-        float sims = child->sims;
-        if (sims > highestSims) {
-            highestSimsChild = child;
-            highestSims = sims;
+        float winrate = getWinrate(child);
+        if (winrate > highestWinrate) {
+            highestWinrateChild = child;
+            highestWinrate = winrate;
         }
     }
-    return highestSimsChild->square;
+    return highestWinrateChild->square;
 }
 
 
@@ -996,6 +981,56 @@ float getWinrate(MCTSNode* node) {
     return node->wins * node->simsInverted;
 }
 // END MCTS_NODE
+
+
+
+
+
+
+
+
+
+
+// START SOLVER
+#define BIG_FLOAT 5000000.0f
+
+
+void checkAllSet(MCTSNode* node) {
+    if (node == NULL || node->amountOfUntriedMoves > 0) {
+        return;
+    }
+    bool hasDraw = false;
+    for (int i = 0; i < node->amountOfChildren; i++) {
+        MCTSNode child = node->children[i];
+        if (child.sims < BIG_FLOAT || child.wins == child.sims) {
+            return;
+        }
+        if (!hasDraw && child.wins > 0) {
+            hasDraw = true;
+        }
+    }
+    setNodeWinner(node, hasDraw? DRAW : WIN_P1, PLAYER1);
+}
+
+
+void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
+    if (node == NULL || node->sims >= BIG_FLOAT) {
+        return;
+    }
+    node->sims = BIG_FLOAT;
+    if (winner == DRAW) {
+        node->wins = BIG_FLOAT / 2.0f;
+        checkAllSet(node->parent);
+    } else if (player + 1 == winner) {
+        node->wins = BIG_FLOAT;
+        setNodeWinner(node->parent, winner, OTHER_PLAYER(player));
+    } else {
+        node->wins = 0;
+        checkAllSet(node->parent);
+    }
+}
+// END SOLVER
+
 
 
 
