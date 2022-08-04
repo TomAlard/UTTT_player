@@ -27,7 +27,7 @@ bool squaresAreEqual(Square square1, Square square2);
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))
-#define BIT_CHANGE(a,b,c) ((a) ^= (-(c) ^ (a)) & (1ULL << (b)))
+#define BIT_CHANGE(a,b,c) ((a) = (a) & ~(b) | (-(c) & (b)))
 
 void crash(char* errorMessage);
 
@@ -81,22 +81,29 @@ void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard);
 
 void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard);
 
-typedef struct RolloutState {
-    uint16_t instantWinBoards[2];
-    uint16_t instantWinSmallBoards[2];
-} RolloutState;
-
-void initializeLookupTable();
-
-void initializeRolloutState(RolloutState* RS);
-
-bool hasWinningMove(RolloutState* RS, uint8_t currentBoard, Player player);
-
-void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t smallBoard, uint16_t otherSmallBoard, Player player);
-
-void updateBigBoardState(RolloutState* RS, uint16_t bigBoard, uint16_t otherBigBoard, Player player);
-
 #define TOTAL_SMALL_SQUARES 81
+#define ANY_BOARD 9
+
+typedef struct AdditionalState {
+    Player currentPlayer;
+    uint8_t currentBoard;
+    Winner winner;
+    uint8_t ply;
+    uint8_t totalAmountOfOpenSquares;
+    uint8_t amountOfOpenSquaresBySmallBoard[9];
+} AdditionalState;
+
+typedef struct Board {
+    PlayerBitBoard player1;
+    PlayerBitBoard player2;
+    AdditionalState AS;
+    AdditionalState ASCheckpoint;
+    Player me;
+} Board;
+
+Square openSquares[512][9][9];
+int8_t amountOfOpenSquares[512];
+Winner winnerByBigBoards[512][512];
 
 typedef struct Board Board;
 
@@ -106,7 +113,7 @@ void freeBoard(Board* board);
 
 Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
 
-void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng);
+uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 
 bool nextBoardIsEmpty(Board* board);
 
@@ -127,6 +134,25 @@ void setMe(Board* board, Player player);
 bool currentPlayerIsMe(Board* board);
 
 uint8_t getPly(Board* board);
+
+typedef struct RolloutState {
+    uint16_t instantWinBoards[2];
+    uint16_t instantWinSmallBoards[2];
+} RolloutState;
+
+void initializeLookupTable();
+
+void initializeRolloutState(RolloutState* RS);
+
+bool hasWinningMove(Board* board, RolloutState* RS);
+
+void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex);
+
+void updateBigBoardState(Board* board, RolloutState* RS);
+
+void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng);
+
+Winner rollout(Board* board, RNG* rng);
 
 typedef struct MCTSNode MCTSNode;
 
@@ -398,12 +424,12 @@ uint16_t calculateInstantWinBoards_(uint16_t bigBoard) {
 
 
 uint16_t calculateInstantWinBoards(uint16_t bigBoard, uint16_t otherPlayerBigBoard) {
-    return precalculatedInstantWinBoards[bigBoard] & ~otherPlayerBigBoard;
+    return precalculatedInstantWinBoards[bigBoard & ~otherPlayerBigBoard] & ~otherPlayerBigBoard;
 }
 
 
 bool smallBoardHasInstantWinMove(uint16_t smallBoard, uint16_t otherSmallBoard) {
-    return (precalculatedInstantWinBoards[smallBoard] & ~otherSmallBoard) != 0;
+    return calculateInstantWinBoards(smallBoard, otherSmallBoard) != 0;
 }
 
 
@@ -419,24 +445,96 @@ void initializeRolloutState(RolloutState* RS) {
 }
 
 
-bool hasWinningMove(RolloutState* RS, uint8_t currentBoard, Player player) {
+bool canWinWith3InARow(uint8_t currentBoard, uint16_t smallBoardsWithWinningMove) {
+    return (currentBoard == ANY_BOARD && smallBoardsWithWinningMove)
+           || BIT_CHECK(smallBoardsWithWinningMove, currentBoard);
+}
+
+
+bool hasWinningMove(Board* board, RolloutState* RS) {
+    Player player = board->AS.currentPlayer;
+    uint8_t currentBoard = board->AS.currentBoard;
     uint16_t smallBoardsWithWinningMove = RS->instantWinBoards[player] & RS->instantWinSmallBoards[player];
-    return (currentBoard == 9 && smallBoardsWithWinningMove) || BIT_CHECK(smallBoardsWithWinningMove, currentBoard);
+    return canWinWith3InARow(currentBoard, smallBoardsWithWinningMove);
 }
 
 
-void updateSmallBoardState(RolloutState* RS, uint8_t boardIndex, uint16_t smallBoard, uint16_t otherSmallBoard, Player player) {
-    BIT_CHANGE(RS->instantWinSmallBoards[player], boardIndex, smallBoardHasInstantWinMove(smallBoard, otherSmallBoard));
-    BIT_CHANGE(RS->instantWinSmallBoards[OTHER_PLAYER(player)], boardIndex, smallBoardHasInstantWinMove(otherSmallBoard, smallBoard));
+void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex) {
+    uint16_t p1 = board->player1.smallBoards[boardIndex];
+    uint16_t p2 = board->player2.smallBoards[boardIndex];
+    uint16_t mask = 1ULL << boardIndex;
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER1], mask, smallBoardHasInstantWinMove(p1, p2));
+    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER2], mask, smallBoardHasInstantWinMove(p2, p1));
 }
 
 
-void updateBigBoardState(RolloutState* RS, uint16_t bigBoard, uint16_t otherBigBoard, Player player) {
-    RS->instantWinBoards[player] = calculateInstantWinBoards(bigBoard, otherBigBoard);
-    RS->instantWinBoards[OTHER_PLAYER(player)] = calculateInstantWinBoards(otherBigBoard, bigBoard);
+void updateBigBoardState(Board* board, RolloutState* RS) {
+    uint16_t p1 = board->player1.bigBoard;
+    uint16_t p2 = board->player2.bigBoard;
+    RS->instantWinBoards[PLAYER1] = calculateInstantWinBoards(p1, p2);
+    RS->instantWinBoards[PLAYER2] = calculateInstantWinBoards(p2, p1);
 }
 // END SMART_ROLLOUT
 
+
+
+
+
+
+
+
+
+
+// START ROLLOUT
+void makeRolloutTemporaryMove(Board* board, RolloutState* RS, Square square) {
+    PlayerBitBoard* p1 = &board->player1;
+    if (setSquareOccupied(p1 + board->AS.currentPlayer, p1 + !board->AS.currentPlayer, square)) {
+        board->AS.winner = winnerByBigBoards[board->player1.bigBoard][board->player2.bigBoard];
+        board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
+        board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
+        updateBigBoardState(board, RS);
+    } else {
+        board->AS.totalAmountOfOpenSquares--;
+        board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
+    }
+    updateSmallBoardState(board, RS, square.board);
+    board->AS.currentPlayer ^= 1;
+    board->AS.currentBoard = getNextBoard(board, square.position);
+    board->AS.ply++;
+}
+
+
+void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng) {
+    uint8_t currentBoard = board->AS.currentBoard;
+    if (hasWinningMove(board, RS)) {
+        board->AS.winner = board->AS.currentPlayer + 1;
+        return;
+    }
+    uint8_t randomMoveIndex;
+    if (currentBoard == ANY_BOARD) {
+        randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.totalAmountOfOpenSquares);
+        currentBoard = 0;
+        while (currentBoard < 9 && randomMoveIndex < 128) {
+            randomMoveIndex -= board->AS.amountOfOpenSquaresBySmallBoard[currentBoard++];
+        }
+        randomMoveIndex += board->AS.amountOfOpenSquaresBySmallBoard[--currentBoard];
+    } else {
+        randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
+    }
+    uint16_t bitBoard = ~(board->player1.smallBoards[currentBoard] | board->player2.smallBoards[currentBoard]) & 511;
+    makeRolloutTemporaryMove(board, RS, openSquares[bitBoard][currentBoard][randomMoveIndex]);
+}
+
+
+Winner rollout(Board* board, RNG* rng) {
+    RolloutState state;
+    initializeRolloutState(&state);
+    while (getWinner(board) == NONE) {
+        makeRandomTemporaryMove(board, &state, rng);
+    }
+    return getWinner(board);
+}
+// END ROLLOUT
 
 
 
@@ -453,33 +551,6 @@ void updateBigBoardState(RolloutState* RS, uint16_t bigBoard, uint16_t otherBigB
 
 
 // START BOARD
-#define ANY_BOARD 9
-
-
-typedef struct AdditionalState {
-    Player currentPlayer;
-    uint8_t currentBoard;
-    Winner winner;
-    uint8_t ply;
-    uint8_t totalAmountOfOpenSquares;
-    uint8_t amountOfOpenSquaresBySmallBoard[9];
-} AdditionalState;
-
-
-typedef struct Board {
-    PlayerBitBoard player1;
-    PlayerBitBoard player2;
-    AdditionalState AS;
-    AdditionalState ASCheckpoint;
-    Player me;
-} Board;
-
-
-Square openSquares[512][9][9];
-int8_t amountOfOpenSquares[512];
-Winner winnerByBigBoards[512][512];
-
-
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
     int8_t amountOfMoves = 0;
     while (bitBoard) {
@@ -540,6 +611,7 @@ Board* createBoard() {
         }
     }
     board->me = PLAYER2;
+    initializeLookupTable();
     return board;
 }
 
@@ -591,50 +663,8 @@ Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* a
 
 
 uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
-    bool smallBoardIsDecided = boardIsWon(&board->player1, previousPosition) || boardIsWon(&board->player2, previousPosition);
+    bool smallBoardIsDecided = BIT_CHECK(board->player1.bigBoard | board->player2.bigBoard, previousPosition);
     return smallBoardIsDecided ? ANY_BOARD : previousPosition;
-}
-
-
-void makeRolloutTemporaryMove(Board* board, RolloutState* RS, Square square) {
-    PlayerBitBoard* playerBitBoard = &board->player1 + board->AS.currentPlayer;
-    PlayerBitBoard* otherPlayerBitBoard = &board->player1 + !board->AS.currentPlayer;
-    if (setSquareOccupied(playerBitBoard, otherPlayerBitBoard, square)) {
-        board->AS.winner = winnerByBigBoards[board->player1.bigBoard][board->player2.bigBoard];
-        board->AS.totalAmountOfOpenSquares -= board->AS.amountOfOpenSquaresBySmallBoard[square.board];
-        board->AS.amountOfOpenSquaresBySmallBoard[square.board] = 0;
-        updateBigBoardState(RS, playerBitBoard->bigBoard, otherPlayerBitBoard->bigBoard, board->AS.currentPlayer);
-    } else {
-        board->AS.totalAmountOfOpenSquares--;
-        board->AS.amountOfOpenSquaresBySmallBoard[square.board]--;
-    }
-    updateSmallBoardState(RS, square.board, playerBitBoard->smallBoards[square.board],
-                          otherPlayerBitBoard->smallBoards[square.board], board->AS.currentPlayer);
-    board->AS.currentPlayer ^= 1;
-    board->AS.currentBoard = getNextBoard(board, square.position);
-    board->AS.ply++;
-}
-
-
-void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng) {
-    uint8_t currentBoard = board->AS.currentBoard;
-    if (hasWinningMove(RS, currentBoard, board->AS.currentPlayer)) {
-        board->AS.winner = board->AS.currentPlayer + 1;
-        return;
-    }
-    uint8_t randomMoveIndex;
-    if (currentBoard == ANY_BOARD) {
-        randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.totalAmountOfOpenSquares);
-        currentBoard = 0;
-        while (currentBoard < 9 && randomMoveIndex < 128) {
-            randomMoveIndex -= board->AS.amountOfOpenSquaresBySmallBoard[currentBoard++];
-        }
-        randomMoveIndex += board->AS.amountOfOpenSquaresBySmallBoard[--currentBoard];
-    } else {
-        randomMoveIndex = generateBoundedRandomNumber(rng, board->AS.amountOfOpenSquaresBySmallBoard[currentBoard]);
-    }
-    uint16_t bitBoard = ~(board->player1.smallBoards[currentBoard] | board->player2.smallBoards[currentBoard]) & 511;
-    makeRolloutTemporaryMove(board, RS, openSquares[bitBoard][currentBoard][randomMoveIndex]);
 }
 
 
@@ -782,6 +812,9 @@ void freeMCTSTree(MCTSNode* node) {
         freeMCTSTree(&node->children[i]);
     }
     free(node->children);
+    if (node->parent == NULL) {
+        free(node);
+    }
 }
 
 
@@ -905,6 +938,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     newRoot->parent = NULL;
     newRoot = copyMCTSNode(newRoot);
     free(root->children);
+    free(root);
     return newRoot;
 }
 
@@ -1136,7 +1170,6 @@ void playGame(FILE* file, double timePerMove) {
     MCTSNode* root = createMCTSRootNode();
     RNG rng;
     seedRNG(&rng, 69, 420);
-    initializeLookupTable();
     while (true) {
         int enemy_row;
         int enemy_col;
