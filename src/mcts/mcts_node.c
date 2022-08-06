@@ -136,10 +136,7 @@ float fastLog2(float x) {
 
 
 MCTSNode* selectNextChild(MCTSNode* node) {
-    assert(node->amountOfUntriedMoves > 0 || node->amountOfChildren > 0 && "selectNextChild: node is terminal");
-    if (node->amountOfUntriedMoves) {
-        return expandNode(node, 0);
-    }
+    assert(node->amountOfChildren > 0 && "selectNextChild: node is terminal");
     float logSims = fastLog2(node->sims);
     MCTSNode* highestUCTChild = &node->children[0];
     float highestUCT = getUCTValue(highestUCTChild, logSims);
@@ -153,6 +150,12 @@ MCTSNode* selectNextChild(MCTSNode* node) {
     }
     assert(highestUCTChild != NULL && "selectNextChild: Panic! This should be impossible.");
     return highestUCTChild;
+}
+
+
+MCTSNode* expandNextChild(MCTSNode* node) {
+    assert(node->amountOfUntriedMoves > 0);
+    return expandNode(node, 0);
 }
 
 

@@ -18,7 +18,7 @@ MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
 
 
 MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
-    MCTSNode* nextChild = selectNextChild(leaf);
+    MCTSNode* nextChild = expandNextChild(leaf);
     visitNode(nextChild, board);
     return nextChild;
 }

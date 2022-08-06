@@ -2,7 +2,6 @@
 #include "mcts_node_tests.h"
 #include "../../src/mcts/mcts_node.h"
 #include "../test_util.h"
-#include "../../src/mcts/solver.h"
 
 
 void rootIsLeafNode() {
@@ -20,7 +19,7 @@ void between17And81MovesInOneGame() {
     MCTSNode* node = root;
     int count = 0;
     while (isLeafNode(node, board)) {
-        node = selectNextChild(node);
+        node = expandNextChild(node);
         visitNode(node, board);
         count++;
     }
@@ -34,22 +33,22 @@ void selectsChildWithHighChanceOfWin() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     isLeafNode(root, board);  // to discover child nodes
-    MCTSNode* winNode = selectNextChild(root);
+    MCTSNode* winNode = expandNextChild(root);
     // backpropagate one loss and 99 wins
     backpropagate(winNode, WIN_P2, getCurrentPlayer(board));
     for (int i = 0; i < 99 ; i++) {
         backpropagate(winNode, WIN_P1, getCurrentPlayer(board));
     }
-    MCTSNode* node = selectNextChild(root);
-    while (getSims(node) == 0) {
+    MCTSNode* node = expandNextChild(root);
+    while (isLeafNode(root, board)) {
         // backpropagate one win and 99 losses
         backpropagate(node, WIN_P1, getCurrentPlayer(board));
         for (int i = 0; i < 99; i++) {
             backpropagate(node, WIN_P2, getCurrentPlayer(board));
         }
-        node = selectNextChild(root);
+        node = expandNextChild(root);
     }
-    myAssert(node == winNode);
+    myAssert(selectNextChild(root) == winNode);
     freeBoard(board);
     freeMCTSTree(root);
 }
@@ -59,12 +58,12 @@ void updateRootTest() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     isLeafNode(root, board);  // to discover child nodes
-    backpropagate(selectNextChild(root), DRAW, getCurrentPlayer(board));
+    backpropagate(expandNextChild(root), DRAW, getCurrentPlayer(board));
     Square square = getMostPromisingMove(root);
     makePermanentMove(board, square);
     MCTSNode* newRoot = updateRoot(root, board, square);
     isLeafNode(newRoot, board);  // to discover child nodes
-    backpropagate(selectNextChild(newRoot), DRAW, getCurrentPlayer(board));
+    backpropagate(expandNextChild(newRoot), DRAW, getCurrentPlayer(board));
     myAssert(getMostPromisingMove(newRoot).board == square.position);
     freeBoard(board);
     freeMCTSTree(newRoot);
@@ -76,7 +75,7 @@ void alwaysPlays44WhenGoingFirst() {
     Board* board = createBoard();
     setMe(board, PLAYER1);
     isLeafNode(root, board);  // to discover child nodes
-    selectNextChild(root);  // to expand at least one child
+    expandNextChild(root);  // to expand at least one child
     Square expected = {4, 4};
     myAssert(squaresAreEqual(getMostPromisingMove(root), expected));
     freeBoard(board);

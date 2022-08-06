@@ -23,6 +23,8 @@ bool isLeafNode(MCTSNode* node, Board* board);
 
 MCTSNode* selectNextChild(MCTSNode* node);
 
+MCTSNode* expandNextChild(MCTSNode* node);
+
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
 void backpropagate(MCTSNode* node, Winner winner, Player player);
