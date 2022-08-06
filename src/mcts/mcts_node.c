@@ -223,11 +223,6 @@ Square getMostPromisingMove(MCTSNode* node) {
 }
 
 
-int getSims(MCTSNode* node) {
-    return (int) node->sims;
-}
-
-
 float getWinrate(MCTSNode* node) {
     return node->wins * node->simsInverted;
 }

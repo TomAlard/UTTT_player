@@ -33,8 +33,6 @@ void visitNode(MCTSNode* node, Board* board);
 
 Square getMostPromisingMove(MCTSNode* node);
 
-int getSims(MCTSNode* node);
-
 float getWinrate(MCTSNode* node);
 
 #endif //UTTT2_MCTS_NODE_H
