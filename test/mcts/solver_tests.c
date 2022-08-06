@@ -4,26 +4,6 @@
 #include "../test_util.h"
 
 
-void keepsSelectingSameNodeWhenSetAsWin() {
-    MCTSNode* root = createMCTSRootNode();
-    Board* board = createBoard();
-    isLeafNode(root, board);  // to discover child nodes
-    MCTSNode* node = expandNextChild(root);
-    backpropagate(node, WIN_P1, PLAYER1);
-    setNodeWinner(node, WIN_P1, PLAYER1);
-    while (isLeafNode(root, board)) {
-        // backpropagate 100 wins
-        MCTSNode* untriedNode = expandNextChild(root);
-        for (int i = 0; i < 100; i++) {
-            backpropagate(untriedNode, WIN_P1, PLAYER1);
-        }
-    }
-    myAssert(selectNextChild(root) == node);
-    freeBoard(board);
-    freeMCTSTree(root);
-}
-
-
 void parentIsLossIfOneChildIsSetAsWin() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
@@ -76,8 +56,6 @@ void parentIsLossIfAllGrandchildrenOfOneChildAreLoss() {
 
 
 void runSolverTests() {
-    printf("\tkeepsSelectingSameNodeWhenSetAsWin...\n");
-    keepsSelectingSameNodeWhenSetAsWin();
     printf("\tparentIsLossIfOneChildIsSetAsWin...\n");
     parentIsLossIfOneChildIsSetAsWin();
     printf("\tparentIsWinIfAllChildrenAreSetAsLoss...\n");

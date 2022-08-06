@@ -30,6 +30,7 @@ void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
         return;
     }
     node->sims = BIG_FLOAT;
+    node->simsInverted = 1.0f / BIG_FLOAT;
     if (winner == DRAW) {
         node->wins = BIG_FLOAT / 2.0f;
         checkAllSet(node->parent);
