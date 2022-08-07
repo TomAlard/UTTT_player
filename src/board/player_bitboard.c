@@ -24,24 +24,11 @@ bool isWin(uint16_t smallBoard) {
 }
 
 
-PlayerBitBoard* createPlayerBitBoard() {
-    for (uint16_t i = 0; i < 512; i++) {
-        precalculatedIsWin[i] = isWin_(i);
-    }
-    return safe_calloc(sizeof(PlayerBitBoard));
-}
-
-
 void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
     for (uint16_t i = 0; i < 512; i++) {
         precalculatedIsWin[i] = isWin_(i);
     }
     memset(playerBitBoard, 0, sizeof(PlayerBitBoard));
-}
-
-
-void freePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
-    safe_free(playerBitBoard);
 }
 
 

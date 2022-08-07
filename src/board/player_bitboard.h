@@ -10,11 +10,7 @@ typedef struct PlayerBitBoard {
     uint16_t bigBoard;
 } PlayerBitBoard;
 
-PlayerBitBoard* createPlayerBitBoard();
-
 void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard);
-
-void freePlayerBitBoard(PlayerBitBoard* playerBitBoard);
 
 bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board);
 
