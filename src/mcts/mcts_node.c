@@ -86,6 +86,15 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             Square movesArray[TOTAL_SMALL_SQUARES];
             int8_t amountOfMoves;
             Square* moves = generateMoves(board, movesArray, &amountOfMoves);
+            if (getPly(board) > 30) {
+                Player player = getCurrentPlayer(board);
+                for (int i = 0; i < amountOfMoves; i++) {
+                    if (getWinnerAfterMove(board, moves[i]) == player + 1) {
+                        singleChild(node, moves[i]);
+                        return;
+                    }
+                }
+            }
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
             for (int i = 0; i < amountOfMoves; i++) {

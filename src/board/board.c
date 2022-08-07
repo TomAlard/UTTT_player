@@ -178,6 +178,15 @@ void makePermanentMove(Board* board, Square square) {
 }
 
 
+Winner getWinnerAfterMove(Board* board, Square square) {
+    State tempCheckpoint = board->state;
+    makeTemporaryMove(board, square);
+    Winner winner = getWinner(board);
+    board->state = tempCheckpoint;
+    return winner;
+}
+
+
 Winner getWinner(Board* board) {
     return board->state.winner;
 }

@@ -50,6 +50,8 @@ void makeTemporaryMove(Board* board, Square square);
 
 void makePermanentMove(Board* board, Square square);
 
+Winner getWinnerAfterMove(Board* board, Square square);
+
 Winner getWinner(Board* board);
 
 void setMe(Board* board, Player player);
