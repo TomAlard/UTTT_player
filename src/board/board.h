@@ -9,28 +9,26 @@
 #define TOTAL_SMALL_SQUARES 81
 #define ANY_BOARD 9
 
-typedef struct AdditionalState {
+typedef struct State {
+    PlayerBitBoard player1;
+    PlayerBitBoard player2;
     Player currentPlayer;
     uint8_t currentBoard;
     Winner winner;
     uint8_t ply;
     uint8_t totalAmountOfOpenSquares;
     uint8_t amountOfOpenSquaresBySmallBoard[9];
-} AdditionalState;
+} State;
 
 typedef struct Board {
-    PlayerBitBoard player1;
-    PlayerBitBoard player2;
-    AdditionalState AS;
-    AdditionalState ASCheckpoint;
+    State state;
+    State stateCheckpoint;
     Player me;
 } Board;
 
 Square openSquares[512][9][9];
 int8_t amountOfOpenSquares[512];
 Winner winnerByBigBoards[512][512];
-
-typedef struct Board Board;
 
 Board* createBoard();
 

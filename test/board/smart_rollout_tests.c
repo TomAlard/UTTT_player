@@ -24,12 +24,12 @@ void hasWinningMoveTest() {
                 }
                 revertToCheckpoint(board);
             }
-            uint16_t openSmallBoards = 511 - (board->player1.bigBoard | board->player2.bigBoard);
+            uint16_t openSmallBoards = 511 - (board->state.player1.bigBoard | board->state.player2.bigBoard);
             bool oneSquareLeft = (openSmallBoards & (openSmallBoards - 1)) == 0;
             myAssert((hasWinningMove(board, &RS) == winningMoveExists) || oneSquareLeft);
             Square move = moves[generateBoundedRandomNumber(&rng, amountOfMoves)];
-            PlayerBitBoard* player = currentPlayer == PLAYER1? &board->player1 : &board->player2;
-            PlayerBitBoard* otherPlayer = currentPlayer == PLAYER1? &board->player2 : &board->player1;
+            PlayerBitBoard* player = currentPlayer == PLAYER1? &board->state.player1 : &board->state.player2;
+            PlayerBitBoard* otherPlayer = currentPlayer == PLAYER1? &board->state.player2 : &board->state.player1;
             bool bigBoardWasUpdated = setSquareOccupied(player, otherPlayer, move);
             if (bigBoardWasUpdated) {
                 updateBigBoardState(board, &RS);

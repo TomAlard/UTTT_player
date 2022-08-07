@@ -74,15 +74,3 @@ bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
     }
     return false;
 }
-
-
-void revertToPlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
-    memcpy(playerBitBoard->smallBoards, playerBitBoard->checkpointSmallBoards, 9 * sizeof(uint16_t));
-    playerBitBoard->bigBoard = playerBitBoard->checkpointBigBoard;
-}
-
-
-void updatePlayerCheckpoint(PlayerBitBoard* playerBitBoard) {
-    memcpy(playerBitBoard->checkpointSmallBoards, playerBitBoard->smallBoards, 9 * sizeof(uint16_t));
-    playerBitBoard->checkpointBigBoard = playerBitBoard->bigBoard;
-}
