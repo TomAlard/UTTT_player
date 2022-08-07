@@ -173,16 +173,22 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
         }
     }
     if (newRoot == NULL) {
-        for (int i = 0; i < root->amountOfUntriedMoves; i++) {
-            if (squaresAreEqual(square, root->children[root->amountOfChildren + i].square)) {
-                newRoot = expandNode(root, i);
+        Square movesArray[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves;
+        Square* moves = generateMoves(board, movesArray, &amountOfMoves);
+        for (int i = 0; i < amountOfMoves; i++) {
+            if (squaresAreEqual(moves[i], square)) {
+                MCTSNode temp;
+                initializeMCTSNode(NULL, square, &temp);
+                newRoot = copyMCTSNode(&temp);
                 break;
             }
         }
+        assert(newRoot != NULL);
+    } else {
+        newRoot->parent = NULL;
+        newRoot = copyMCTSNode(newRoot);
     }
-    assert(newRoot != NULL && "updateRoot: newRoot shouldn't be NULL");
-    newRoot->parent = NULL;
-    newRoot = copyMCTSNode(newRoot);
     free(root->children);
     free(root);
     return newRoot;

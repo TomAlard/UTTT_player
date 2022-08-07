@@ -70,6 +70,23 @@ void updateRootTest() {
 }
 
 
+void updateRootStillWorksWhenPlayedMoveWasPruned() {
+    MCTSNode* root = createMCTSRootNode();
+    Board* board = createBoard();
+    Square firstMove = {4, 4};
+    isLeafNode(root, board);  // to discover child nodes
+    root = updateRoot(root, board, firstMove);
+    makePermanentMove(board, firstMove);
+    isLeafNode(root, board);  // to discover child nodes
+    root->amountOfUntriedMoves = 1;  // 'prune' the other 8 moves
+    Square prunedMove = {4, 5};
+    myAssert(!squaresAreEqual(expandNextChild(root)->square, prunedMove));
+    root = updateRoot(root, board, prunedMove);
+    freeBoard(board);
+    freeMCTSTree(root);
+}
+
+
 void alwaysPlays44WhenGoingFirst() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
@@ -92,6 +109,8 @@ void runMCTSNodeTests() {
     selectsChildWithHighChanceOfWin();
     printf("\tupdateRootTest...\n");
     updateRootTest();
+    printf("\tupdateRootStillWorksWhenPlayedMoveWasPruned...\n");
+    updateRootStillWorksWhenPlayedMoveWasPruned();
     printf("\talwaysPlays44WhenGoingFirst...\n");
     alwaysPlays44WhenGoingFirst();
 }
