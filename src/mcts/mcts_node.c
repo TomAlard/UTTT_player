@@ -132,14 +132,6 @@ float getUCTValue(MCTSNode* node, float parentLogSims) {
 }
 
 
-MCTSNode* expandNode(MCTSNode* node, int childIndex) {
-    MCTSNode* newChild = &node->children[childIndex + node->amountOfChildren++];
-    initializeMCTSNode(node, newChild->square, newChild);
-    node->amountOfUntriedMoves--;
-    return newChild;
-}
-
-
 // From: https://github.com/etheory/fastapprox/blob/master/fastapprox/src/fastlog.h
 float fastLog2(float x) {
     union { float f; uint32_t i; } vx = { x };
@@ -169,7 +161,10 @@ MCTSNode* selectNextChild(MCTSNode* node) {
 
 MCTSNode* expandNextChild(MCTSNode* node) {
     assert(node->amountOfUntriedMoves > 0);
-    return expandNode(node, 0);
+    MCTSNode* newChild = &node->children[node->amountOfChildren++];
+    initializeMCTSNode(node, newChild->square, newChild);
+    node->amountOfUntriedMoves--;
+    return newChild;
 }
 
 
