@@ -44,6 +44,8 @@ void seedRNG(RNG* rng, uint64_t init_state, uint64_t init_seq);
 
 uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound);
 
+void shuffle(int* array, size_t n, RNG* rng);
+
 #define Player bool
 #define PLAYER1 0
 #define PLAYER2 1
@@ -159,13 +161,13 @@ MCTSNode* createMCTSRootNode();
 
 void freeMCTSTree(MCTSNode* root);
 
-bool isLeafNode(MCTSNode* node, Board* board);
+bool isLeafNode(MCTSNode* node, Board* board, RNG* rng);
 
 MCTSNode* selectNextChild(MCTSNode* node);
 
 MCTSNode* expandNextChild(MCTSNode* node);
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, RNG* rng);
 
 void backpropagate(MCTSNode* node, Winner winner, Player player);
 
@@ -266,7 +268,7 @@ Square toGameNotation(Square square) {
 
 
 // START RANDOM
-uint32_t pcg32_random_r(RNG* rng) {
+uint32_t generateRandomNumber(RNG* rng) {
     uint64_t oldstate = rng->state;
     rng->state = oldstate * 6364136223846793005ULL + rng->inc;
     uint32_t xorshifted = ((oldstate >> 18u) ^ oldstate) >> 27u;
@@ -278,14 +280,27 @@ uint32_t pcg32_random_r(RNG* rng) {
 void seedRNG(RNG* rng, uint64_t init_state, uint64_t init_seq) {
     rng->state = 0U;
     rng->inc = (init_seq << 1u) | 1u;
-    pcg32_random_r(rng);
+    generateRandomNumber(rng);
     rng->state += init_state;
-    pcg32_random_r(rng);
+    generateRandomNumber(rng);
 }
 
 
 uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound) {
-    return ((uint64_t)pcg32_random_r(rng) * (uint64_t)bound) >> 32;
+    return ((uint64_t) generateRandomNumber(rng) * (uint64_t)bound) >> 32;
+}
+
+
+void shuffle(int* array, size_t n, RNG* rng) {
+    uint32_t maxRandomNumber = (1L << 32) - 1;
+    if (n > 1) {
+        for (size_t i = 0; i < n - 1; i++) {
+            size_t j = i + generateRandomNumber(rng) / (maxRandomNumber / (n - i) + 1);
+            int t = array[j];
+            array[j] = array[i];
+            array[i] = t;
+        }
+    }
 }
 // END RANDOM
 
@@ -803,7 +818,7 @@ bool handleSpecialCases(MCTSNode* node, Board* board) {
 }
 
 
-void discoverChildNodes(MCTSNode* node, Board* board) {
+void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
     if (node->amountOfChildren == -1) {
         node->amountOfChildren = 0;
         if (!handleSpecialCases(node, board)) {
@@ -819,18 +834,23 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
                     }
                 }
             }
+            int range[amountOfMoves];
+            for (int i = 0; i < amountOfMoves; i++) {
+                range[i] = i;
+            }
+            shuffle(range, amountOfMoves, rng);
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = malloc(amountOfMoves * sizeof(MCTSNode));
             for (int i = 0; i < amountOfMoves; i++) {
-                node->children[i].square = moves[i];
+                node->children[i].square = moves[range[i]];
             }
         }
     }
 }
 
 
-bool isLeafNode(MCTSNode* node, Board* board) {
-    discoverChildNodes(node, board);
+bool isLeafNode(MCTSNode* node, Board* board, RNG* rng) {
+    discoverChildNodes(node, board, rng);
     return node->amountOfUntriedMoves > 0;
 }
 
@@ -889,8 +909,8 @@ MCTSNode* expandNextChild(MCTSNode* node) {
 }
 
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
-    discoverChildNodes(root, board);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, RNG* rng) {
+    discoverChildNodes(root, board, rng);
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &root->children[i];
@@ -1027,9 +1047,9 @@ void setNodeWinner(MCTSNode* node, Winner winner, Player player) {
 
 
 // START FIND_NEXT_MOVE
-MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
+MCTSNode* selectLeaf(Board* board, MCTSNode* root, RNG* rng) {
     MCTSNode* currentNode = root;
-    while (!isLeafNode(currentNode, board) && getWinner(board) == NONE) {
+    while (!isLeafNode(currentNode, board, rng) && getWinner(board) == NONE) {
         currentNode = selectNextChild(currentNode);
         visitNode(currentNode, board);
     }
@@ -1057,7 +1077,7 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
     struct timeval start;
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
-        MCTSNode* leaf = selectLeaf(board, root);
+        MCTSNode* leaf = selectLeaf(board, root, rng);
         MCTSNode* playoutNode;
         Winner simulationWinner;
         Winner winner = getWinner(board);
@@ -1096,22 +1116,22 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
 
 
 // START HANDLE_TURN
-MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
+MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, RNG* rng) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
         setMe(board, PLAYER1);
         return root;
     }
-    MCTSNode* newRoot = updateRoot(root, board, enemyMove);
+    MCTSNode* newRoot = updateRoot(root, board, enemyMove, rng);
     makePermanentMove(board, enemyMove);
     return newRoot;
 }
 
 
 HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, Square enemyMove) {
-    root = handleEnemyTurn(board, root, enemyMove);
+    root = handleEnemyTurn(board, root, enemyMove, rng);
     int amountOfSimulations = findNextMove(board, root, rng, allocatedTime);
     Square move = getMostPromisingMove(root);
-    MCTSNode* newRoot = updateRoot(root, board, move);
+    MCTSNode* newRoot = updateRoot(root, board, move, rng);
     makePermanentMove(board, move);
     HandleTurnResult result = {move, newRoot, amountOfSimulations};
     return result;
