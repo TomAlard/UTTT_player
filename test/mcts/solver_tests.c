@@ -7,7 +7,9 @@
 void parentIsLossIfOneChildIsSetAsWin() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    isLeafNode(root, board);  // to discover child nodes
+    RNG rng;
+    seedRNG(&rng, 69, 420);
+    isLeafNode(root, board, &rng);  // to discover child nodes
     setNodeWinner(expandNextChild(root), WIN_P2, PLAYER2);
     myAssert(root->wins == 0 && root->sims > 0);
     freeBoard(board);
@@ -18,7 +20,9 @@ void parentIsLossIfOneChildIsSetAsWin() {
 void parentIsWinIfAllChildrenAreSetAsLoss() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    while (isLeafNode(root, board)) {
+    RNG rng;
+    seedRNG(&rng, 69, 420);
+    while (isLeafNode(root, board, &rng)) {
         setNodeWinner(expandNextChild(root), WIN_P2, PLAYER1);
     }
     myAssert(root->wins == root->sims && root->wins > 0);
@@ -30,9 +34,11 @@ void parentIsWinIfAllChildrenAreSetAsLoss() {
 void parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreLoss() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    isLeafNode(root, board);  // to discover child nodes
+    RNG rng;
+    seedRNG(&rng, 69, 420);
+    isLeafNode(root, board, &rng);  // to discover child nodes
     setNodeWinner(expandNextChild(root), DRAW, PLAYER1);
-    while (isLeafNode(root, board)) {
+    while (isLeafNode(root, board, &rng)) {
         setNodeWinner(expandNextChild(root), WIN_P2, PLAYER1);
     }
     myAssert(root->wins / root->sims == 0.5f);
@@ -44,9 +50,11 @@ void parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreLoss() {
 void parentIsLossIfAllGrandchildrenOfOneChildAreLoss() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    isLeafNode(root, board);  // to discover child nodes
+    RNG rng;
+    seedRNG(&rng, 69, 420);
+    isLeafNode(root, board, &rng);  // to discover child nodes
     MCTSNode* child = expandNextChild(root);
-    while (isLeafNode(child, board)) {
+    while (isLeafNode(child, board, &rng)) {
         setNodeWinner(expandNextChild(child), WIN_P1, PLAYER2);
     }
     myAssert(root->wins == 0 && root->sims > 0);

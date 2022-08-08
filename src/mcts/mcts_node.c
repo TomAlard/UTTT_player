@@ -79,7 +79,7 @@ bool handleSpecialCases(MCTSNode* node, Board* board) {
 }
 
 
-void discoverChildNodes(MCTSNode* node, Board* board) {
+void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
     if (node->amountOfChildren == -1) {
         node->amountOfChildren = 0;
         if (!handleSpecialCases(node, board)) {
@@ -95,18 +95,23 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
                     }
                 }
             }
+            int range[amountOfMoves];
+            for (int i = 0; i < amountOfMoves; i++) {
+                range[i] = i;
+            }
+            shuffle(range, amountOfMoves, rng);
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
             for (int i = 0; i < amountOfMoves; i++) {
-                node->children[i].square = moves[i];
+                node->children[i].square = moves[range[i]];
             }
         }
     }
 }
 
 
-bool isLeafNode(MCTSNode* node, Board* board) {
-    discoverChildNodes(node, board);
+bool isLeafNode(MCTSNode* node, Board* board, RNG* rng) {
+    discoverChildNodes(node, board, rng);
     return node->amountOfUntriedMoves > 0;
 }
 
@@ -168,8 +173,8 @@ MCTSNode* expandNextChild(MCTSNode* node) {
 }
 
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
-    discoverChildNodes(root, board);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, RNG* rng) {
+    discoverChildNodes(root, board, rng);
     assert(root->amountOfUntriedMoves > 0 || root->amountOfChildren > 0 && "updateRoot: root is terminal");
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {

@@ -19,13 +19,13 @@ MCTSNode* createMCTSRootNode();
 
 void freeMCTSTree(MCTSNode* root);
 
-bool isLeafNode(MCTSNode* node, Board* board);
+bool isLeafNode(MCTSNode* node, Board* board, RNG* rng);
 
 MCTSNode* selectNextChild(MCTSNode* node);
 
 MCTSNode* expandNextChild(MCTSNode* node);
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, RNG* rng);
 
 void backpropagate(MCTSNode* node, Winner winner, Player player);
 

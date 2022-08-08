@@ -6,9 +6,9 @@
 #include "solver.h"
 
 
-MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
+MCTSNode* selectLeaf(Board* board, MCTSNode* root, RNG* rng) {
     MCTSNode* currentNode = root;
-    while (!isLeafNode(currentNode, board) && getWinner(board) == NONE) {
+    while (!isLeafNode(currentNode, board, rng) && getWinner(board) == NONE) {
         currentNode = selectNextChild(currentNode);
         assert(currentNode != NULL && "selectLeaf: currentNode is NULL!");
         visitNode(currentNode, board);
@@ -37,7 +37,7 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
     struct timeval start;
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
-        MCTSNode* leaf = selectLeaf(board, root);
+        MCTSNode* leaf = selectLeaf(board, root, rng);
         MCTSNode* playoutNode;
         Winner simulationWinner;
         Winner winner = getWinner(board);

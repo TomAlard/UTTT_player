@@ -22,3 +22,16 @@ void seedRNG(RNG* rng, uint64_t init_state, uint64_t init_seq) {
 uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound) {
     return ((uint64_t) generateRandomNumber(rng) * (uint64_t)bound) >> 32;
 }
+
+
+void shuffle(int* array, size_t n, RNG* rng) {
+    uint32_t maxRandomNumber = (1L << 32) - 1;
+    if (n > 1) {
+        for (size_t i = 0; i < n - 1; i++) {
+            size_t j = i + generateRandomNumber(rng) / (maxRandomNumber / (n - i) + 1);
+            int t = array[j];
+            array[j] = array[i];
+            array[i] = t;
+        }
+    }
+}
