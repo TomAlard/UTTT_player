@@ -122,7 +122,7 @@ void fastSquareRoot(float* restrict pOut, float* restrict pIn) {
 }
 
 
-#define EXPLORATION_PARAMETER 0.459375f
+#define EXPLORATION_PARAMETER 0.41f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     float c = EXPLORATION_PARAMETER;
     float sqrtIn = parentLogSims * node->simsInverted;
