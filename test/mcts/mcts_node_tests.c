@@ -69,7 +69,7 @@ void updateRootTest() {
     backpropagate(expandNextChild(root), DRAW, getCurrentPlayer(board));
     Square square = getMostPromisingMove(root);
     makePermanentMove(board, square);
-    MCTSNode* newRoot = updateRoot(root, board, square, &rng);
+    MCTSNode* newRoot = updateRoot(root, board, square);
     isLeafNode(newRoot, board, &rng);  // to discover child nodes
     backpropagate(expandNextChild(newRoot), DRAW, getCurrentPlayer(board));
     myAssert(getMostPromisingMove(newRoot).board == square.position);
@@ -85,13 +85,13 @@ void updateRootStillWorksWhenPlayedMoveWasPruned() {
     seedRNG(&rng, 69, 420);
     Square firstMove = {4, 4};
     isLeafNode(root, board, &rng);  // to discover child nodes
-    root = updateRoot(root, board, firstMove, &rng);
+    root = updateRoot(root, board, firstMove);
     makePermanentMove(board, firstMove);
     isLeafNode(root, board, &rng);  // to discover child nodes
     root->amountOfUntriedMoves = 1;  // 'prune' the other 8 moves
     Square prunedMove = {4, 5};
     myAssert(!squaresAreEqual(expandNextChild(root)->square, prunedMove));
-    root = updateRoot(root, board, prunedMove, &rng);
+    root = updateRoot(root, board, prunedMove);
     freeBoard(board);
     freeMCTSTree(root);
 }

@@ -168,8 +168,7 @@ MCTSNode* expandNextChild(MCTSNode* node) {
 }
 
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, RNG* rng) {
-    discoverChildNodes(root, board, rng);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     assert(root->amountOfUntriedMoves > 0 || root->amountOfChildren > 0 && "updateRoot: root is terminal");
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
