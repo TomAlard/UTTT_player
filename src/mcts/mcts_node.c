@@ -111,7 +111,9 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
 
 
 bool isLeafNode(MCTSNode* node, Board* board, RNG* rng) {
-    discoverChildNodes(node, board, rng);
+    if (node->sims == 1) {
+        discoverChildNodes(node, board, rng);
+    }
     return node->sims == 0;
 }
 
@@ -141,7 +143,7 @@ float fastLog2(float x) {
 }
 
 
-#define FIRST_PLAY_URGENCY 1.00f
+#define FIRST_PLAY_URGENCY 1.10f
 MCTSNode* selectNextChild(MCTSNode* node) {
     assert(node->amountOfChildren > 0 || node->amountOfUntriedMoves > 0);
     float logSims = fastLog2(node->sims);
@@ -155,7 +157,7 @@ MCTSNode* selectNextChild(MCTSNode* node) {
             highestUCT = UCT;
         }
     }
-    if (highestUCTChild == NULL || (node->amountOfUntriedMoves > 0 && highestUCT < FIRST_PLAY_URGENCY)) {
+    if (node->amountOfUntriedMoves > 0 && highestUCT < FIRST_PLAY_URGENCY) {
         highestUCTChild = expandNextChild(node);
     }
     assert(highestUCTChild != NULL);

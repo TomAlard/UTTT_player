@@ -22,6 +22,7 @@ void parentIsWinIfAllChildrenAreSetAsLoss() {
     Board* board = createBoard();
     RNG rng;
     seedRNG(&rng, 69, 420);
+    discoverChildNodes(root, board, &rng);
     while (isLeafNode(root, board, &rng)) {
         setNodeWinner(expandNextChild(root), WIN_P2, PLAYER1);
     }
@@ -54,6 +55,7 @@ void parentIsLossIfAllGrandchildrenOfOneChildAreLoss() {
     seedRNG(&rng, 69, 420);
     discoverChildNodes(root, board, &rng);
     MCTSNode* child = expandNextChild(root);
+    discoverChildNodes(child, board, &rng);
     while (isLeafNode(child, board, &rng)) {
         setNodeWinner(expandNextChild(child), WIN_P1, PLAYER2);
     }

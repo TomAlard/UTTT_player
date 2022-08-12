@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <sys/time.h>
 #include "find_next_move.h"
 #include "../misc/util.h"
@@ -10,17 +9,9 @@ MCTSNode* selectLeaf(Board* board, MCTSNode* root, RNG* rng) {
     MCTSNode* currentNode = root;
     while (!isLeafNode(currentNode, board, rng) && getWinner(board) == NONE) {
         currentNode = selectNextChild(currentNode);
-        assert(currentNode != NULL && "selectLeaf: currentNode is NULL!");
         visitNode(currentNode, board);
     }
     return currentNode;
-}
-
-
-MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
-    MCTSNode* nextChild = expandNextChild(leaf);
-    visitNode(nextChild, board);
-    return nextChild;
 }
 
 
@@ -38,21 +29,14 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
         MCTSNode* leaf = selectLeaf(board, root, rng);
-        MCTSNode* playoutNode;
-        Winner simulationWinner;
         Winner winner = getWinner(board);
-        Player player;
+        Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            playoutNode = expandLeaf(board, leaf);
-            player = OTHER_PLAYER(getCurrentPlayer(board));
-            simulationWinner = rollout(board, rng);
+            winner = rollout(board, rng);
         } else {
-            playoutNode = leaf;
-            simulationWinner = winner;
-            player = OTHER_PLAYER(getCurrentPlayer(board));
-            setNodeWinner(playoutNode, winner, player);
+            setNodeWinner(leaf, winner, player);
         }
-        backpropagate(playoutNode, simulationWinner, player);
+        backpropagate(leaf, winner, player);
         revertToCheckpoint(board);
     }
     return amountOfSimulations;
