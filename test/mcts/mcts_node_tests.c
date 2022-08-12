@@ -21,10 +21,12 @@ void between17And81MovesInOneGame() {
     RNG rng;
     seedRNG(&rng, 69, 420);
     MCTSNode* node = root;
+    discoverChildNodes(node, board, &rng);
     int count = 0;
-    while (isLeafNode(node, board, &rng)) {
+    while (node->amountOfUntriedMoves > 0) {
         node = expandNextChild(node);
         visitNode(node, board);
+        discoverChildNodes(node, board, &rng);
         count++;
     }
     myAssert(count >= 17 && count <= 81);
@@ -46,7 +48,7 @@ void selectsChildWithHighChanceOfWin() {
         backpropagate(winNode, WIN_P1, getCurrentPlayer(board));
     }
     MCTSNode* node = expandNextChild(root);
-    while (isLeafNode(root, board, &rng)) {
+    while (root->amountOfUntriedMoves > 0) {
         // backpropagate one win and 99 losses
         backpropagate(node, WIN_P1, getCurrentPlayer(board));
         for (int i = 0; i < 99; i++) {
