@@ -38,7 +38,7 @@ void selectsChildWithHighChanceOfWin() {
     Board* board = createBoard();
     RNG rng;
     seedRNG(&rng, 69, 420);
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     MCTSNode* winNode = expandNextChild(root);
     // backpropagate one loss and 99 wins
     backpropagate(winNode, WIN_P2, getCurrentPlayer(board));
@@ -65,12 +65,12 @@ void updateRootTest() {
     Board* board = createBoard();
     RNG rng;
     seedRNG(&rng, 69, 420);
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     backpropagate(expandNextChild(root), DRAW, getCurrentPlayer(board));
     Square square = getMostPromisingMove(root);
     makePermanentMove(board, square);
     MCTSNode* newRoot = updateRoot(root, board, square);
-    isLeafNode(newRoot, board, &rng);  // to discover child nodes
+    discoverChildNodes(newRoot, board, &rng);
     backpropagate(expandNextChild(newRoot), DRAW, getCurrentPlayer(board));
     myAssert(getMostPromisingMove(newRoot).board == square.position);
     freeBoard(board);
@@ -84,10 +84,10 @@ void updateRootStillWorksWhenPlayedMoveWasPruned() {
     RNG rng;
     seedRNG(&rng, 69, 420);
     Square firstMove = {4, 4};
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     root = updateRoot(root, board, firstMove);
     makePermanentMove(board, firstMove);
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     root->amountOfUntriedMoves = 1;  // 'prune' the other 8 moves
     Square prunedMove = {4, 5};
     myAssert(!squaresAreEqual(expandNextChild(root)->square, prunedMove));
@@ -103,7 +103,7 @@ void alwaysPlays44WhenGoingFirst() {
     RNG rng;
     seedRNG(&rng, 69, 420);
     setMe(board, PLAYER1);
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     expandNextChild(root);  // to expand at least one child
     Square expected = {4, 4};
     myAssert(squaresAreEqual(getMostPromisingMove(root), expected));

@@ -9,7 +9,7 @@ void parentIsLossIfOneChildIsSetAsWin() {
     Board* board = createBoard();
     RNG rng;
     seedRNG(&rng, 69, 420);
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     setNodeWinner(expandNextChild(root), WIN_P2, PLAYER2);
     myAssert(root->wins == 0 && root->sims > 0);
     freeBoard(board);
@@ -36,7 +36,7 @@ void parentIsDrawIfAtLeastOneChildIsDrawAndOthersAreLoss() {
     Board* board = createBoard();
     RNG rng;
     seedRNG(&rng, 69, 420);
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     setNodeWinner(expandNextChild(root), DRAW, PLAYER1);
     while (isLeafNode(root, board, &rng)) {
         setNodeWinner(expandNextChild(root), WIN_P2, PLAYER1);
@@ -52,7 +52,7 @@ void parentIsLossIfAllGrandchildrenOfOneChildAreLoss() {
     Board* board = createBoard();
     RNG rng;
     seedRNG(&rng, 69, 420);
-    isLeafNode(root, board, &rng);  // to discover child nodes
+    discoverChildNodes(root, board, &rng);
     MCTSNode* child = expandNextChild(root);
     while (isLeafNode(child, board, &rng)) {
         setNodeWinner(expandNextChild(child), WIN_P1, PLAYER2);

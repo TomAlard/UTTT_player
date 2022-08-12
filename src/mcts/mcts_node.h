@@ -19,6 +19,8 @@ MCTSNode* createMCTSRootNode();
 
 void freeMCTSTree(MCTSNode* root);
 
+void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng);
+
 bool isLeafNode(MCTSNode* node, Board* board, RNG* rng);
 
 MCTSNode* selectNextChild(MCTSNode* node);

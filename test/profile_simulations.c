@@ -12,7 +12,7 @@ void profileSimulations() {
         RNG rng;
         seedRNG(&rng, 69, 420);
         Square square = createSquare(1, 0);
-        isLeafNode(root, board, &rng);  // to discover child nodes
+        discoverChildNodes(root, board, &rng);
         root = updateRoot(root, board, square);
         makePermanentMove(board, square);
         totalSims += findNextMove(board, root, &rng, 0.1);

@@ -6,7 +6,7 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, RNG* r
         setMe(board, PLAYER1);
         return root;
     }
-    isLeafNode(root, board, rng);  // to discover child nodes
+    discoverChildNodes(root, board, rng);
     MCTSNode* newRoot = updateRoot(root, board, enemyMove);
     makePermanentMove(board, enemyMove);
     return newRoot;
