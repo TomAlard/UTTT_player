@@ -59,7 +59,7 @@ void freeMCTSTree(MCTSNode* node) {
 void singleChild(MCTSNode* node, Square square) {
     node->amountOfUntriedMoves = 1;
     node->children = safe_malloc(sizeof(MCTSNode));
-    node->children[0].square = square;
+    initializeMCTSNode(node, square, &node->children[0]);
 }
 
 
@@ -103,7 +103,7 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
             for (int i = 0; i < amountOfMoves; i++) {
-                node->children[i].square = moves[range[i]];
+                initializeMCTSNode(node, moves[range[i]], &node->children[i]);
             }
         }
     }
@@ -167,10 +167,8 @@ MCTSNode* selectNextChild(MCTSNode* node) {
 
 MCTSNode* expandNextChild(MCTSNode* node) {
     assert(node->amountOfUntriedMoves > 0);
-    MCTSNode* newChild = &node->children[node->amountOfChildren++];
-    initializeMCTSNode(node, newChild->square, newChild);
     node->amountOfUntriedMoves--;
-    return newChild;
+    return &node->children[node->amountOfChildren++];
 }
 
 
