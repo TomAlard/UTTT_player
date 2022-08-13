@@ -161,13 +161,15 @@ MCTSNode* createMCTSRootNode();
 
 void freeMCTSTree(MCTSNode* root);
 
+void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng);
+
 bool isLeafNode(MCTSNode* node, Board* board, RNG* rng);
 
 MCTSNode* selectNextChild(MCTSNode* node);
 
 MCTSNode* expandNextChild(MCTSNode* node);
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, RNG* rng);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
 void backpropagate(MCTSNode* node, Winner winner, Player player);
 
@@ -850,8 +852,10 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
 
 
 bool isLeafNode(MCTSNode* node, Board* board, RNG* rng) {
-    discoverChildNodes(node, board, rng);
-    return node->amountOfUntriedMoves > 0;
+    if (node->sims == 1) {
+        discoverChildNodes(node, board, rng);
+    }
+    return node->sims == 0;
 }
 
 
@@ -861,21 +865,13 @@ void fastSquareRoot(float* restrict pOut, float* restrict pIn) {
 }
 
 
-#define EXPLORATION_PARAMETER 0.459375f
+#define EXPLORATION_PARAMETER 0.41f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     float c = EXPLORATION_PARAMETER;
     float sqrtIn = parentLogSims * node->simsInverted;
     float sqrtOut;
     fastSquareRoot(&sqrtOut, &sqrtIn);
     return node->wins*node->simsInverted + c*sqrtOut;
-}
-
-
-MCTSNode* expandNode(MCTSNode* node, int childIndex) {
-    MCTSNode* newChild = &node->children[childIndex + node->amountOfChildren++];
-    initializeMCTSNode(node, newChild->square, newChild);
-    node->amountOfUntriedMoves--;
-    return newChild;
 }
 
 
@@ -888,11 +884,12 @@ float fastLog2(float x) {
 }
 
 
+#define FIRST_PLAY_URGENCY 1.10f
 MCTSNode* selectNextChild(MCTSNode* node) {
     float logSims = fastLog2(node->sims);
-    MCTSNode* highestUCTChild = &node->children[0];
-    float highestUCT = getUCTValue(highestUCTChild, logSims);
-    for (int i = 1; i < node->amountOfChildren; i++) {
+    MCTSNode* highestUCTChild = NULL;
+    float highestUCT = -1.0f;
+    for (int i = 0; i < node->amountOfChildren; i++) {
         MCTSNode* child = &node->children[i];
         float UCT = getUCTValue(child, logSims);
         if (UCT > highestUCT) {
@@ -900,17 +897,22 @@ MCTSNode* selectNextChild(MCTSNode* node) {
             highestUCT = UCT;
         }
     }
+    if (node->amountOfUntriedMoves > 0 && highestUCT < FIRST_PLAY_URGENCY) {
+        highestUCTChild = expandNextChild(node);
+    }
     return highestUCTChild;
 }
 
 
 MCTSNode* expandNextChild(MCTSNode* node) {
-    return expandNode(node, 0);
+    MCTSNode* newChild = &node->children[node->amountOfChildren++];
+    initializeMCTSNode(node, newChild->square, newChild);
+    node->amountOfUntriedMoves--;
+    return newChild;
 }
 
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, RNG* rng) {
-    discoverChildNodes(root, board, rng);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &root->children[i];
@@ -1057,13 +1059,6 @@ MCTSNode* selectLeaf(Board* board, MCTSNode* root, RNG* rng) {
 }
 
 
-MCTSNode* expandLeaf(Board* board, MCTSNode* leaf) {
-    MCTSNode* nextChild = expandNextChild(leaf);
-    visitNode(nextChild, board);
-    return nextChild;
-}
-
-
 bool hasTimeRemaining(struct timeval start, double allocatedTime) {
     struct timeval end;
     gettimeofday(&end, NULL);
@@ -1078,21 +1073,14 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
         MCTSNode* leaf = selectLeaf(board, root, rng);
-        MCTSNode* playoutNode;
-        Winner simulationWinner;
         Winner winner = getWinner(board);
-        Player player;
+        Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            playoutNode = expandLeaf(board, leaf);
-            player = OTHER_PLAYER(getCurrentPlayer(board));
-            simulationWinner = rollout(board, rng);
+            winner = rollout(board, rng);
         } else {
-            playoutNode = leaf;
-            simulationWinner = winner;
-            player = OTHER_PLAYER(getCurrentPlayer(board));
-            setNodeWinner(playoutNode, winner, player);
+            setNodeWinner(leaf, winner, player);
         }
-        backpropagate(playoutNode, simulationWinner, player);
+        backpropagate(leaf, winner, player);
         revertToCheckpoint(board);
     }
     return amountOfSimulations;
@@ -1121,7 +1109,8 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, RNG* r
         setMe(board, PLAYER1);
         return root;
     }
-    MCTSNode* newRoot = updateRoot(root, board, enemyMove, rng);
+    discoverChildNodes(root, board, rng);
+    MCTSNode* newRoot = updateRoot(root, board, enemyMove);
     makePermanentMove(board, enemyMove);
     return newRoot;
 }
@@ -1131,7 +1120,7 @@ HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double alloc
     root = handleEnemyTurn(board, root, enemyMove, rng);
     int amountOfSimulations = findNextMove(board, root, rng, allocatedTime);
     Square move = getMostPromisingMove(root);
-    MCTSNode* newRoot = updateRoot(root, board, move, rng);
+    MCTSNode* newRoot = updateRoot(root, board, move);
     makePermanentMove(board, move);
     HandleTurnResult result = {move, newRoot, amountOfSimulations};
     return result;
