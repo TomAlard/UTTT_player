@@ -4,6 +4,7 @@
 #include <emmintrin.h>
 #include "mcts_node.h"
 #include "../misc/util.h"
+#include "priors.h"
 
 
 MCTSNode* createMCTSRootNode() {
@@ -12,6 +13,7 @@ MCTSNode* createMCTSRootNode() {
     root->square.board = 9;
     root->square.position = 9;
     root->amountOfUntriedMoves = -1;
+    initializePriorsLookupTable();
     return root;
 }
 
@@ -38,7 +40,7 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
     copy->square = original->square;
     copy->amountOfChildren = original->amountOfChildren;
     copy->amountOfUntriedMoves = original->amountOfUntriedMoves;
-    for (int i = 0; i < copy->amountOfChildren; i++) {
+    for (int i = 0; i < copy->amountOfChildren + copy->amountOfUntriedMoves; i++) {
         copy->children[i].parent = copy;
     }
     return copy;
@@ -102,8 +104,20 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
             shuffle(range, amountOfMoves, rng);
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
+            uint8_t currentBoard = getCurrentBoard(board);
+            bool* pairPriors = getPly(board) <= 35 && nextBoardHasOneMoveFromBothPlayers(board)
+                    ? getPairPriors(board->state.player1.smallBoards[currentBoard],
+                                    board->state.player2.smallBoards[currentBoard])
+                    : NULL;
             for (int i = 0; i < amountOfMoves; i++) {
-                initializeMCTSNode(node, moves[range[i]], &node->children[i]);
+                Square move = moves[range[i]];
+                MCTSNode* child = &node->children[i];
+                initializeMCTSNode(node, move, child);
+                if (pairPriors != NULL) {
+                    child->wins = pairPriors[move.position]? PAIR_PRIORS_BONUS : 0.0f;
+                    child->sims = PAIR_PRIORS_BONUS;
+                    child->simsInverted = 1.0f / child->sims;
+                }
             }
         }
     }
@@ -111,7 +125,7 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
 
 
 bool isLeafNode(MCTSNode* node, Board* board, RNG* rng) {
-    if (node->sims == 1) {
+    if (node->sims > 0) {
         discoverChildNodes(node, board, rng);
     }
     return node->sims == 0;

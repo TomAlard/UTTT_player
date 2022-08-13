@@ -40,6 +40,8 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 
 bool nextBoardIsEmpty(Board* board);
 
+bool nextBoardHasOneMoveFromBothPlayers(Board* board);
+
 uint8_t getCurrentBoard(Board* board);
 
 Player getCurrentPlayer(Board* board);
