@@ -64,7 +64,7 @@ void singleChild(MCTSNode* node, Square square) {
 
 
 bool handleSpecialCases(MCTSNode* node, Board* board) {
-    if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
+    if (nextBoardIsEmpty(board) && getPly(board) <= 20) {
         uint8_t currentBoard = getCurrentBoard(board);
         Square sameBoard = {currentBoard, currentBoard};
         singleChild(node, sameBoard);
