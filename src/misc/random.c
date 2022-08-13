@@ -24,14 +24,12 @@ uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound) {
 }
 
 
-void shuffle(int* array, size_t n, RNG* rng) {
+void shuffle(int* array, int n, RNG* rng) {
     uint32_t maxRandomNumber = (1L << 32) - 1;
-    if (n > 1) {
-        for (size_t i = 0; i < n - 1; i++) {
-            size_t j = i + generateRandomNumber(rng) / (maxRandomNumber / (n - i) + 1);
-            int t = array[j];
-            array[j] = array[i];
-            array[i] = t;
-        }
+    for (int i = 0; i < n - 1; i++) {
+        uint32_t j = i + generateRandomNumber(rng) / (maxRandomNumber / (n - i) + 1);
+        int t = array[j];
+        array[j] = array[i];
+        array[i] = t;
     }
 }
