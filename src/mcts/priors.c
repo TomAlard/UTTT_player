@@ -55,11 +55,27 @@ void applyPairPriors(MCTSNode* parent, uint16_t smallBoard, uint16_t otherPlayer
 }
 
 
+void applySendToDecidedBoardPriors(Board* board, MCTSNode* parent, float prior) {
+    for (int i = 0; i < parent->amountOfUntriedMoves; i++) {
+        MCTSNode* child = &parent->children[i];
+        if ((board->state.player1.bigBoard | board->state.player2.bigBoard) & (1 << child->square.position)) {
+            child->wins = 0.0f;
+            child->sims = prior;
+            child->simsInverted = 1.0f / prior;
+        }
+    }
+}
+
+
 void applyPriors(Board* board, MCTSNode* parent) {
     PlayerBitBoard* p1 = &board->state.player1;
     uint16_t smallBoard = (p1 + board->state.currentPlayer)->smallBoards[board->state.currentBoard];
     uint16_t otherPlayerSmallBoard = (p1 + !board->state.currentPlayer)->smallBoards[board->state.currentBoard];
-    if (nextBoardHasOneMoveFromBothPlayers(board) && getPly(board) <= 30) {
-        applyPairPriors(parent, smallBoard, otherPlayerSmallBoard, getPly(board) <= 18? 1000.0f : 2.0f);
+    uint8_t ply = getPly(board);
+    if (nextBoardHasOneMoveFromBothPlayers(board) && ply <= 30) {
+        applyPairPriors(parent, smallBoard, otherPlayerSmallBoard, ply <= 18? 1000.0f : 2.0f);
+    }
+    if (ply <= 40) {
+        applySendToDecidedBoardPriors(board, parent, ply <= 30? 1000.0f : 5.0f);
     }
 }
