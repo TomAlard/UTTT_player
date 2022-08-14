@@ -28,8 +28,7 @@ bool squaresAreEqual(Square square1, Square square2);
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))
 #define BIT_CHANGE(a,b,c) ((a) = (a) & ~(b) | (-(c) & (b)))
-
-void crash(char* errorMessage);
+#define ONE_BIT_SET(a) (((a) & ((a)-1)) == 0 && (a) != 0)
 
 Square toOurNotation(Square rowAndColumn);
 
@@ -44,7 +43,7 @@ void seedRNG(RNG* rng, uint64_t init_state, uint64_t init_seq);
 
 uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound);
 
-void shuffle(int* array, size_t n, RNG* rng);
+void shuffle(int* array, int n, RNG* rng);
 
 #define Player bool
 #define PLAYER1 0
@@ -106,6 +105,8 @@ Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* a
 uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 
 bool nextBoardIsEmpty(Board* board);
+
+bool nextBoardHasOneMoveFromBothPlayers(Board* board);
 
 uint8_t getCurrentBoard(Board* board);
 
@@ -178,6 +179,12 @@ void visitNode(MCTSNode* node, Board* board);
 Square getMostPromisingMove(MCTSNode* node);
 
 float getWinrate(MCTSNode* node);
+
+#define PAIR_PRIORS_BONUS 2.0f
+
+void initializePriorsLookupTable();
+
+bool* getPairPriors(uint16_t smallBoard, uint16_t otherPlayerSmallBoard);
 
 void setNodeWinner(MCTSNode* node, Winner winner, Player player);
 
@@ -293,15 +300,13 @@ uint8_t generateBoundedRandomNumber(RNG* rng, uint8_t bound) {
 }
 
 
-void shuffle(int* array, size_t n, RNG* rng) {
+void shuffle(int* array, int n, RNG* rng) {
     uint32_t maxRandomNumber = (1L << 32) - 1;
-    if (n > 1) {
-        for (size_t i = 0; i < n - 1; i++) {
-            size_t j = i + generateRandomNumber(rng) / (maxRandomNumber / (n - i) + 1);
-            int t = array[j];
-            array[j] = array[i];
-            array[i] = t;
-        }
+    for (int i = 0; i < n - 1; i++) {
+        uint32_t j = i + generateRandomNumber(rng) / (maxRandomNumber / (n - i) + 1);
+        int t = array[j];
+        array[j] = array[i];
+        array[i] = t;
     }
 }
 // END RANDOM
@@ -661,6 +666,14 @@ bool nextBoardIsEmpty(Board* board) {
 }
 
 
+bool nextBoardHasOneMoveFromBothPlayers(Board* board) {
+    uint8_t currentBoard = board->state.currentBoard;
+    return currentBoard != ANY_BOARD
+           && ONE_BIT_SET(board->state.player1.smallBoards[currentBoard])
+           && ONE_BIT_SET(board->state.player2.smallBoards[currentBoard]);
+}
+
+
 uint8_t getCurrentBoard(Board* board) {
     return board->state.currentBoard;
 }
@@ -753,6 +766,7 @@ MCTSNode* createMCTSRootNode() {
     root->square.board = 9;
     root->square.position = 9;
     root->amountOfUntriedMoves = -1;
+    initializePriorsLookupTable();
     return root;
 }
 
@@ -779,7 +793,7 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
     copy->square = original->square;
     copy->amountOfChildren = original->amountOfChildren;
     copy->amountOfUntriedMoves = original->amountOfUntriedMoves;
-    for (int i = 0; i < copy->amountOfChildren; i++) {
+    for (int i = 0; i < copy->amountOfChildren + copy->amountOfUntriedMoves; i++) {
         copy->children[i].parent = copy;
     }
     return copy;
@@ -800,12 +814,12 @@ void freeMCTSTree(MCTSNode* node) {
 void singleChild(MCTSNode* node, Square square) {
     node->amountOfUntriedMoves = 1;
     node->children = malloc(sizeof(MCTSNode));
-    node->children[0].square = square;
+    initializeMCTSNode(node, square, &node->children[0]);
 }
 
 
 bool handleSpecialCases(MCTSNode* node, Board* board) {
-    if (nextBoardIsEmpty(board) && currentPlayerIsMe(board) && getPly(board) <= 20) {
+    if (nextBoardIsEmpty(board) && getPly(board) <= 20) {
         uint8_t currentBoard = getCurrentBoard(board);
         Square sameBoard = {currentBoard, currentBoard};
         singleChild(node, sameBoard);
@@ -843,8 +857,20 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
             shuffle(range, amountOfMoves, rng);
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = malloc(amountOfMoves * sizeof(MCTSNode));
+            uint8_t currentBoard = getCurrentBoard(board);
+            bool* pairPriors = getPly(board) <= 35 && nextBoardHasOneMoveFromBothPlayers(board)
+                               ? getPairPriors(board->state.player1.smallBoards[currentBoard],
+                                               board->state.player2.smallBoards[currentBoard])
+                               : NULL;
             for (int i = 0; i < amountOfMoves; i++) {
-                node->children[i].square = moves[range[i]];
+                Square move = moves[range[i]];
+                MCTSNode* child = &node->children[i];
+                initializeMCTSNode(node, move, child);
+                if (pairPriors != NULL) {
+                    child->wins = pairPriors[move.position]? PAIR_PRIORS_BONUS : 0.0f;
+                    child->sims = PAIR_PRIORS_BONUS;
+                    child->simsInverted = 1.0f / child->sims;
+                }
             }
         }
     }
@@ -852,7 +878,7 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
 
 
 bool isLeafNode(MCTSNode* node, Board* board, RNG* rng) {
-    if (node->sims == 1) {
+    if (node->sims > 0) {
         discoverChildNodes(node, board, rng);
     }
     return node->sims == 0;
@@ -905,10 +931,8 @@ MCTSNode* selectNextChild(MCTSNode* node) {
 
 
 MCTSNode* expandNextChild(MCTSNode* node) {
-    MCTSNode* newChild = &node->children[node->amountOfChildren++];
-    initializeMCTSNode(node, newChild->square, newChild);
     node->amountOfUntriedMoves--;
-    return newChild;
+    return &node->children[node->amountOfChildren++];
 }
 
 
@@ -980,6 +1004,71 @@ float getWinrate(MCTSNode* node) {
     return node->wins * node->simsInverted;
 }
 // END MCTS_NODE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// START PRIORS
+bool pairPriors[512][512][9];
+void calculatePairPriors(uint16_t smallBoard, uint16_t otherPlayerSmallBoard, bool* result) {
+    uint16_t linesOf2Masks[24] = {
+            3, 6, 24, 48, 192, 384, 5, 40, 320,  // horizontal
+            9, 18, 36, 72, 144, 288, 65, 130, 260,  // vertical
+            17, 272, 20, 80, 257, 68  // diagonal
+    };
+    for (uint8_t position = 0; position < 9; position++) {
+        result[position] = false;
+        if ((1 << position) == smallBoard || (1 << position) == otherPlayerSmallBoard) {
+            continue;
+        }
+        for (int i = 0; i < 24; i++) {
+            uint16_t mask = linesOf2Masks[i];
+            if ((smallBoard | (1 << position)) == mask && !isWin(mask | otherPlayerSmallBoard)) {
+                result[position] = true;
+                break;
+            }
+        }
+    }
+}
+
+
+void initializePriorsLookupTable() {
+    for (uint8_t position1 = 0; position1 < 9; position1++) {
+        for (uint8_t position2 = 0; position2 < 9; position2++) {
+            if (position1 != position2) {
+                uint16_t smallBoard = 1 << position1;
+                uint16_t otherPlayerSmallBoard = 1 << position2;
+                calculatePairPriors(smallBoard, otherPlayerSmallBoard, pairPriors[smallBoard][otherPlayerSmallBoard]);
+            }
+        }
+    }
+}
+
+
+bool* getPairPriors(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
+    return pairPriors[smallBoard][otherPlayerSmallBoard];
+}
+// END PRIORS
+
+
+
+
+
+
+
+
 
 
 
