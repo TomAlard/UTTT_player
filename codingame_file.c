@@ -180,11 +180,11 @@ Square getMostPromisingMove(MCTSNode* node);
 
 float getWinrate(MCTSNode* node);
 
-#define PAIR_PRIORS_BONUS 2.0f
-
 void initializePriorsLookupTable();
 
 bool* getPairPriors(uint16_t smallBoard, uint16_t otherPlayerSmallBoard);
+
+void applyPriors(Board* board, MCTSNode* parent);
 
 void setNodeWinner(MCTSNode* node, Winner winner, Player player);
 
@@ -857,21 +857,12 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
             shuffle(range, amountOfMoves, rng);
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = malloc(amountOfMoves * sizeof(MCTSNode));
-            uint8_t currentBoard = getCurrentBoard(board);
-            bool* pairPriors = getPly(board) <= 35 && nextBoardHasOneMoveFromBothPlayers(board)
-                               ? getPairPriors(board->state.player1.smallBoards[currentBoard],
-                                               board->state.player2.smallBoards[currentBoard])
-                               : NULL;
             for (int i = 0; i < amountOfMoves; i++) {
                 Square move = moves[range[i]];
                 MCTSNode* child = &node->children[i];
                 initializeMCTSNode(node, move, child);
-                if (pairPriors != NULL) {
-                    child->wins = pairPriors[move.position]? PAIR_PRIORS_BONUS : 0.0f;
-                    child->sims = PAIR_PRIORS_BONUS;
-                    child->simsInverted = 1.0f / child->sims;
-                }
             }
+            applyPriors(board, node);
         }
     }
 }
@@ -1059,6 +1050,43 @@ void initializePriorsLookupTable() {
 
 bool* getPairPriors(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
     return pairPriors[smallBoard][otherPlayerSmallBoard];
+}
+
+
+void applyPairPriors(MCTSNode* parent, uint16_t smallBoard, uint16_t otherPlayerSmallBoard, float prior) {
+    bool* formsPair = pairPriors[smallBoard][otherPlayerSmallBoard];
+    for (int i = 0; i < parent->amountOfUntriedMoves; i++) {
+        MCTSNode* child = &parent->children[i];
+        child->wins = formsPair[child->square.position]? prior : 0.0f;
+        child->sims = prior;
+        child->simsInverted = 1.0f / prior;
+    }
+}
+
+
+void applySendToDecidedBoardPriors(Board* board, MCTSNode* parent, float prior) {
+    for (int i = 0; i < parent->amountOfUntriedMoves; i++) {
+        MCTSNode* child = &parent->children[i];
+        if ((board->state.player1.bigBoard | board->state.player2.bigBoard) & (1 << child->square.position)) {
+            child->wins = 0.0f;
+            child->sims = prior;
+            child->simsInverted = 1.0f / prior;
+        }
+    }
+}
+
+
+void applyPriors(Board* board, MCTSNode* parent) {
+    PlayerBitBoard* p1 = &board->state.player1;
+    uint16_t smallBoard = (p1 + board->state.currentPlayer)->smallBoards[board->state.currentBoard];
+    uint16_t otherPlayerSmallBoard = (p1 + !board->state.currentPlayer)->smallBoards[board->state.currentBoard];
+    uint8_t ply = getPly(board);
+    if (nextBoardHasOneMoveFromBothPlayers(board) && ply <= 30) {
+        applyPairPriors(parent, smallBoard, otherPlayerSmallBoard, ply <= 18? 1000.0f : 2.0f);
+    }
+    if (ply <= 40) {
+        applySendToDecidedBoardPriors(board, parent, ply <= 30? 1000.0f : 5.0f);
+    }
 }
 // END PRIORS
 
