@@ -1,6 +1,5 @@
 #include <assert.h>
 #include "priors.h"
-#include "../board/player_bitboard.h"
 
 
 bool pairPriors[512][512][9];
@@ -42,4 +41,25 @@ void initializePriorsLookupTable() {
 bool* getPairPriors(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
     assert(ONE_BIT_SET(smallBoard) && ONE_BIT_SET(otherPlayerSmallBoard) && smallBoard != otherPlayerSmallBoard);
     return pairPriors[smallBoard][otherPlayerSmallBoard];
+}
+
+
+void applyPairPriors(MCTSNode* parent, uint16_t smallBoard, uint16_t otherPlayerSmallBoard, float prior) {
+    bool* formsPair = pairPriors[smallBoard][otherPlayerSmallBoard];
+    for (int i = 0; i < parent->amountOfUntriedMoves; i++) {
+        MCTSNode* child = &parent->children[i];
+        child->wins = formsPair[child->square.position]? prior : 0.0f;
+        child->sims = prior;
+        child->simsInverted = 1.0f / prior;
+    }
+}
+
+
+void applyPriors(Board* board, MCTSNode* parent) {
+    PlayerBitBoard* p1 = &board->state.player1;
+    uint16_t smallBoard = (p1 + board->state.currentPlayer)->smallBoards[board->state.currentBoard];
+    uint16_t otherPlayerSmallBoard = (p1 + !board->state.currentPlayer)->smallBoards[board->state.currentBoard];
+    if (nextBoardHasOneMoveFromBothPlayers(board) && getPly(board) <= 30) {
+        applyPairPriors(parent, smallBoard, otherPlayerSmallBoard, getPly(board) <= 18? 1000.0f : 2.0f);
+    }
 }

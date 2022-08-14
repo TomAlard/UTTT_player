@@ -104,21 +104,12 @@ void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
             shuffle(range, amountOfMoves, rng);
             node->amountOfUntriedMoves = amountOfMoves;
             node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
-            uint8_t currentBoard = getCurrentBoard(board);
-            bool* pairPriors = getPly(board) <= 35 && nextBoardHasOneMoveFromBothPlayers(board)
-                    ? getPairPriors(board->state.player1.smallBoards[currentBoard],
-                                    board->state.player2.smallBoards[currentBoard])
-                    : NULL;
             for (int i = 0; i < amountOfMoves; i++) {
                 Square move = moves[range[i]];
                 MCTSNode* child = &node->children[i];
                 initializeMCTSNode(node, move, child);
-                if (pairPriors != NULL) {
-                    child->wins = pairPriors[move.position]? PAIR_PRIORS_BONUS : 0.0f;
-                    child->sims = PAIR_PRIORS_BONUS;
-                    child->simsInverted = 1.0f / child->sims;
-                }
             }
+            applyPriors(board, node);
         }
     }
 }

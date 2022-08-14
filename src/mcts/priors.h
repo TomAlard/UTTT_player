@@ -3,11 +3,12 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-#define PAIR_PRIORS_BONUS 2.0f
+#include "mcts_node.h"
 
 void initializePriorsLookupTable();
 
 bool* getPairPriors(uint16_t smallBoard, uint16_t otherPlayerSmallBoard);
+
+void applyPriors(Board* board, MCTSNode* parent);
 
 #endif //UTTT2_PRIORS_H
