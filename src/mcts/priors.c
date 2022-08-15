@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "priors.h"
+#include "../misc/util.h"
 
 
 bool pairPriors[512][512][9];
