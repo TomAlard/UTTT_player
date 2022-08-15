@@ -65,6 +65,42 @@ void singleChild(MCTSNode* node, Square square) {
 }
 
 
+bool handleOpening(MCTSNode* node, Board* board) {
+    uint8_t ply = getPly(board);
+    if (board->me != PLAYER2 || ply > 10) {
+        return false;
+    }
+    bool firstMove = BIT_CHECK(board->state.player1.smallBoards[4], 4);
+    bool secondMove = BIT_CHECK(board->state.player1.smallBoards[8], 8);
+    bool thirdMove = BIT_CHECK(board->state.player1.smallBoards[0], 0);
+    bool fourthMove = BIT_CHECK(board->state.player1.smallBoards[5], 5);
+    bool fifthMove = BIT_CHECK(board->state.player1.smallBoards[7], 7);
+    uint8_t currentBoard = getCurrentBoard(board);
+    if (ply == 1 && firstMove) {
+        Square move = {4, 8};
+        singleChild(node, move);
+        return true;
+    } else if (ply == 3 && firstMove && secondMove && currentBoard == 8) {
+        Square move = {8, 0};
+        singleChild(node, move);
+        return true;
+    } else if (ply == 5 && firstMove && secondMove && thirdMove && currentBoard == 0) {
+        Square move = {0, 5};
+        singleChild(node, move);
+        return true;
+    } else if (ply == 7 && firstMove && secondMove && thirdMove && fourthMove && currentBoard == 5) {
+        Square move = {5, 7};
+        singleChild(node, move);
+        return true;
+    } else if (ply == 9 && firstMove && secondMove && thirdMove && fourthMove && fifthMove && currentBoard == 7) {
+        Square move = {7, 5};
+        singleChild(node, move);
+        return true;
+    }
+    return false;
+}
+
+
 bool handleSpecialCases(MCTSNode* node, Board* board) {
     if (nextBoardIsEmpty(board) && getPly(board) <= 20) {
         uint8_t currentBoard = getCurrentBoard(board);
@@ -84,7 +120,7 @@ bool handleSpecialCases(MCTSNode* node, Board* board) {
 void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng) {
     if (node->amountOfChildren == -1) {
         node->amountOfChildren = 0;
-        if (!handleSpecialCases(node, board)) {
+        if (!handleOpening(node, board) && !handleSpecialCases(node, board)) {
             Square movesArray[TOTAL_SMALL_SQUARES];
             int8_t amountOfMoves;
             Square* moves = generateMoves(board, movesArray, &amountOfMoves);
