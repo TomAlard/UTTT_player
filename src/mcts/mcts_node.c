@@ -47,13 +47,18 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
 }
 
 
-void freeMCTSTree(MCTSNode* node) {
+void freeMCTSTreeRecursive(MCTSNode* node) {
     for (int i = 0; i < node->amountOfChildren; i++) {
-        freeMCTSTree(&node->children[i]);
+        freeMCTSTreeRecursive(&node->children[i]);
     }
     free(node->children);
-    if (node->parent == NULL) {
-        free(node);
+}
+
+
+void freeMCTSTree(MCTSNode* root) {
+    freeMCTSTreeRecursive(root);
+    if (root->parent == NULL) {
+        free(root);
     }
 }
 
