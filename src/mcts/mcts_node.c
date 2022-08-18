@@ -128,19 +128,17 @@ bool isLeafNode(MCTSNode* node, Board* board, RNG* rng) {
 }
 
 
-void fastSquareRoot(float* restrict pOut, float* restrict pIn) {
-    __m128 in = _mm_load_ss(pIn);
-    _mm_store_ss(pOut, _mm_mul_ss(in, _mm_rsqrt_ss(in)));
+float fastSquareRoot(float x) {
+    __m128 in = _mm_set_ss(x);
+    return _mm_cvtss_f32(_mm_mul_ss(in, _mm_rsqrt_ss(in)));
 }
 
 
 #define EXPLORATION_PARAMETER 0.41f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
-    float c = EXPLORATION_PARAMETER;
-    float sqrtIn = parentLogSims * node->simsInverted;
-    float sqrtOut;
-    fastSquareRoot(&sqrtOut, &sqrtIn);
-    return node->wins*node->simsInverted + c*sqrtOut;
+    float exploitation = node->wins*node->simsInverted;
+    float exploration = fastSquareRoot(parentLogSims * node->simsInverted);
+    return exploitation + exploration;
 }
 
 
@@ -156,7 +154,7 @@ float fastLog2(float x) {
 #define FIRST_PLAY_URGENCY 1.10f
 MCTSNode* selectNextChild(MCTSNode* node) {
     assert(node->amountOfChildren > 0 || node->amountOfUntriedMoves > 0);
-    float logSims = fastLog2(node->sims);
+    float logSims = EXPLORATION_PARAMETER*EXPLORATION_PARAMETER * fastLog2(node->sims);
     MCTSNode* highestUCTChild = NULL;
     float highestUCT = -1.0f;
     for (int i = 0; i < node->amountOfChildren; i++) {
