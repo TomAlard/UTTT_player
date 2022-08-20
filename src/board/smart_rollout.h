@@ -14,7 +14,7 @@ void initializeLookupTable();
 
 void initializeRolloutState(RolloutState* RS);
 
-bool hasWinningMove(Board* board, RolloutState* RS);
+bool hasWinningMove(Board* board, uint16_t smallBoardsWithWinningMove);
 
 void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex);
 

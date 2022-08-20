@@ -60,10 +60,8 @@ void initializeRolloutState(RolloutState* RS) {
 }
 
 
-bool hasWinningMove(Board* board, RolloutState* RS) {
-    Player player = board->state.currentPlayer;
+bool hasWinningMove(Board* board, uint16_t smallBoardsWithWinningMove) {
     uint8_t currentBoard = board->state.currentBoard;
-    uint16_t smallBoardsWithWinningMove = RS->instantWinBoards[player] & RS->instantWinSmallBoards[player];
     return (currentBoard == ANY_BOARD && smallBoardsWithWinningMove)
         || BIT_CHECK(smallBoardsWithWinningMove, currentBoard);
 }

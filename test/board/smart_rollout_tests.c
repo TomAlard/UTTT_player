@@ -26,7 +26,8 @@ void hasWinningMoveTest() {
             }
             uint16_t openSmallBoards = 511 - (board->state.player1.bigBoard | board->state.player2.bigBoard);
             bool oneSquareLeft = (openSmallBoards & (openSmallBoards - 1)) == 0;
-            myAssert((hasWinningMove(board, &RS) == winningMoveExists) || oneSquareLeft);
+            uint16_t smallBoardsWithWinningMove = RS.instantWinBoards[currentPlayer] & RS.instantWinSmallBoards[currentPlayer];
+            myAssert((hasWinningMove(board, smallBoardsWithWinningMove) == winningMoveExists) || oneSquareLeft);
             Square move = moves[generateBoundedRandomNumber(&rng, amountOfMoves)];
             PlayerBitBoard* player = currentPlayer == PLAYER1? &board->state.player1 : &board->state.player2;
             PlayerBitBoard* otherPlayer = currentPlayer == PLAYER1? &board->state.player2 : &board->state.player1;

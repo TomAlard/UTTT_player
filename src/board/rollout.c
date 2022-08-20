@@ -27,24 +27,32 @@ void makeRolloutTemporaryMove(Board* board, RolloutState* RS, Square square) {
 }
 
 
+uint8_t generateRandomMoveIndex(Board* board, RNG* rng, uint8_t* currentBoard) {
+    uint8_t randomMoveIndex;
+    if (*currentBoard == ANY_BOARD) {
+        randomMoveIndex = generateBoundedRandomNumber(rng, board->state.totalAmountOfOpenSquares);
+        *currentBoard = 0;
+        while (*currentBoard < 9 && randomMoveIndex < 128) {
+            randomMoveIndex -= board->state.amountOfOpenSquaresBySmallBoard[(*currentBoard)++];
+        }
+        randomMoveIndex += board->state.amountOfOpenSquaresBySmallBoard[--(*currentBoard)];
+    } else {
+        randomMoveIndex = generateBoundedRandomNumber(rng, board->state.amountOfOpenSquaresBySmallBoard[*currentBoard]);
+    }
+    return randomMoveIndex;
+}
+
+
 void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng) {
     assert(board->state.winner == NONE && "makeRandomTemporaryMove: there is already a winner");
-    uint8_t currentBoard = board->state.currentBoard;
-    if (hasWinningMove(board, RS)) {
+    Player player = getCurrentPlayer(board);
+    uint16_t smallBoardsWithWinningMove = RS->instantWinBoards[player] & RS->instantWinSmallBoards[player];
+    if (hasWinningMove(board, smallBoardsWithWinningMove)) {
         board->state.winner = board->state.currentPlayer + 1;
         return;
     }
-    uint8_t randomMoveIndex;
-    if (currentBoard == ANY_BOARD) {
-        randomMoveIndex = generateBoundedRandomNumber(rng, board->state.totalAmountOfOpenSquares);
-        currentBoard = 0;
-        while (currentBoard < 9 && randomMoveIndex < 128) {
-            randomMoveIndex -= board->state.amountOfOpenSquaresBySmallBoard[currentBoard++];
-        }
-        randomMoveIndex += board->state.amountOfOpenSquaresBySmallBoard[--currentBoard];
-    } else {
-        randomMoveIndex = generateBoundedRandomNumber(rng, board->state.amountOfOpenSquaresBySmallBoard[currentBoard]);
-    }
+    uint8_t currentBoard = board->state.currentBoard;
+    uint8_t randomMoveIndex = generateRandomMoveIndex(board, rng, &currentBoard);
     uint16_t bitBoard = ~(board->state.player1.smallBoards[currentBoard] | board->state.player2.smallBoards[currentBoard]) & 511;
     makeRolloutTemporaryMove(board, RS, openSquares[bitBoard][currentBoard][randomMoveIndex]);
 }
