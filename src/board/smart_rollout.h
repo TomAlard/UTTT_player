@@ -5,19 +5,12 @@
 #include "../misc/player.h"
 #include "board.h"
 
-typedef struct RolloutState {
-    uint16_t instantWinBoards[2];
-    uint16_t instantWinSmallBoards[2];
-} RolloutState;
-
 void initializeLookupTable();
-
-void initializeRolloutState(RolloutState* RS);
 
 bool hasWinningMove(Board* board, uint16_t smallBoardsWithWinningMove);
 
-void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex);
+void updateSmallBoardState(Board* board, uint8_t boardIndex);
 
-void updateBigBoardState(Board* board, RolloutState* RS);
+void updateBigBoardState(Board* board);
 
 #endif //UTTT2_SMART_ROLLOUT_H

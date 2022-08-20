@@ -43,6 +43,10 @@ Board* createBoard() {
     Board* board = safe_malloc(sizeof(Board));
     initializePlayerBitBoard(&board->state.player1);
     initializePlayerBitBoard(&board->state.player2);
+    board->state.instantWinBoards[PLAYER1] = 0;
+    board->state.instantWinBoards[PLAYER2] = 0;
+    board->state.instantWinSmallBoards[PLAYER1] = 0;
+    board->state.instantWinSmallBoards[PLAYER2] = 0;
     board->state.currentPlayer = PLAYER1;
     board->state.currentBoard = ANY_BOARD;
     board->state.winner = NONE;
@@ -159,10 +163,10 @@ void updateCheckpoint(Board* board) {
 
 void makeTemporaryMove(Board* board, Square square) {
     assert(square.board == board->state.currentBoard
-            || board->state.currentBoard == ANY_BOARD &&
-               "Can't make a move on that board");
+           || board->state.currentBoard == ANY_BOARD &&
+              "Can't make a move on that board");
     assert(!squareIsOccupied(&board->state.player1, square) && !squareIsOccupied(&board->state.player2, square)
-            && "Can't make a move on a square that is already occupied");
+           && "Can't make a move on a square that is already occupied");
     assert(board->state.winner == NONE && "Can't make a move when there is already a winner");
 
     PlayerBitBoard* p1 = &board->state.player1;
@@ -170,10 +174,12 @@ void makeTemporaryMove(Board* board, Square square) {
         board->state.winner = winnerByBigBoards[board->state.player1.bigBoard][board->state.player2.bigBoard];
         board->state.totalAmountOfOpenSquares -= board->state.amountOfOpenSquaresBySmallBoard[square.board];
         board->state.amountOfOpenSquaresBySmallBoard[square.board] = 0;
+        updateBigBoardState(board);
     } else {
         board->state.totalAmountOfOpenSquares--;
         board->state.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
+    updateSmallBoardState(board, square.board);
     board->state.currentPlayer ^= 1;
     board->state.currentBoard = getNextBoard(board, square.position);
     board->state.ply++;

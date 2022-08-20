@@ -107,10 +107,8 @@ void makeRandomTemporaryMoveMakesSameMoveAsOldGenerateMovesWay() {
     seedRNG(&rng1, 69, 420);
     RNG rng2;
     seedRNG(&rng2, 69, 420);
-    RolloutState RS;
-    initializeRolloutState(&RS);
     while (getWinner(board) == NONE) {
-        makeRandomTemporaryMove(board, &RS, &rng1);
+        makeRandomTemporaryMove(board, &rng1);
         if (getWinner(board) != NONE) {
             break;
         }

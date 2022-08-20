@@ -4,7 +4,7 @@
 #include "board.h"
 #include "smart_rollout.h"
 
-void makeRandomTemporaryMove(Board* board, RolloutState* RS, RNG* rng);
+void makeRandomTemporaryMove(Board* board, RNG* rng);
 
 Winner rollout(Board* board, RNG* rng);
 

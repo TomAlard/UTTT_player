@@ -1,4 +1,3 @@
-#include <string.h>
 #include "smart_rollout.h"
 #include "../misc/util.h"
 
@@ -55,11 +54,6 @@ void initializeLookupTable() {
 }
 
 
-void initializeRolloutState(RolloutState* RS) {
-    memset(RS, 0, sizeof(RolloutState));
-}
-
-
 bool hasWinningMove(Board* board, uint16_t smallBoardsWithWinningMove) {
     uint8_t currentBoard = board->state.currentBoard;
     return (currentBoard == ANY_BOARD && smallBoardsWithWinningMove)
@@ -67,18 +61,18 @@ bool hasWinningMove(Board* board, uint16_t smallBoardsWithWinningMove) {
 }
 
 
-void updateSmallBoardState(Board* board, RolloutState* RS, uint8_t boardIndex) {
+void updateSmallBoardState(Board* board, uint8_t boardIndex) {
     uint16_t p1 = board->state.player1.smallBoards[boardIndex];
     uint16_t p2 = board->state.player2.smallBoards[boardIndex];
     uint16_t mask = 1ULL << boardIndex;
-    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER1], mask, smallBoardHasInstantWinMove(p1, p2));
-    BIT_CHANGE(RS->instantWinSmallBoards[PLAYER2], mask, smallBoardHasInstantWinMove(p2, p1));
+    BIT_CHANGE(board->state.instantWinSmallBoards[PLAYER1], mask, smallBoardHasInstantWinMove(p1, p2));
+    BIT_CHANGE(board->state.instantWinSmallBoards[PLAYER2], mask, smallBoardHasInstantWinMove(p2, p1));
 }
 
 
-void updateBigBoardState(Board* board, RolloutState* RS) {
+void updateBigBoardState(Board* board) {
     uint16_t p1 = board->state.player1.bigBoard;
     uint16_t p2 = board->state.player2.bigBoard;
-    RS->instantWinBoards[PLAYER1] = calculateInstantWinBoards(p1, p2);
-    RS->instantWinBoards[PLAYER2] = calculateInstantWinBoards(p2, p1);
+    board->state.instantWinBoards[PLAYER1] = calculateInstantWinBoards(p1, p2);
+    board->state.instantWinBoards[PLAYER2] = calculateInstantWinBoards(p2, p1);
 }

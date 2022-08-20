@@ -12,6 +12,8 @@
 typedef struct State {
     PlayerBitBoard player1;
     PlayerBitBoard player2;
+    uint16_t instantWinBoards[2];
+    uint16_t instantWinSmallBoards[2];
     Player currentPlayer;
     uint8_t currentBoard;
     Winner winner;
