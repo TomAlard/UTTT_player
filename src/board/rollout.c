@@ -2,19 +2,21 @@
 #include "rollout.h"
 
 
-uint8_t generateRandomMoveIndex(Board* board, RNG* rng, uint8_t* currentBoard) {
+Square generateMove(Board* board, RNG* rng) {
+    uint8_t currentBoard = board->state.currentBoard;
     uint8_t randomMoveIndex;
-    if (*currentBoard == ANY_BOARD) {
+    if (currentBoard == ANY_BOARD) {
         randomMoveIndex = generateBoundedRandomNumber(rng, board->state.totalAmountOfOpenSquares);
-        *currentBoard = 0;
-        while (*currentBoard < 9 && randomMoveIndex < 128) {
-            randomMoveIndex -= board->state.amountOfOpenSquaresBySmallBoard[(*currentBoard)++];
+        currentBoard = 0;
+        while (currentBoard < 9 && randomMoveIndex < 128) {
+            randomMoveIndex -= board->state.amountOfOpenSquaresBySmallBoard[currentBoard++];
         }
-        randomMoveIndex += board->state.amountOfOpenSquaresBySmallBoard[--(*currentBoard)];
+        randomMoveIndex += board->state.amountOfOpenSquaresBySmallBoard[--currentBoard];
     } else {
-        randomMoveIndex = generateBoundedRandomNumber(rng, board->state.amountOfOpenSquaresBySmallBoard[*currentBoard]);
+        randomMoveIndex = generateBoundedRandomNumber(rng, board->state.amountOfOpenSquaresBySmallBoard[currentBoard]);
     }
-    return randomMoveIndex;
+    uint16_t bitBoard = ~(board->state.player1.smallBoards[currentBoard] | board->state.player2.smallBoards[currentBoard]) & 511;
+    return openSquares[bitBoard][currentBoard][randomMoveIndex];
 }
 
 
@@ -26,10 +28,8 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
         board->state.winner = board->state.currentPlayer + 1;
         return;
     }
-    uint8_t currentBoard = board->state.currentBoard;
-    uint8_t randomMoveIndex = generateRandomMoveIndex(board, rng, &currentBoard);
-    uint16_t bitBoard = ~(board->state.player1.smallBoards[currentBoard] | board->state.player2.smallBoards[currentBoard]) & 511;
-    makeTemporaryMove(board, openSquares[bitBoard][currentBoard][randomMoveIndex]);
+    Square move = generateMove(board, rng);
+    makeTemporaryMove(board, move);
 }
 
 
