@@ -8,10 +8,9 @@ Square generateMove(Board* board, RNG* rng) {
     if (currentBoard == ANY_BOARD) {
         randomMoveIndex = generateBoundedRandomNumber(rng, board->state.totalAmountOfOpenSquares);
         currentBoard = 0;
-        while (currentBoard < 9 && randomMoveIndex < 128) {
+        while (currentBoard < 9 && randomMoveIndex - board->state.amountOfOpenSquaresBySmallBoard[currentBoard] >= 0) {
             randomMoveIndex -= board->state.amountOfOpenSquaresBySmallBoard[currentBoard++];
         }
-        randomMoveIndex += board->state.amountOfOpenSquaresBySmallBoard[--currentBoard];
     } else {
         randomMoveIndex = generateBoundedRandomNumber(rng, board->state.amountOfOpenSquaresBySmallBoard[currentBoard]);
     }
