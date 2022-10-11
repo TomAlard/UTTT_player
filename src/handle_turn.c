@@ -48,7 +48,7 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, RNG* r
 
 HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, Square enemyMove) {
     root = handleEnemyTurn(board, root, enemyMove, rng);
-    Square openingMove = handleOpening(board);
+    Square openingMove = {9, 9};
     if (openingMove.board != 9) {
         MCTSNode* newRoot = updateRoot(root, board, openingMove);
         makePermanentMove(board, openingMove);
