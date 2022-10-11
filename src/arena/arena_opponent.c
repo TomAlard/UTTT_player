@@ -1231,6 +1231,11 @@ void freeStateOpponent(StateOpponent* stateOpponent) {
 }
 
 
+float getWinrateOpponent(StateOpponent* state) {
+    return getWinrate2(state->root);
+}
+
+
 Square2 playTurnOpponent(StateOpponent** state, double allocatedTime, Square2 enemyMove) {
     initializeLookupTable2();
     HandleTurnResult2 result = handleTurn2((*state)->board, (*state)->root, &(*state)->rng, allocatedTime, enemyMove);

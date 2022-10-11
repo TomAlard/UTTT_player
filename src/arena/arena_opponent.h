@@ -10,6 +10,8 @@ StateOpponent* initializeStateOpponent();
 
 void freeStateOpponent(StateOpponent* stateOpponent);
 
+float getWinrateOpponent(StateOpponent* state);
+
 Square playTurnOpponent(StateOpponent** state, double allocatedTime, Square enemyMove);
 
 #endif //UTTT2_ARENA_OPPONENT_H
