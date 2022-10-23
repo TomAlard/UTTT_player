@@ -1,5 +1,6 @@
 import os
 import csv
+import random
 
 
 def merge():
@@ -20,9 +21,47 @@ def merge():
             f.write(position + '\n')
 
 
+def remove_duplicates():
+    seen = set()
+    with open('../positions.csv', 'r') as read_file:
+        reader = csv.reader(read_file, delimiter=',')
+        with open('../unique_positions.csv', 'w') as write_file:
+            write_file.write(','.join(next(reader)) + '\n')  # Write header
+            for row in reader:
+                key = ','.join(row[:-3])
+                if key not in seen:
+                    seen.add(key)
+                    write_file.write(','.join(row) + '\n')
+
+
+def shuffle():
+    with open('../unique_positions.csv', 'r') as f:
+        lines = f.readlines()
+    header = lines[0]
+    lines = lines[1:]
+    random.shuffle(lines)
+    with open('../unique_positions.csv', 'w') as f:
+        f.write(header)
+        f.writelines(lines)
+
+
+def split(train_split):
+    with open('../unique_positions.csv', 'r') as f:
+        lines = f.readlines()
+    header = lines[0]
+    lines = lines[1:]
+    index = int(len(lines) * train_split)
+    with open('../train_positions.csv', 'w') as f:
+        f.write(header)
+        f.writelines(lines[:index])
+    with open('../test_positions.csv', 'w') as f:
+        f.write(header)
+        f.writelines(lines[index:])
+
+
 def balance():
     amounts = [0, 0, 0]
-    with open('../positions.csv', 'r') as f:
+    with open('../unique_positions.csv', 'r') as f:
         reader = csv.reader(f, delimiter=',')
         next(reader)  # Skip header
         for row in reader:
@@ -30,7 +69,7 @@ def balance():
             amounts[winner_index] += 1
     target = min(amounts)
     current = [0, 0, 0]
-    with open('../positions.csv', 'r') as read_file:
+    with open('../unique_positions.csv', 'r') as read_file:
         reader = csv.reader(read_file, delimiter=',')
         with open('../balanced_positions.csv', 'w') as write_file:
             write_file.write(','.join(next(reader)) + '\n')  # Write header
@@ -43,4 +82,7 @@ def balance():
 
 if __name__ == '__main__':
     merge()
+    remove_duplicates()
+    shuffle()
+    split(0.8)
     balance()

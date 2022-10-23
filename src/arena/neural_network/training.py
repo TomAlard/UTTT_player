@@ -1,30 +1,26 @@
 import csv
+import random
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+import numpy as np
 import matplotlib.pyplot as plt
 from neural_network.network import NeuralNetwork
 
 
 class PositionDataset(Dataset):
-    TRAINING_DATA_PERCENTAGE = 0.8
-
-    def __init__(self, filename: str, is_training_dataset: bool, transform, target_transform):
+    def __init__(self, filename: str, transform, target_transform):
         with open(filename, 'r') as f:
             self.positions = list(csv.DictReader(f, delimiter=','))
-        self.is_training_dataset = is_training_dataset
         self.transform = transform
         self.target_transform = target_transform
 
     def __len__(self):
-        return int(len(self.positions) * (self.TRAINING_DATA_PERCENTAGE if self.is_training_dataset else
-                                          1 - self.TRAINING_DATA_PERCENTAGE))
+        return len(self.positions)
 
     def __getitem__(self, index):
-        if not self.is_training_dataset:
-            index += int(len(self.positions) * self.TRAINING_DATA_PERCENTAGE)
-        positions = self.positions[index]
-        return self.transform(positions), self.target_transform(positions)
+        position = self.positions[index]
+        return self.transform(position), self.target_transform(position)
 
 
 def transform_inputs(position: dict[str, str]) -> torch.Tensor:
@@ -74,24 +70,47 @@ def test_loop(dataloader, model, loss_fn, append):
     print(f'Test average loss: {test_loss:>8f}\n')
 
 
-def main():
-    learning_rate = 1e-3
-    batch_size = 64
-    epochs = 100
+def test_actual_loss():
+    testing_data = PositionDataset('../test_positions.csv', transform_inputs, eval_target_transform)
+    model = torch.load('model.pth')
+    model.eval()
+    """
+    s = model.linear_relu_stack
+    inputs, _ = testing_data[769]
+    step1 = torch.matmul(s[0].weight, inputs) + s[0].bias
+    relu = nn.ReLU()
+    step2 = relu(step1)
+    output = torch.matmul(s[2].weight, step2) + s[2].bias
+    print(output.item(), model(inputs).item())
+    """
+    num_samples = 1000
+    error = 0
+    values = []
+    for _ in range(num_samples):
+        inputs, label = testing_data[random.randrange(10000)]
+        values.append(model(inputs).item())
+        error += abs(label.item() - model(inputs).item())
+    print('Average error:', error / num_samples)
 
-    training_data = PositionDataset('../positions.csv', True, transform_inputs, eval_target_transform)
-    testing_data = PositionDataset('../positions.csv', False, transform_inputs, eval_target_transform)
+
+def main():
+    learning_rate = 1e-1
+    batch_size = 256
+    epochs = 50
+
+    training_data = PositionDataset('../train_positions.csv', transform_inputs, eval_target_transform)
+    testing_data = PositionDataset('../test_positions.csv', transform_inputs, eval_target_transform)
     train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
     model = NeuralNetwork().to(device)
     loss_fn = nn.MSELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
     train_losses, test_losses = [], []
     for i in range(epochs):
         print(f'Epoch {i+1}\n-------------------------------')
         train_loop(train_dataloader, model, loss_fn, optimizer, train_losses.append)
         test_loop(test_dataloader, model, loss_fn, test_losses.append)
-    torch.save(model, 'model.pth')
+    torch.save(model, 'model2.pth')
     plt.plot(train_losses, label='Training Loss')
     plt.plot(test_losses, label='Testing Loss')
     plt.legend()
@@ -102,4 +121,5 @@ def main():
 if __name__ == '__main__':
     # device = 'cuda' if torch.cuda.is_available() else 'cpu'
     device = 'cpu'
-    main()
+    test_actual_loss()
+    # main()
