@@ -12,4 +12,4 @@ class NeuralNetwork(nn.Module):
         )
 
     def forward(self, x):
-        return torch.clamp(self.linear_relu_stack(x), min=0, max=1)
+        return torch.clamp(self.linear_relu_stack(x), min=-0.5, max=0.5)

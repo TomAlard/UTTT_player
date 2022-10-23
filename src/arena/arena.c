@@ -8,8 +8,8 @@
 #include "../misc/util.h"
 
 
-#define ROUNDS 20
-#define TIME 1
+#define ROUNDS 100
+#define TIME 0.1
 
 
 Winner simulateSingleGame(bool weArePlayer1, int game) {
@@ -21,7 +21,7 @@ Winner simulateSingleGame(bool weArePlayer1, int game) {
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;
     char buffer[1000];
-    snprintf(buffer, 1000, "/mnt/c/users/tomin/CLionProjects/UTTT2/src/arena/games/run_2_game_%d.csv", game);
+    snprintf(buffer, 1000, "./src/arena/games/delet_game_%d.csv", game);
     FILE* file = fopen(buffer, "w");
     while (getWinner(board) == NONE && stateOpponent != NULL) {
         float winrate;
@@ -85,7 +85,7 @@ void runArena() {
     int winsGoingSecond = 0;
     int drawsGoingSecond = 0;
     int lossesGoingSecond = 0;
-    #pragma omp parallel for default(none) shared(winsGoingFirst, winsGoingSecond, drawsGoingFirst, drawsGoingSecond, lossesGoingFirst, lossesGoingSecond)
+    // #pragma omp parallel for default(none) shared(winsGoingFirst, winsGoingSecond, drawsGoingFirst, drawsGoingSecond, lossesGoingFirst, lossesGoingSecond)
     for (int i = 0; i < ROUNDS/2; i++) {
         Winner winner = simulateSingleGame(true, i*2);
         if (winner == WIN_P1) {

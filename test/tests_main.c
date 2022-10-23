@@ -8,6 +8,7 @@
 #include "board/smart_rollout_tests.h"
 #include "mcts/solver_tests.h"
 #include "mcts/priors_tests.h"
+#include "nn/forward_tests.h"
 
 
 void runTests() {
@@ -15,6 +16,8 @@ void runTests() {
     runPlayerBitBoardTests();
     printf("SmartRollout tests...\n");
     runSmartRolloutTests();
+    printf("Forward tests...\n");
+    runForwardTests();
     printf("Board tests...\n");
     runBoardTests();
     printf("MCTSNode tests...\n");

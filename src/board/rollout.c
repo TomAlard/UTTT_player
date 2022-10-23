@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "rollout.h"
+#include "../nn/forward.h"
 
 
 Square generateMove(Board* board, RNG* rng) {
@@ -32,9 +33,14 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 }
 
 
-Winner rollout(Board* board, RNG* rng) {
-    while (getWinner(board) == NONE) {
+#define EPT_RANDOM_MOVES 0
+float rollout(Board* board, RNG* rng, Player player) {
+    for (int i = 0; i < EPT_RANDOM_MOVES && getWinner(board) == NONE; i++) {
         makeRandomTemporaryMove(board, rng);
     }
-    return getWinner(board);
+    Winner winner = getWinner(board);
+    if (winner != NONE) {
+        return winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
+    }
+    return 1.0f - neuralNetworkEval(board);
 }

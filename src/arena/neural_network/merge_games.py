@@ -84,5 +84,5 @@ if __name__ == '__main__':
     merge()
     remove_duplicates()
     shuffle()
-    split(0.8)
+    split(0.95)
     balance()

@@ -32,11 +32,12 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
         Winner winner = getWinner(board);
         Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            winner = rollout(board, rng);
+            float reward = rollout(board, rng, player);
+            backpropagateReward(leaf, reward);
         } else {
             setNodeWinner(leaf, winner, player);
+            backpropagate(leaf, winner, player);
         }
-        backpropagate(leaf, winner, player);
         revertToCheckpoint(board);
     }
     return amountOfSimulations;

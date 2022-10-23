@@ -216,8 +216,13 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
 
 void backpropagate(MCTSNode* node, Winner winner, Player player) {
     assert(winner != NONE && "backpropagate: Can't backpropagate a NONE Winner");
-    MCTSNode* currentNode = node;
     float reward = winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
+    backpropagateReward(node, reward);
+}
+
+
+void backpropagateReward(MCTSNode* node, float reward) {
+    MCTSNode* currentNode = node;
     while (currentNode != NULL) {
         currentNode->wins += reward;
         currentNode->simsInverted = 1.0f / ++currentNode->sims;

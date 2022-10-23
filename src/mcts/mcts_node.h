@@ -31,6 +31,8 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
 void backpropagate(MCTSNode* node, Winner winner, Player player);
 
+void backpropagateReward(MCTSNode* node, float reward);
+
 void visitNode(MCTSNode* node, Board* board);
 
 Square getMostPromisingMove(MCTSNode* node);
