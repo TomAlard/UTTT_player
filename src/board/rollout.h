@@ -6,6 +6,6 @@
 
 void makeRandomTemporaryMove(Board* board, RNG* rng);
 
-float rollout(Board* board, RNG* rng, Player player);
+Winner rollout(Board* board, RNG* rng, int gameId);
 
 #endif //UTTT2_ROLLOUT_H

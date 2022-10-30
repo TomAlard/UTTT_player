@@ -1174,7 +1174,7 @@ HandleTurnResult2 handleTurn2(Board2* board, MCTSNode2* root, RNG2* rng, double 
         HandleTurnResult2 result = {openingMove, newRoot, 0};
         return result;
     }
-    int amountOfSimulations = findNextMove2(board, root, rng, allocatedTime/100);
+    int amountOfSimulations = findNextMove2(board, root, rng, allocatedTime);
     Square2 move = getMostPromisingMove2(root);
     MCTSNode2* newRoot = updateRoot2(root, board, move);
     makePermanentMove2(board, move);

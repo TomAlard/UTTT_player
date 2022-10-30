@@ -23,17 +23,17 @@ bool hasTimeRemaining(struct timeval start, double allocatedTime) {
 }
 
 
-int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
+int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, int gameId) {
     int amountOfSimulations = 0;
     struct timeval start;
     gettimeofday(&start, NULL);
-    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
+    while (++amountOfSimulations % 75000 != 0 || hasTimeRemaining(start, allocatedTime)) {
         MCTSNode* leaf = selectLeaf(board, root, rng);
         Winner winner = getWinner(board);
         Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            float reward = rollout(board, rng, player);
-            backpropagateReward(leaf, reward);
+            winner = rollout(board, rng, gameId);
+            backpropagate(leaf, winner, player);
         } else {
             setNodeWinner(leaf, winner, player);
             backpropagate(leaf, winner, player);

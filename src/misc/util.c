@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include "util.h"
 
 
@@ -61,4 +60,22 @@ Square toGameNotation(Square square) {
     uint8_t col = (square.position % 3) + 3*(square.board % 3);
     Square result = {row, col};
     return result;
+}
+
+
+void writePositionToFile(State* state, FILE* file, float winrate, Square bestMove) {
+    char p1SmallBoardBits[81];
+    char p2SmallBoardBits[81];
+    for (int j = 0; j < 81; j++) {
+        p1SmallBoardBits[j] = (char)((BIT_CHECK(state->player1.smallBoards[j/9], j%9) != 0) + '0');
+        p2SmallBoardBits[j] = (char)((BIT_CHECK(state->player2.smallBoards[j/9], j%9) != 0) + '0');
+    }
+    char p1BigBoardBits[9];
+    char p2BigBoardBits[9];
+    for (int j = 0; j < 9; j++) {
+        p1BigBoardBits[j] = (char)((BIT_CHECK(state->player1.bigBoard, j) != 0) + '0');
+        p2BigBoardBits[j] = (char)((BIT_CHECK(state->player2.bigBoard, j) != 0) + '0');
+    }
+    fprintf(file, "%.*s,%.*s,%.*s,%.*s,%d,%d,%.4f,%d%d\n", 81, p1SmallBoardBits, 81, p2SmallBoardBits,
+            9, p1BigBoardBits, 9, p2BigBoardBits, state->currentPlayer, state->currentBoard, winrate, bestMove.board, bestMove.position);
 }

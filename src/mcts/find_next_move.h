@@ -5,6 +5,6 @@
 #include "mcts_node.h"
 #include "../misc/random.h"
 
-int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime);
+int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, int gameId);
 
 #endif //UTTT2_FIND_NEXT_MOVE_H

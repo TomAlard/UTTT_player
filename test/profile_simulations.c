@@ -15,7 +15,7 @@ void profileSimulations() {
         discoverChildNodes(root, board, &rng);
         root = updateRoot(root, board, square);
         makePermanentMove(board, square);
-        totalSims += findNextMove(board, root, &rng, 0.1);
+        totalSims += findNextMove(board, root, &rng, 0.1, -1);
         freeMCTSTree(root);
         freeBoard(board);
     }

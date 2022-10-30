@@ -28,8 +28,8 @@ void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
 }
 
 
-Square playTurn(Board* board, MCTSNode** root, RNG* rng, double allocatedTime, Square enemyMove) {
-    HandleTurnResult result = handleTurn(board, *root, rng, allocatedTime, enemyMove);
+Square playTurn(Board* board, MCTSNode** root, RNG* rng, double allocatedTime, Square enemyMove, int gameId) {
+    HandleTurnResult result = handleTurn(board, *root, rng, allocatedTime, enemyMove, gameId);
     *root = result.newRoot;
     return result.move;
 }
@@ -50,7 +50,7 @@ void playGame(FILE* file, double timePerMove) {
         skipMovesInput(file);
         Square enemyMoveGameNotation = {enemy_row, enemy_col};
         Square enemyMove = toOurNotation(enemyMoveGameNotation);
-        HandleTurnResult result = handleTurn(board, root, &rng, timePerMove, enemyMove);
+        HandleTurnResult result = handleTurn(board, root, &rng, timePerMove, enemyMove, -1);
         root = result.newRoot;
         printMove(root, result.move, result.amountOfSimulations);
     }

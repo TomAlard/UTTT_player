@@ -15,7 +15,7 @@ void findNextMoveDoesNotChangeBoard() {
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountMovesBefore;
         Square* movesBefore = generateMoves(board, movesArray, &amountMovesBefore);
-        findNextMove(board, root, &rng, 0.005);
+        findNextMove(board, root, &rng, 0.005, -1);
         Square nextMove = getMostPromisingMove(root);
         myAssert(winnerBefore == getWinner(board));
         int8_t amountMovesAfter;
@@ -41,7 +41,7 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
         struct timeval start, end;
         int timeMs = 100;
         gettimeofday(&start, NULL);
-        findNextMove(board, root, &rng, timeMs / 1000.0);
+        findNextMove(board, root, &rng, timeMs / 1000.0, -1);
         Square nextMove = getMostPromisingMove(root);
         gettimeofday(&end, NULL);
         double elapsedTime = (double) (end.tv_sec - start.tv_sec) * 1000.0;

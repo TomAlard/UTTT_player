@@ -1,10 +1,12 @@
 #ifndef UTTT2_UTIL_H
 #define UTTT2_UTIL_H
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include "../board/square.h"
+#include "../board/board.h"
 
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
@@ -23,5 +25,7 @@ void safe_free(void* pointer);
 Square toOurNotation(Square rowAndColumn);
 
 Square toGameNotation(Square square);
+
+void writePositionToFile(State* state, FILE* file, float winrate, Square bestMove);
 
 #endif //UTTT2_UTIL_H

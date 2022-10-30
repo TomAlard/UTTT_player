@@ -46,7 +46,7 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, RNG* r
 }
 
 
-HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, Square enemyMove) {
+HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, Square enemyMove, int gameId) {
     root = handleEnemyTurn(board, root, enemyMove, rng);
     Square openingMove = {9, 9};
     if (openingMove.board != 9) {
@@ -55,7 +55,7 @@ HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double alloc
         HandleTurnResult result = {openingMove, newRoot, 0};
         return result;
     }
-    int amountOfSimulations = findNextMove(board, root, rng, allocatedTime);
+    int amountOfSimulations = findNextMove(board, root, rng, allocatedTime, gameId);
     Square move = getMostPromisingMove(root);
     MCTSNode* newRoot = updateRoot(root, board, move);
     makePermanentMove(board, move);

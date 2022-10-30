@@ -1,6 +1,10 @@
 #include <assert.h>
+#include <stdlib.h>
 #include "rollout.h"
 #include "../nn/forward.h"
+#include "../mcts/mcts_node.h"
+#include "../mcts/find_next_move.h"
+#include "../misc/util.h"
 
 
 Square generateMove(Board* board, RNG* rng) {
@@ -33,14 +37,26 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 }
 
 
-#define EPT_RANDOM_MOVES 0
-float rollout(Board* board, RNG* rng, Player player) {
-    for (int i = 0; i < EPT_RANDOM_MOVES && getWinner(board) == NONE; i++) {
+Winner rollout(Board* board, RNG* rng, int gameId) {
+    double randomDouble = ((double) rand() / RAND_MAX);  // NOLINT(cert-msc50-cpp)
+    assert(randomDouble >= 0 && randomDouble <= 1);
+    if (gameId != -1 && randomDouble < 0.003) {
+        MCTSNode* root = createMCTSRootNode();
+        Board boardCopy = *board;
+        boardCopy.stateCheckpoint = boardCopy.state;
+        findNextMove(&boardCopy, root, rng, 1, -1);
+        float winrate = getWinrate(root);
+        Square bestMove = getMostPromisingMove(root);
+        freeMCTSTree(root);
+        char buffer[1000];
+        snprintf(buffer, 1000, "./src/arena/positions/fix2_game_%d_positions.csv", gameId);
+        FILE* file = fopen(buffer, "a");
+        writePositionToFile(&board->state, file, winrate, bestMove);
+        fclose(file);
+    }
+
+    while (getWinner(board) == NONE) {
         makeRandomTemporaryMove(board, rng);
     }
-    Winner winner = getWinner(board);
-    if (winner != NONE) {
-        return winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
-    }
-    return 1.0f - neuralNetworkEval(board);
+    return getWinner(board);
 }
