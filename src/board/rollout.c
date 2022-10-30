@@ -33,7 +33,7 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 }
 
 
-#define EPT_RANDOM_MOVES 0
+#define EPT_RANDOM_MOVES 4
 float rollout(Board* board, RNG* rng, Player player) {
     for (int i = 0; i < EPT_RANDOM_MOVES && getWinner(board) == NONE; i++) {
         makeRandomTemporaryMove(board, rng);
@@ -42,5 +42,5 @@ float rollout(Board* board, RNG* rng, Player player) {
     if (winner != NONE) {
         return winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
     }
-    return 1.0f - neuralNetworkEval(board);
+    return neuralNetworkEval(board);
 }

@@ -85,7 +85,7 @@ void runArena() {
     int winsGoingSecond = 0;
     int drawsGoingSecond = 0;
     int lossesGoingSecond = 0;
-    // #pragma omp parallel for default(none) shared(winsGoingFirst, winsGoingSecond, drawsGoingFirst, drawsGoingSecond, lossesGoingFirst, lossesGoingSecond)
+    #pragma omp parallel for default(none) shared(winsGoingFirst, winsGoingSecond, drawsGoingFirst, drawsGoingSecond, lossesGoingFirst, lossesGoingSecond)
     for (int i = 0; i < ROUNDS/2; i++) {
         Winner winner = simulateSingleGame(true, i*2);
         if (winner == WIN_P1) {
