@@ -78,6 +78,6 @@ float neuralNetworkEval(Board* board) {
     multiplyHiddenWeights(input, output);
     addHiddenBiases(output);
     applyReLU(output);
-    float x = multiplyOutputWeights(output) + outputBias;
+    float x = multiplyOutputWeights(output) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }

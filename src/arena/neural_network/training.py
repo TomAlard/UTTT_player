@@ -36,13 +36,8 @@ def transform_inputs(position: dict[str, str]) -> torch.Tensor:
 
 
 def eval_target_transform(position: dict[str, str]) -> torch.Tensor:
-    td_lambda = 1.0
     player_eval = float(position['current_player_eval'])
-    winner = int(position['winner'])
-    current_player = int(position['current_player'])
-    winner_value = 0.5 if winner == 3 else 1 if current_player + 1 == winner else 0
-    target = player_eval*td_lambda + winner_value*(1-td_lambda)
-    return torch.tensor([target - 0.5], dtype=torch.float32).to(device)
+    return torch.tensor([player_eval - 0.5], dtype=torch.float32).to(device)
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, append):
@@ -128,5 +123,5 @@ def main():
 if __name__ == '__main__':
     # device = 'cuda' if torch.cuda.is_available() else 'cpu'
     device = 'cpu'
-    # test_actual_loss()
-    main()
+    test_actual_loss()
+    # main()

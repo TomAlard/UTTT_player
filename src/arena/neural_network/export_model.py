@@ -1,6 +1,8 @@
 import torch
+import shutil
 
-VERSION = 'v4'
+VERSION = 'v5'
+MODEL_FILENAME = 'model.pth'
 
 
 def export2d(filename, parameters):
@@ -22,12 +24,13 @@ def export1d(filename, parameters):
 
 
 def main():
-    model = torch.load('model.pth')
+    model = torch.load(MODEL_FILENAME)
     layers = model.linear_relu_stack
     export2d('hidden_layer_weights.txt', layers[0].weight.tolist())
     export1d('hidden_layer_biases.txt', layers[0].bias.tolist())
     export1d('output_layer_weights.txt', layers[2].weight.tolist()[0])
     export1d('output_layer_biases.txt', layers[2].bias.tolist())
+    shutil.copyfile(MODEL_FILENAME, f'parameters/{VERSION}/{MODEL_FILENAME}')
 
 
 if __name__ == '__main__':
