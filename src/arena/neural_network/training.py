@@ -10,7 +10,9 @@ from neural_network.network import NeuralNetwork
 class PositionDataset(Dataset):
     def __init__(self, filename: str, transform, target_transform):
         with open(filename, 'r') as f:
-            self.positions = list(csv.DictReader(f, delimiter=','))
+            reader = csv.reader(f, delimiter=',')
+            next(reader)
+            self.positions = list(reader)
         self.transform = transform
         self.target_transform = target_transform
 
@@ -22,21 +24,21 @@ class PositionDataset(Dataset):
         return self.transform(position), self.target_transform(position)
 
 
-def transform_inputs(position: dict[str, str]) -> torch.Tensor:
+def transform_inputs(position: list[str]) -> torch.Tensor:
     current_board = ['0'] * 10
-    current_board[int(position['current_board'])] = '1'
+    current_board[int(position[5])] = '1'
     current_board = ''.join(current_board)
-    if position['current_player'] == '0':
-        X = list(map(int, position['p1_big_boards'] + position['p1_small_boards'] + position['p2_big_boards']
-                     + position['p2_small_boards'] + current_board))
+    if position[4] == '0':
+        X = list(map(int, position[2] + position[0] + position[3]
+                     + position[1] + current_board))
     else:
-        X = list(map(int, position['p2_big_boards'] + position['p2_small_boards'] + position['p1_big_boards']
-                     + position['p1_small_boards'] + current_board))
+        X = list(map(int, position[3] + position[1] + position[2]
+                     + position[0] + current_board))
     return torch.tensor(X, dtype=torch.float32).to(device)
 
 
-def eval_target_transform(position: dict[str, str]) -> torch.Tensor:
-    player_eval = float(position['current_player_eval'])
+def eval_target_transform(position: list[str]) -> torch.Tensor:
+    player_eval = float(position[6])
     return torch.tensor([player_eval - 0.5], dtype=torch.float32).to(device)
 
 
@@ -50,9 +52,9 @@ def train_loop(dataloader, model, loss_fn, optimizer, append):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if i % 100 == 0:
+        if i % 1000 == 0:
             loss, current = loss.item(), i * len(X)
-            print(f'loss: {loss:>7f} [{current:>6d}/{size:>6d}]')
+            print(f'loss: {loss:>7f} [{current:>7d}/{size:>7d}]')
     num_batches = len(dataloader)
     train_loss /= num_batches
     print(f'Train average loss: {train_loss:>8f}\n')
@@ -75,21 +77,19 @@ def test_loop(dataloader, model, loss_fn, scheduler, append):
 
 def test_actual_loss():
     testing_data = PositionDataset('../test_positions.csv', transform_inputs, eval_target_transform)
-    model = torch.load('model2.pth')
+    model = torch.load('model_latest.pth')
     model.eval()
-    num_samples = 1000
     error = 0
     values = []
-    for _ in range(num_samples):
-        inputs, label = testing_data[random.randrange(len(testing_data))]
+    for inputs, label in testing_data:
         inputs = inputs.unsqueeze(0)
         values.append(model(inputs).item())
         error += abs(label.item() - model(inputs).item())
-    print('Average error:', error / num_samples)
+    print('Average error:', error / len(testing_data))
 
 
 def main():
-    learning_rate = 1e-1
+    learning_rate = 0.1
     batch_size = 64
     epochs = 1000
 
@@ -98,9 +98,9 @@ def main():
     train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
     model = NeuralNetwork().to(device)
-    loss_fn = nn.MSELoss()
+    loss_fn = nn.L1Loss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.75)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
     train_losses, test_losses = [], []
     best_loss = 1
     for i in range(epochs):
@@ -109,7 +109,8 @@ def main():
         loss = test_loop(test_dataloader, model, loss_fn, scheduler, test_losses.append)
         if loss < best_loss:
             best_loss = loss
-            torch.save(model, 'model2.pth')
+            torch.save(model, 'model_best.pth')
+        torch.save(model, 'model_latest.pth')
         if (i % 25 == 0 and i != 0) or i+1 == epochs:
             plt.plot(train_losses, label='Training Loss')
             plt.plot(test_losses, label='Testing Loss')
@@ -123,5 +124,5 @@ def main():
 if __name__ == '__main__':
     # device = 'cuda' if torch.cuda.is_available() else 'cpu'
     device = 'cpu'
-    test_actual_loss()
-    # main()
+    # test_actual_loss()
+    main()

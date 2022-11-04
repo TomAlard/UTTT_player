@@ -7,6 +7,8 @@ def merge():
     all_positions = []
     for _, _, files in os.walk("../positions"):
         for filename in files:
+            if not filename.startswith('fix'):
+                continue
             with open(f'../positions/{filename}', 'r') as f:
                 contents = f.read()
                 lines = contents.splitlines()
@@ -61,4 +63,4 @@ if __name__ == '__main__':
     merge()
     remove_duplicates()
     shuffle()
-    split(0.95)
+    split(0.99)

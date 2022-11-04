@@ -1,8 +1,8 @@
 import torch
 import shutil
 
-VERSION = 'v5'
-MODEL_FILENAME = 'model.pth'
+VERSION = 'v9'
+MODEL_FILENAME = 'model_latest.pth'
 
 
 def export2d(filename, parameters):
