@@ -6,7 +6,9 @@ class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         self.linear_relu_stack = nn.Sequential(
-            nn.Linear(190, 128),
+            nn.Linear(1458, 128),
+            nn.LeakyReLU(),
+            nn.Linear(128, 128),
             nn.LeakyReLU(),
             nn.Linear(128, 1)
         )
