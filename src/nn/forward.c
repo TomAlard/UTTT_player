@@ -55,9 +55,10 @@ void addHiddenBiases(float* restrict input) {
 }
 
 
-void applyReLU(float* restrict input) {
+#define NEGATIVE_SLOPE 0.01f
+void applyLeakyReLU(float* restrict input) {
     for (int i = 0; i < 128; i++) {
-        input[i] = input[i] < 0? 0 : input[i];
+        input[i] = input[i] < 0? input[i] * NEGATIVE_SLOPE : input[i];
     }
 }
 
@@ -77,7 +78,7 @@ float neuralNetworkEval(Board* board) {
     float output[128] = {0.0f};
     multiplyHiddenWeights(input, output);
     addHiddenBiases(output);
-    applyReLU(output);
+    applyLeakyReLU(output);
     float x = multiplyOutputWeights(output) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
