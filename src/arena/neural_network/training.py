@@ -1,51 +1,36 @@
-import csv
-import random
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
 from neural_network.network import NeuralNetwork
 
 
 class PositionDataset(Dataset):
-    def __init__(self, filename: str, transform, target_transform):
-        with open(filename, 'r') as f:
-            reader = csv.reader(f, delimiter=',')
-            next(reader)
-            self.positions = list(reader)
-        self.transform = transform
-        self.target_transform = target_transform
+    LINE_SIZE = 197
+
+    def __init__(self, filename: str):
+        with open(filename, 'rb') as f:
+            f.seek(0, 2)
+            self.amount_of_lines = f.tell() // self.LINE_SIZE
+            f.seek(0)
+            self.data = f.read()
 
     def __len__(self):
-        return len(self.positions)
+        return self.amount_of_lines
 
     def __getitem__(self, index):
-        position = self.positions[index]
-        return self.transform(position), self.target_transform(position)
-
-
-def transform_inputs(position: list[str]) -> torch.Tensor:
-    current_board = ['0'] * 10
-    current_board[int(position[5])] = '1'
-    current_board = ''.join(current_board)
-    if position[4] == '0':
-        X = list(map(int, position[2] + position[0] + position[3]
-                     + position[1] + current_board))
-    else:
-        X = list(map(int, position[3] + position[1] + position[2]
-                     + position[0] + current_board))
-    return torch.tensor(X, dtype=torch.float32).to(device)
-
-
-def eval_target_transform(position: list[str]) -> torch.Tensor:
-    player_eval = float(position[6])
-    return torch.tensor([player_eval - 0.5], dtype=torch.float32).to(device)
+        pos = index * self.LINE_SIZE
+        position = self.data[pos:pos+190]
+        evaluation = self.data[pos+190:pos+self.LINE_SIZE]
+        X = torch.frombuffer(position, dtype=torch.uint8).type(torch.float32)
+        y = torch.tensor([float(evaluation)], dtype=torch.float32)
+        return X, y
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, append):
     size = len(dataloader.dataset)
     train_loss = 0
     for i, (X, y) in enumerate(dataloader):
+        X, y = X.cuda(), y.cuda()
         pred = model(X)
         loss = loss_fn(pred, y)
         train_loss += loss.item()
@@ -65,6 +50,7 @@ def test_loop(dataloader, model, loss_fn, scheduler, append):
     test_loss = 0
     with torch.no_grad():
         for X, y in dataloader:
+            X, y = X.cuda(), y.cuda()
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
     num_batches = len(dataloader)
@@ -76,7 +62,7 @@ def test_loop(dataloader, model, loss_fn, scheduler, append):
 
 
 def test_actual_loss():
-    testing_data = PositionDataset('../test_positions.csv', transform_inputs, eval_target_transform)
+    testing_data = PositionDataset('../test_positions2.csv')
     model = torch.load('model_latest.pth')
     model.eval()
     error = 0
@@ -93,14 +79,15 @@ def main():
     batch_size = 64
     epochs = 1000
 
-    training_data = PositionDataset('../train_positions.csv', transform_inputs, eval_target_transform)
-    testing_data = PositionDataset('../test_positions.csv', transform_inputs, eval_target_transform)
-    train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-    test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
-    model = NeuralNetwork().to(device)
+    training_data = PositionDataset('../train_positions2.csv')
+    testing_data = PositionDataset('../test_positions2.csv')
+    train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=8, persistent_workers=True,
+                                  pin_memory=True)
+    test_dataloader = DataLoader(testing_data, batch_size=batch_size)
+    model = NeuralNetwork().cuda()
     loss_fn = nn.L1Loss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5)
     train_losses, test_losses = [], []
     best_loss = 1
     for i in range(epochs):
@@ -111,18 +98,8 @@ def main():
             best_loss = loss
             torch.save(model, 'model_best.pth')
         torch.save(model, 'model_latest.pth')
-        if (i % 25 == 0 and i != 0) or i+1 == epochs:
-            plt.plot(train_losses, label='Training Loss')
-            plt.plot(test_losses, label='Testing Loss')
-            plt.xlabel('Epochs')
-            plt.ylabel('Loss')
-            plt.legend()
-            plt.show()
     print('Done!')
 
 
 if __name__ == '__main__':
-    # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device = 'cpu'
-    # test_actual_loss()
     main()
