@@ -39,7 +39,4 @@ def main():
 
 
 if __name__ == '__main__':
-    with open('../test_positions2.csv', 'rb') as f:
-        f.seek(0, 2)
-        print(f.tell())
-    # main()
+    main()

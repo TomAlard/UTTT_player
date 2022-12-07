@@ -1,8 +1,8 @@
 import torch
 import shutil
 
-VERSION = 'v9'
-MODEL_FILENAME = 'model_latest.pth'
+VERSION = 'v2.0'
+MODEL_FILENAME = 'model_latest_NNUE_1024_batch.pth'
 
 
 def export2d(filename, parameters):
@@ -24,12 +24,15 @@ def export1d(filename, parameters):
 
 
 def main():
-    model = torch.load(MODEL_FILENAME)
-    layers = model.linear_relu_stack
-    export2d('hidden_layer_weights.txt', layers[0].weight.tolist())
-    export1d('hidden_layer_biases.txt', layers[0].bias.tolist())
-    export1d('output_layer_weights.txt', layers[2].weight.tolist()[0])
-    export1d('output_layer_biases.txt', layers[2].bias.tolist())
+    layers = torch.load(MODEL_FILENAME).linear_relu_stack
+    export2d('hidden_layer_1_weights.txt', layers[0].weight.tolist())
+    export1d('hidden_layer_1_biases.txt', layers[0].bias.tolist())
+    export2d('hidden_layer_2_weights.txt', layers[2].weight.tolist())
+    export1d('hidden_layer_2_biases.txt', layers[2].bias.tolist())
+    export2d('hidden_layer_3_weights.txt', layers[4].weight.tolist())
+    export1d('hidden_layer_3_biases.txt', layers[4].bias.tolist())
+    export1d('output_layer_weights.txt', layers[6].weight.tolist()[0])
+    export1d('output_layer_biases.txt', layers[6].bias.tolist())
     shutil.copyfile(MODEL_FILENAME, f'parameters/{VERSION}/{MODEL_FILENAME}')
 
 

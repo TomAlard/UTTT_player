@@ -8,8 +8,6 @@ class NeuralNetwork(nn.Module):
         self.linear_relu_stack = nn.Sequential(
             nn.Linear(1458, 128),
             nn.LeakyReLU(),
-            nn.Linear(128, 128),
-            nn.LeakyReLU(),
             nn.Linear(128, 1)
         )
 

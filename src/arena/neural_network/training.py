@@ -8,14 +8,12 @@ from network import NeuralNetwork
 class PositionDataset(Dataset):
     LINE_SIZE = 88
 
-    def __init__(self, filename: str, transform, target_transform):
+    def __init__(self, filename: str):
         with open(filename, 'rb') as f:
             f.seek(0, 2)
             self.amount_of_lines = f.tell() // self.LINE_SIZE
             f.seek(0)
             self.data = f.read()
-        self.transform = transform
-        self.target_transform = target_transform
 
     def __len__(self):
         return self.amount_of_lines
@@ -24,18 +22,19 @@ class PositionDataset(Dataset):
         pos = index * self.LINE_SIZE
         position = self.data[pos:pos+81]
         evaluation = self.data[pos+81:pos+88]
-        return self.transform(position), self.target_transform(evaluation)
+        return transform_inputs(position), eval_target_transform(evaluation)
 
 
 def transform_inputs(position: bytes) -> torch.Tensor:
     result = torch.zeros(1458, dtype=torch.float32)
-    for i, n in enumerate(position):
-        result[18*i + n - 97] = 1
+    indices = torch.arange(0, 1441, 18)
+    indices += torch.frombuffer(position, dtype=torch.uint8) - 97
+    result[indices] += 1
     return result
 
 
-def eval_target_transform(position: bytes) -> torch.Tensor:
-    player_eval = float(position)
+def eval_target_transform(evaluation: bytes) -> torch.Tensor:
+    player_eval = float(evaluation)
     return torch.tensor([player_eval - 0.5], dtype=torch.float32)
 
 
@@ -74,8 +73,8 @@ def test_loop(dataloader, model, loss_fn, scheduler):
 
 
 def test_actual_loss():
-    testing_data = PositionDataset('../test_positions2.csv', transform_inputs, eval_target_transform)
-    model = torch.load('model_latest.pth')
+    testing_data = PositionDataset('../test_positions2.csv')
+    model = torch.load('model_latest_NNUE_1024_batch.pth').cpu()
     model.eval()
     error = 0
     values = []
@@ -83,18 +82,19 @@ def test_actual_loss():
         inputs = inputs.unsqueeze(0)
         values.append(model(inputs).item())
         error += abs(label.item() - model(inputs).item())
+        print(label.item() + 0.5, model(inputs).item() + 0.5)
     print('Average error:', error / len(testing_data))
 
 
 def main():
     learning_rate = 0.1
-    batch_size = 64
+    batch_size = 1024
     epochs = 1000
 
-    training_data = PositionDataset('../train_positions2.csv', transform_inputs, eval_target_transform)
-    testing_data = PositionDataset('../test_positions2.csv', transform_inputs, eval_target_transform)
+    training_data = PositionDataset('../train_positions2.csv')
+    testing_data = PositionDataset('../test_positions2.csv')
     train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=8, persistent_workers=True,
-                                  pin_memory=True)
+                                  pin_memory=True, shuffle=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
     model = NeuralNetwork().cuda()
     loss_fn = nn.L1Loss()
@@ -107,9 +107,8 @@ def main():
         loss = test_loop(test_dataloader, model, loss_fn, scheduler)
         if loss < best_loss:
             best_loss = loss
-            torch.save(model, 'model_best_2_128.pth')
-        torch.save(model, 'model_latest_2_128.pth')
-    print('Done!')
+            # torch.save(model, 'model_best_NNUE.pth')
+        torch.save(model, 'model_latest_1024_batch.pth')
 
 
 if __name__ == '__main__':
