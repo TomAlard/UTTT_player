@@ -9,7 +9,7 @@ def convert(position) -> bytes:
         X = list(position[2] + position[0] + position[3] + position[1] + current_board)
     else:
         X = list(position[3] + position[1] + position[2] + position[0] + current_board)
-    b = b''.join(b'\x00' if x == '0' else b'\x01' for x in ''.join(X))
+    b = b''.join(b'\x00' if x == '0' else b'\x01' for x in X)
     return b + bytes(position[6], encoding='UTF-8')
 
 

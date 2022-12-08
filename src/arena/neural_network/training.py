@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+from time import time
 from neural_network.network import NeuralNetwork
 
 
@@ -20,8 +21,8 @@ class PositionDataset(Dataset):
     def __getitem__(self, index):
         pos = index * self.LINE_SIZE
         position = self.data[pos:pos+190]
-        evaluation = self.data[pos+190:pos+self.LINE_SIZE]
-        X = torch.frombuffer(position, dtype=torch.uint8).type(torch.float32)
+        evaluation = self.data[pos+190:pos+197]
+        X = torch.frombuffer(position, dtype=torch.uint8).to(torch.float32)
         y = torch.tensor([float(evaluation)], dtype=torch.float32)
         return X, y
 
@@ -42,7 +43,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, append):
             print(f'loss: {loss:>7f} [{current:>7d}/{size:>7d}]')
     num_batches = len(dataloader)
     train_loss /= num_batches
-    print(f'Train average loss: {train_loss:>8f}\n')
+    print(f'Train average loss: {train_loss:>8f}')
     append(train_loss)
 
 
@@ -57,8 +58,7 @@ def test_loop(dataloader, model, loss_fn, scheduler, append):
     test_loss /= num_batches
     append(test_loss)
     scheduler.step(test_loss)
-    print(f'Test average loss: {test_loss:>8f}\n')
-    return test_loss
+    print(f'Test average loss: {test_loss:>8f}')
 
 
 def test_actual_loss():
@@ -76,27 +76,25 @@ def test_actual_loss():
 
 def main():
     learning_rate = 0.1
-    batch_size = 64
+    batch_size = 1024
     epochs = 1000
 
     training_data = PositionDataset('../train_positions2.csv')
     testing_data = PositionDataset('../test_positions2.csv')
-    train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=8, persistent_workers=True,
+    train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=4, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
     model = NeuralNetwork().cuda()
     loss_fn = nn.L1Loss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
     train_losses, test_losses = [], []
-    best_loss = 1
     for i in range(epochs):
         print(f'Epoch {i+1}\n-------------------------------')
+        start = time()
         train_loop(train_dataloader, model, loss_fn, optimizer, train_losses.append)
-        loss = test_loop(test_dataloader, model, loss_fn, scheduler, test_losses.append)
-        if loss < best_loss:
-            best_loss = loss
-            torch.save(model, 'model_best.pth')
+        test_loop(test_dataloader, model, loss_fn, scheduler, test_losses.append)
+        print(f'Epoch completed in {time() - start:<7f}\n')
         torch.save(model, 'model_latest.pth')
     print('Done!')
 
