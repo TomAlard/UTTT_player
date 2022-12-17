@@ -1,12 +1,14 @@
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+import numpy as np
 from time import time
 from neural_network.network import NeuralNetwork
 
 
 class PositionDataset(Dataset):
-    LINE_SIZE = 197
+    LINE_SIZE = 30
+    SPLIT_INDEX = 24
 
     def __init__(self, filename: str):
         with open(filename, 'rb') as f:
@@ -20,10 +22,12 @@ class PositionDataset(Dataset):
 
     def __getitem__(self, index):
         pos = index * self.LINE_SIZE
-        position = self.data[pos:pos+190]
-        evaluation = self.data[pos+190:pos+197]
-        X = torch.frombuffer(position, dtype=torch.uint8).to(torch.float32)
-        y = torch.tensor([float(evaluation)], dtype=torch.float32)
+        position = self.data[pos:pos+self.SPLIT_INDEX]
+        evaluation = self.data[pos+self.SPLIT_INDEX:pos+self.LINE_SIZE]
+        X = np.frombuffer(position, dtype=np.uint8)
+        X = np.unpackbits(X)[:190]
+        X = torch.from_numpy(X).to(torch.float32)
+        y = torch.tensor([float(evaluation) - 0.5], dtype=torch.float32)
         return X, y
 
 
@@ -62,7 +66,7 @@ def test_loop(dataloader, model, loss_fn, scheduler, append):
 
 
 def test_actual_loss():
-    testing_data = PositionDataset('../test_positions2.csv')
+    testing_data = PositionDataset('D:/test_positions2.csv')
     model = torch.load('model_latest.pth')
     model.eval()
     error = 0
@@ -79,8 +83,8 @@ def main():
     batch_size = 1024
     epochs = 1000
 
-    training_data = PositionDataset('../train_positions2.csv')
-    testing_data = PositionDataset('../test_positions2.csv')
+    training_data = PositionDataset('D:/train_positions2.csv')
+    testing_data = PositionDataset('D:/test_positions2.csv')
     train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=4, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)

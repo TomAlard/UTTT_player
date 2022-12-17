@@ -1,7 +1,7 @@
 import torch
 import shutil
 
-VERSION = 'v9'
+VERSION = 'v25M'
 MODEL_FILENAME = 'model_latest.pth'
 
 

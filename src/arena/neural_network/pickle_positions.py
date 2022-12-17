@@ -2,14 +2,20 @@ import csv
 
 
 def convert(position) -> bytes:
+    if len(position) != 8 or sum(map(len, position)) != 190:
+        return b''
+    try:
+        float(position[6])
+    except ValueError:
+        return b''
     current_board = ['0'] * 10
     current_board[int(position[5])] = '1'
     current_board = ''.join(current_board)
     if position[4] == '0':
-        X = list(position[2] + position[0] + position[3] + position[1] + current_board)
+        X = position[2] + position[0] + position[3] + position[1] + current_board + '00'
     else:
-        X = list(position[3] + position[1] + position[2] + position[0] + current_board)
-    b = b''.join(b'\x00' if x == '0' else b'\x01' for x in X)
+        X = position[3] + position[1] + position[2] + position[0] + current_board + '00'
+    b = bytes(int(X[i:i+8], 2) for i in range(0, len(X), 8))
     return b + bytes(position[6], encoding='UTF-8')
 
 
@@ -21,9 +27,10 @@ def convert_positions(filename):
         with open(filename[:-4] + '2.csv', 'wb') as write_file:
             i = 0
             for position in converted:
-                write_file.write(position + b'\n')
+                if position != b'':
+                    write_file.write(position)
                 if i % 100_000 == 0:
-                    print(f'{i:>7d}/5366060')
+                    print(f'{i:>7d}/?')
                 i += 1
 
 

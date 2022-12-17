@@ -2,14 +2,14 @@ import os
 import csv
 import random
 
+PATH = 'D:/new_positions'
+
 
 def merge():
     all_positions = []
-    for _, _, files in os.walk("../positions"):
+    for _, _, files in os.walk(PATH):
         for filename in files:
-            if not filename.startswith('fix'):
-                continue
-            with open(f'../positions/{filename}', 'r') as f:
+            with open(f'{PATH}/{filename}', 'r') as f:
                 contents = f.read()
                 lines = contents.splitlines()
                 if len(lines) > 2:
@@ -35,18 +35,18 @@ def remove_duplicates():
 
 
 def shuffle():
-    with open('../unique_positions.csv', 'r') as f:
+    with open('../positions.csv', 'r') as f:
         lines = f.readlines()
     header = lines[0]
     lines = lines[1:]
     random.shuffle(lines)
-    with open('../unique_positions.csv', 'w') as f:
+    with open('../positions.csv', 'w') as f:
         f.write(header)
         f.writelines(lines)
 
 
 def split(train_split):
-    with open('../unique_positions.csv', 'r') as f:
+    with open('../positions.csv', 'r') as f:
         lines = f.readlines()
     header = lines[0]
     lines = lines[1:]
@@ -61,6 +61,5 @@ def split(train_split):
 
 if __name__ == '__main__':
     merge()
-    remove_duplicates()
     shuffle()
     split(0.99)
