@@ -40,9 +40,9 @@ void boardToInput(Board* board, float* restrict result) {
 
 
 void multiplyHiddenWeights(const float* restrict input, float* restrict output) {
-    for (int i = 0; i < 128; i++) {
-        for (int j = 0; j < 190; j++) {
-            output[i] += hiddenWeights[i][j] * input[j];
+    for (int i = 0; i < 190; i++) {
+        for (int j = 0; j < 128; j++) {
+            output[j] += hiddenWeights[i][j] * input[i];
         }
     }
 }

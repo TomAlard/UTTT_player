@@ -33,7 +33,7 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 }
 
 
-#define EPT_RANDOM_MOVES 0
+#define EPT_RANDOM_MOVES 4
 float rollout(Board* board, RNG* rng, Player player) {
     for (int i = 0; i < EPT_RANDOM_MOVES && getWinner(board) == NONE; i++) {
         makeRandomTemporaryMove(board, rng);

@@ -1,7 +1,7 @@
 import torch
 import shutil
 
-VERSION = 'v25M'
+VERSION = 'v25M_MSE'
 MODEL_FILENAME = 'model_latest.pth'
 
 
@@ -26,7 +26,7 @@ def export1d(filename, parameters):
 def main():
     model = torch.load(MODEL_FILENAME)
     layers = model.linear_relu_stack
-    export2d('hidden_layer_weights.txt', layers[0].weight.tolist())
+    export2d('hidden_layer_weights.txt', layers[0].weight.T.tolist())
     export1d('hidden_layer_biases.txt', layers[0].bias.tolist())
     export1d('output_layer_weights.txt', layers[2].weight.tolist()[0])
     export1d('output_layer_biases.txt', layers[2].bias.tolist())
