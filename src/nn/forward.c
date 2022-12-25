@@ -5,6 +5,9 @@
 #include "forward.h"
 #include "parameters.h"
 
+#define INPUT_NEURONS 190
+#define HIDDEN_NEURONS 256
+
 
 void boardToInput(Board* board, float* restrict result) {
     PlayerBitBoard* p1 = &board->state.player1;
@@ -40,16 +43,18 @@ void boardToInput(Board* board, float* restrict result) {
 
 
 void multiplyHiddenWeights(const float* restrict input, float* restrict output) {
-    for (int i = 0; i < 190; i++) {
-        for (int j = 0; j < 128; j++) {
-            output[j] += hiddenWeights[i][j] * input[i];
+    for (int i = 0; i < INPUT_NEURONS; i++) {
+        if (input[i] != 0.0f) {
+            for (int j = 0; j < HIDDEN_NEURONS; j++) {
+                output[j] += hiddenWeights[i][j];
+            }
         }
     }
 }
 
 
 void addHiddenBiases(float* restrict input) {
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < HIDDEN_NEURONS; i++) {
         input[i] += hiddenBiases[i];
     }
 }
@@ -57,7 +62,7 @@ void addHiddenBiases(float* restrict input) {
 
 #define NEGATIVE_SLOPE 0.01f
 void applyLeakyReLU(float* restrict input) {
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < HIDDEN_NEURONS; i++) {
         input[i] = input[i] < 0? input[i] * NEGATIVE_SLOPE : input[i];
     }
 }
@@ -65,7 +70,7 @@ void applyLeakyReLU(float* restrict input) {
 
 float multiplyOutputWeights(const float* restrict input) {
     float result = 0.0f;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < HIDDEN_NEURONS; i++) {
         result += input[i] * outputWeights[i];
     }
     return result;
@@ -73,9 +78,9 @@ float multiplyOutputWeights(const float* restrict input) {
 
 
 float neuralNetworkEval(Board* board) {
-    float input[190] = {0.0f};
+    float input[INPUT_NEURONS] = {0.0f};
     boardToInput(board, input);
-    float output[128] = {0.0f};
+    float output[HIDDEN_NEURONS] = {0.0f};
     multiplyHiddenWeights(input, output);
     addHiddenBiases(output);
     applyLeakyReLU(output);
