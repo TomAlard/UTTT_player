@@ -63,26 +63,13 @@ def test_loop(dataloader, model, loss_fn):
     print(f'Test average loss: {test_loss:>8f}')
 
 
-def test_actual_loss():
-    testing_data = PositionDataset('D:/test_positions2.csv')
-    model = torch.load('model_latest.pth')
-    model.eval()
-    error = 0
-    values = []
-    for inputs, label in testing_data:
-        inputs = inputs.unsqueeze(0)
-        values.append(model(inputs).item())
-        error += abs(label.item() - model(inputs).item())
-    print('Average error:', error / len(testing_data))
-
-
 def main():
     learning_rate = 0.1
     batch_size = 1024
     epochs = 1000
 
-    training_data = PositionDataset('D:/train_positions2.csv')
-    testing_data = PositionDataset('D:/test_positions2.csv')
+    training_data = PositionDataset('../train_positions2.csv')
+    testing_data = PositionDataset('../test_positions2.csv')
     train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=4, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
@@ -97,7 +84,6 @@ def main():
         test_loop(test_dataloader, model, loss_fn)
         print(f'Epoch completed in {time() - start:<7f}\n')
         torch.save(model, 'model_latest.pth')
-    print('Done!')
 
 
 if __name__ == '__main__':
