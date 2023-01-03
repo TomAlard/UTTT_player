@@ -6,5 +6,11 @@
       <file path="$PROJECT_DIR$/src" />
       <file path="$PROJECT_DIR$/test" />
     </sourceRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/src/arena/.mypy_cache" />
+      <file path="$PROJECT_DIR$/src/arena/games" />
+      <file path="$PROJECT_DIR$/src/arena/new_positions" />
+      <file path="$PROJECT_DIR$/src/arena/positions" />
+    </excludeRoots>
   </component>
 </project>

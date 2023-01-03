@@ -5,7 +5,6 @@
 #include "mcts/mcts_node_tests.h"
 #include "mcts/find_next_move_tests.h"
 #include "profile_simulations.h"
-#include "board/smart_rollout_tests.h"
 #include "mcts/solver_tests.h"
 #include "mcts/priors_tests.h"
 #include "nn/forward_tests.h"
@@ -14,8 +13,6 @@
 void runTests() {
     printf("PlayerBitBoard tests...\n");
     runPlayerBitBoardTests();
-    printf("SmartRollout tests...\n");
-    runSmartRolloutTests();
     printf("Forward tests...\n");
     runForwardTests();
     printf("Board tests...\n");

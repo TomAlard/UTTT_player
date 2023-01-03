@@ -1,8 +1,8 @@
 import torch
 import shutil
 
-VERSION = 'v25M_MSE'
-MODEL_FILENAME = 'model_latest.pth'
+VERSION = 'v25M_256'
+MODEL_FILENAME = 'parameters/v25M_256/model_latest.pth'
 
 
 def export2d(filename, parameters):
@@ -30,7 +30,7 @@ def main():
     export1d('hidden_layer_biases.txt', layers[0].bias.tolist())
     export1d('output_layer_weights.txt', layers[2].weight.tolist()[0])
     export1d('output_layer_biases.txt', layers[2].bias.tolist())
-    shutil.copyfile(MODEL_FILENAME, f'parameters/{VERSION}/{MODEL_FILENAME}')
+    # shutil.copyfile(MODEL_FILENAME, f'parameters/{VERSION}/{MODEL_FILENAME}')
 
 
 if __name__ == '__main__':

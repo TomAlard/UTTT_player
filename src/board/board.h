@@ -12,14 +12,10 @@
 typedef struct State {
     PlayerBitBoard player1;
     PlayerBitBoard player2;
-    uint16_t instantWinBoards[2];
-    uint16_t instantWinSmallBoards[2];
     Player currentPlayer;
     uint8_t currentBoard;
     Winner winner;
     uint8_t ply;
-    uint8_t totalAmountOfOpenSquares;
-    uint8_t amountOfOpenSquaresBySmallBoard[9];
 } State;
 
 typedef struct Board {

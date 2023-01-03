@@ -2,7 +2,6 @@
 #include <assert.h>
 #include "board.h"
 #include "../misc/util.h"
-#include "smart_rollout.h"
 
 
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
@@ -43,18 +42,10 @@ Board* createBoard() {
     Board* board = safe_malloc(sizeof(Board));
     initializePlayerBitBoard(&board->state.player1);
     initializePlayerBitBoard(&board->state.player2);
-    board->state.instantWinBoards[PLAYER1] = 0;
-    board->state.instantWinBoards[PLAYER2] = 0;
-    board->state.instantWinSmallBoards[PLAYER1] = 0;
-    board->state.instantWinSmallBoards[PLAYER2] = 0;
     board->state.currentPlayer = PLAYER1;
     board->state.currentBoard = ANY_BOARD;
     board->state.winner = NONE;
     board->state.ply = 0;
-    board->state.totalAmountOfOpenSquares = 81;
-    for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
-        board->state.amountOfOpenSquaresBySmallBoard[boardIndex] = 9;
-    }
     board->stateCheckpoint = board->state;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
@@ -69,7 +60,6 @@ Board* createBoard() {
         }
     }
     board->me = PLAYER2;
-    initializeLookupTable();
     return board;
 }
 
@@ -172,14 +162,7 @@ void makeTemporaryMove(Board* board, Square square) {
     PlayerBitBoard* p1 = &board->state.player1;
     if (setSquareOccupied(p1 + board->state.currentPlayer, p1 + !board->state.currentPlayer, square)) {
         board->state.winner = winnerByBigBoards[board->state.player1.bigBoard][board->state.player2.bigBoard];
-        board->state.totalAmountOfOpenSquares -= board->state.amountOfOpenSquaresBySmallBoard[square.board];
-        board->state.amountOfOpenSquaresBySmallBoard[square.board] = 0;
-        updateBigBoardState(board);
-    } else {
-        board->state.totalAmountOfOpenSquares--;
-        board->state.amountOfOpenSquaresBySmallBoard[square.board]--;
     }
-    updateSmallBoardState(board, square.board);
     board->state.currentPlayer ^= 1;
     board->state.currentBoard = getNextBoard(board, square.position);
     board->state.ply++;

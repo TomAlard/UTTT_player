@@ -1,8 +1,8 @@
 #include <sys/time.h>
 #include "find_next_move.h"
 #include "../misc/util.h"
-#include "../board/rollout.h"
 #include "solver.h"
+#include "../nn/forward.h"
 
 
 MCTSNode* selectLeaf(Board* board, MCTSNode* root, RNG* rng) {
@@ -32,7 +32,7 @@ int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
         Winner winner = getWinner(board);
         Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            float reward = rollout(board, rng, player);
+            float reward = neuralNetworkEval(board);
             backpropagateReward(leaf, reward);
         } else {
             setNodeWinner(leaf, winner, player);
