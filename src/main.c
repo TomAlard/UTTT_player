@@ -8,12 +8,10 @@
 void skipMovesInput(FILE* file) {
     int validActionCount;
     fscanf(file, "%d", &validActionCount);  // NOLINT(cert-err34-c)
-    assert(amountMatched == 1 && "Incorrect amount of arguments matched");
     for (int i = 0; i < validActionCount; i++) {
         int row;
         int col;
         fscanf(file, "%d%d", &row, &col);  // NOLINT(cert-err34-c)
-        assert(amountMatched == 2 && "Incorrect amount of arguments matched");
     }
 }
 
@@ -22,14 +20,14 @@ void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
     Square s = toGameNotation(bestMove);
     uint8_t x = s.board;
     uint8_t y = s.position;
-    float winrate = getWinrate(root);
+    float winrate = getEval(root);
     printf("%d %d %.4f %d\n", x, y, winrate, amountOfSimulations);
     fflush(stdout);
 }
 
 
-Square playTurn(Board* board, MCTSNode** root, RNG* rng, double allocatedTime, Square enemyMove) {
-    HandleTurnResult result = handleTurn(board, *root, rng, allocatedTime, enemyMove);
+Square playTurn(Board* board, MCTSNode** root, double allocatedTime, Square enemyMove) {
+    HandleTurnResult result = handleTurn(board, *root, allocatedTime, enemyMove);
     *root = result.newRoot;
     return result.move;
 }
@@ -38,8 +36,6 @@ Square playTurn(Board* board, MCTSNode** root, RNG* rng, double allocatedTime, S
 void playGame(FILE* file, double timePerMove) {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
-    RNG rng;
-    seedRNG(&rng, 69, 420);
     while (true) {
         int enemy_row;
         int enemy_col;
@@ -50,7 +46,7 @@ void playGame(FILE* file, double timePerMove) {
         skipMovesInput(file);
         Square enemyMoveGameNotation = {enemy_row, enemy_col};
         Square enemyMove = toOurNotation(enemyMoveGameNotation);
-        HandleTurnResult result = handleTurn(board, root, &rng, timePerMove, enemyMove);
+        HandleTurnResult result = handleTurn(board, root, timePerMove, enemyMove);
         root = result.newRoot;
         printMove(root, result.move, result.amountOfSimulations);
     }

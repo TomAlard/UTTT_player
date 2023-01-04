@@ -5,8 +5,6 @@
 #include "mcts/mcts_node_tests.h"
 #include "mcts/find_next_move_tests.h"
 #include "profile_simulations.h"
-#include "mcts/solver_tests.h"
-#include "mcts/priors_tests.h"
 #include "nn/forward_tests.h"
 
 
@@ -19,10 +17,6 @@ void runTests() {
     runBoardTests();
     printf("MCTSNode tests...\n");
     runMCTSNodeTests();
-    printf("Solver tests...\n");
-    runSolverTests();
-    printf("Priors tests...\n");
-    runPriorsTests();
     printf("FindNextMove tests...\n");
     runFindNextMoveTests();
     printf("Amount of simulations on second move: ");

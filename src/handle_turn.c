@@ -34,28 +34,28 @@ Square handleOpening(Board* board) {
 }
 
 
-MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, RNG* rng) {
+MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
         setMe(board, PLAYER1);
         return root;
     }
-    discoverChildNodes(root, board, rng);
+    discoverChildNodes(root, board);
     MCTSNode* newRoot = updateRoot(root, board, enemyMove);
     makePermanentMove(board, enemyMove);
     return newRoot;
 }
 
 
-HandleTurnResult handleTurn(Board* board, MCTSNode* root, RNG* rng, double allocatedTime, Square enemyMove) {
-    root = handleEnemyTurn(board, root, enemyMove, rng);
-    Square openingMove = {9, 9};
+HandleTurnResult handleTurn(Board* board, MCTSNode* root, double allocatedTime, Square enemyMove) {
+    root = handleEnemyTurn(board, root, enemyMove);
+    Square openingMove = handleOpening(board);
     if (openingMove.board != 9) {
         MCTSNode* newRoot = updateRoot(root, board, openingMove);
         makePermanentMove(board, openingMove);
         HandleTurnResult result = {openingMove, newRoot, 0};
         return result;
     }
-    int amountOfSimulations = findNextMove(board, root, rng, allocatedTime);
+    int amountOfSimulations = findNextMove(board, root, allocatedTime);
     Square move = getMostPromisingMove(root);
     MCTSNode* newRoot = updateRoot(root, board, move);
     makePermanentMove(board, move);

@@ -1,7 +1,5 @@
 #include <stdbool.h>
-#include <time.h>
 #include <assert.h>
-#include <sys/time.h>
 #include "../misc/player.h"
 #include "../main.h"
 #include "arena_opponent.h"
@@ -15,14 +13,12 @@
 Winner simulateSingleGame(bool weArePlayer1) {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
-    RNG rng;
-    seedRNG(&rng, time(NULL), 420);
     StateOpponent* stateOpponent = initializeStateOpponent();
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;
     while (getWinner(board) == NONE && stateOpponent != NULL) {
         if (weAreCurrentPlayer) {
-            previousMove = playTurn(board, &root, &rng, TIME, previousMove);
+            previousMove = playTurn(board, &root, TIME, previousMove);
         } else {
             previousMove = playTurnOpponent(&stateOpponent, TIME, previousMove);
         }

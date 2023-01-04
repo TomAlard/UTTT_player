@@ -7,36 +7,35 @@
 typedef struct MCTSNode {
     struct MCTSNode* parent;
     struct MCTSNode* children;
-    float wins;
+    float eval;
     float sims;
     float simsInverted;
     Square square;
     int8_t amountOfChildren;
-    int8_t amountOfUntriedMoves;
 } MCTSNode;
 
 MCTSNode* createMCTSRootNode();
 
 void freeMCTSTree(MCTSNode* root);
 
-void discoverChildNodes(MCTSNode* node, Board* board, RNG* rng);
+void discoverChildNodes(MCTSNode* node, Board* board);
 
-bool isLeafNode(MCTSNode* node, Board* board, RNG* rng);
+bool isLeafNode(MCTSNode* node);
 
 MCTSNode* selectNextChild(MCTSNode* node);
 
-MCTSNode* expandNextChild(MCTSNode* node);
+MCTSNode* expandLeaf(MCTSNode* leaf, Board* board);
 
 MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
 void backpropagate(MCTSNode* node, Winner winner, Player player);
 
-void backpropagateReward(MCTSNode* node, float reward);
+void backpropagateEval(MCTSNode* node);
 
 void visitNode(MCTSNode* node, Board* board);
 
 Square getMostPromisingMove(MCTSNode* node);
 
-float getWinrate(MCTSNode* node);
+float getEval(MCTSNode* node);
 
 #endif //UTTT2_MCTS_NODE_H

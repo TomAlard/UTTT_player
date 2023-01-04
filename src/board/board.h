@@ -3,7 +3,6 @@
 
 #include "square.h"
 #include "../misc/player.h"
-#include "../misc/random.h"
 #include "player_bitboard.h"
 
 #define TOTAL_SMALL_SQUARES 81
@@ -38,13 +37,13 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 
 bool nextBoardIsEmpty(Board* board);
 
-bool nextBoardHasOneMoveFromBothPlayers(Board* board);
-
 uint8_t getCurrentBoard(Board* board);
 
 Player getCurrentPlayer(Board* board);
 
 void revertToCheckpoint(Board* board);
+
+void updateCheckpoint(Board* board);
 
 void makeTemporaryMove(Board* board, Square square);
 

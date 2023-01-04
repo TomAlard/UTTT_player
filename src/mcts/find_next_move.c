@@ -1,13 +1,11 @@
 #include <sys/time.h>
 #include "find_next_move.h"
 #include "../misc/util.h"
-#include "solver.h"
-#include "../nn/forward.h"
 
 
-MCTSNode* selectLeaf(Board* board, MCTSNode* root, RNG* rng) {
+MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
     MCTSNode* currentNode = root;
-    while (!isLeafNode(currentNode, board, rng) && getWinner(board) == NONE) {
+    while (!isLeafNode(currentNode) && getWinner(board) == NONE) {
         currentNode = selectNextChild(currentNode);
         visitNode(currentNode, board);
     }
@@ -23,19 +21,17 @@ bool hasTimeRemaining(struct timeval start, double allocatedTime) {
 }
 
 
-int findNextMove(Board* board, MCTSNode* root, RNG* rng, double allocatedTime) {
+int findNextMove(Board* board, MCTSNode* root, double allocatedTime) {
     int amountOfSimulations = 0;
     struct timeval start;
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
-        MCTSNode* leaf = selectLeaf(board, root, rng);
+        MCTSNode* leaf = selectLeaf(board, root);
         Winner winner = getWinner(board);
         Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            float reward = neuralNetworkEval(board);
-            backpropagateReward(leaf, reward);
+            backpropagateEval(expandLeaf(leaf, board));
         } else {
-            setNodeWinner(leaf, winner, player);
             backpropagate(leaf, winner, player);
         }
         revertToCheckpoint(board);

@@ -123,14 +123,6 @@ bool nextBoardIsEmpty(Board* board) {
 }
 
 
-bool nextBoardHasOneMoveFromBothPlayers(Board* board) {
-    uint8_t currentBoard = board->state.currentBoard;
-    return currentBoard != ANY_BOARD
-        && ONE_BIT_SET(board->state.player1.smallBoards[currentBoard])
-        && ONE_BIT_SET(board->state.player2.smallBoards[currentBoard]);
-}
-
-
 uint8_t getCurrentBoard(Board* board) {
     return board->state.currentBoard;
 }
