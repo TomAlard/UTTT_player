@@ -2,6 +2,7 @@
 #pragma GCC target("avx", "fma")
 
 
+#include <string.h>
 #include "forward.h"
 #include "parameters.h"
 
@@ -48,13 +49,6 @@ void boardToInput(Board* board, float* restrict output) {
 }
 
 
-void addHiddenBiases(float* restrict input) {
-    for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        input[i] += hiddenBiases[i];
-    }
-}
-
-
 #define NEGATIVE_SLOPE 0.01f
 void applyLeakyReLU(float* restrict input) {
     for (int i = 0; i < HIDDEN_NEURONS; i++) {
@@ -73,9 +67,9 @@ float multiplyOutputWeights(const float* restrict input) {
 
 
 float neuralNetworkEval(Board* board) {
-    float input[HIDDEN_NEURONS] = {0.0f};
+    float input[HIDDEN_NEURONS];
+    memcpy(input, hiddenBiases, HIDDEN_NEURONS * sizeof(float));
     boardToInput(board, input);
-    addHiddenBiases(input);
     applyLeakyReLU(input);
     float x = multiplyOutputWeights(input) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
