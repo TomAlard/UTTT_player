@@ -7,6 +7,7 @@
       <file path="$PROJECT_DIR$/test" />
     </sourceRoots>
     <excludeRoots>
+      <file path="$PROJECT_DIR$/CG-Send-Binary" />
       <file path="$PROJECT_DIR$/src/arena/.mypy_cache" />
       <file path="$PROJECT_DIR$/src/arena/games" />
       <file path="$PROJECT_DIR$/src/arena/new_positions" />

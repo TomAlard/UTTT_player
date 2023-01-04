@@ -5,12 +5,16 @@ VERSION = 'v25M_256'
 MODEL_FILENAME = 'parameters/v25M_256/model_latest.pth'
 
 
+def double_to_C_str(value):
+    return str(round(value, 3))
+
+
 def export2d(filename, parameters):
     with open(f'./parameters/{VERSION}/{filename}', 'w') as f:
         f.write('{')
         for i, line in enumerate(parameters):
             f.write('{')
-            line = ','.join(f'{x}f' for x in line)
+            line = ','.join(map(double_to_C_str, line))
             f.write(line + '}')
             if i+1 != len(parameters):
                 f.write(',\n')
@@ -19,7 +23,7 @@ def export2d(filename, parameters):
 
 def export1d(filename, parameters):
     with open(f'./parameters/{VERSION}/{filename}', 'w') as f:
-        line = ','.join(f'{x}f' for x in parameters)
+        line = ','.join(map(double_to_C_str, parameters))
         f.write('{' + line + '}')
 
 

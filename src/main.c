@@ -7,12 +7,12 @@
 
 void skipMovesInput(FILE* file) {
     int validActionCount;
-    int amountMatched = fscanf(file, "%d", &validActionCount);  // NOLINT(cert-err34-c)
+    fscanf(file, "%d", &validActionCount);  // NOLINT(cert-err34-c)
     assert(amountMatched == 1 && "Incorrect amount of arguments matched");
     for (int i = 0; i < validActionCount; i++) {
         int row;
         int col;
-        amountMatched = fscanf(file, "%d%d", &row, &col);  // NOLINT(cert-err34-c)
+        fscanf(file, "%d%d", &row, &col);  // NOLINT(cert-err34-c)
         assert(amountMatched == 2 && "Incorrect amount of arguments matched");
     }
 }
