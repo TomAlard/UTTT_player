@@ -143,7 +143,7 @@ float fastSquareRoot(float x) {
 
 
 #define EXPLORATION_PARAMETER 0.41f
-#define FIRST_PLAY_URGENCY 1.10f
+#define FIRST_PLAY_URGENCY 0.40f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     float exploitation = node->eval;
     float exploration = node->sims == 0? FIRST_PLAY_URGENCY : fastSquareRoot(parentLogSims * node->simsInverted);
