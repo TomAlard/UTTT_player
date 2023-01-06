@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <math.h>
 #include "mcts_node_tests.h"
 #include "../../src/mcts/mcts_node.h"
 #include "../test_util.h"
+#include "../../src/nn/forward.h"
 
 
 void rootIsLeafNode() {
@@ -76,6 +78,21 @@ void alwaysPlays44WhenGoingFirst() {
 }
 
 
+void optimizedNNEvalTest() {
+    MCTSNode* root = createMCTSRootNode();
+    Board* board = createBoard();
+    discoverChildNodes(root, board);
+    for (int i = 0; i < root->amountOfChildren; i++) {
+        MCTSNode* child = &root->children[i];
+        makeTemporaryMove(board, child->square);
+        myAssert(fabsf(neuralNetworkEval(board) - child->eval) < 1e-5);
+        revertToCheckpoint(board);
+    }
+    freeBoard(board);
+    freeMCTSTree(root);
+}
+
+
 void runMCTSNodeTests() {
     printf("\trootIsLeafNode...\n");
     rootIsLeafNode();
@@ -87,4 +104,6 @@ void runMCTSNodeTests() {
     updateRootStillWorksWhenPlayedMoveWasPruned();
     printf("\talwaysPlays44WhenGoingFirst...\n");
     alwaysPlays44WhenGoingFirst();
+    printf("\toptimizedNNEvalTest...\n");
+    optimizedNNEvalTest();
 }

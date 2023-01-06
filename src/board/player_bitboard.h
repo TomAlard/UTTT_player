@@ -18,6 +18,8 @@ bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
 
 bool isWin(uint16_t smallBoard);
 
+bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard);
+
 bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square);
 
 #endif //UTTT2_PLAYER_BITBOARD_H

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <assert.h>
 #include <string.h>
 #include <emmintrin.h>
@@ -100,6 +101,51 @@ bool isBadMove(Board* board, Square square) {
 }
 
 
+void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
+    float NNInputs[256];
+    board->state.currentPlayer ^= 1;
+    setHidden(board, NNInputs);
+    board->state.currentPlayer ^= 1;
+    float originalNNInputs[256];
+    memcpy(originalNNInputs, NNInputs, 256 * sizeof(float));
+    int8_t amountOfMoves = parent->amountOfChildren;
+    PlayerBitBoard* p1 = &board->state.player1;
+    PlayerBitBoard* currentPlayerBitBoard = p1 + board->state.currentPlayer;
+    PlayerBitBoard* otherPlayerBitBoard = p1 + !board->state.currentPlayer;
+    int j = 0;
+    for (int i = 0; i < amountOfMoves; i++) {
+        Square move = moves[i];
+        if (isBadMove(board, move)) {
+            parent->amountOfChildren--;
+            continue;
+        }
+        MCTSNode* child = &parent->children[j++];
+        addHiddenWeights(move.position + 99 + 9*move.board, NNInputs);
+        uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
+        BIT_SET(smallBoard, move.position);
+        bool smallBoardIsDecided;
+        if (isWin(smallBoard)) {
+            smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
+                                            | (1 << move.board), move.position);
+            addHiddenWeights(move.board + 90, NNInputs);
+
+        } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
+            smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
+                                            | (1 << move.board), move.position);
+            addHiddenWeights(move.board, NNInputs);
+            addHiddenWeights(move.board + 90, NNInputs);
+        } else {
+            smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard, move.position);
+        }
+        addHiddenWeights((smallBoardIsDecided? ANY_BOARD : move.position) + 180, NNInputs);
+        float eval = neuralNetworkEvalFromHidden(NNInputs);
+        assert(fabsf(eval - getEvalOfMove(board, move)) < 1e-5);
+        initializeMCTSNode(parent, move, eval, child);
+        memcpy(NNInputs, originalNNInputs, 256 * sizeof(float));
+    }
+}
+
+
 void discoverChildNodes(MCTSNode* node, Board* board) {
     if (node->amountOfChildren == -1 && !handleSpecialCases(node, board)) {
         Square movesArray[TOTAL_SMALL_SQUARES];
@@ -116,17 +162,7 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
         }
         node->amountOfChildren = amountOfMoves;
         node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
-        int j = 0;
-        for (int i = 0; i < amountOfMoves; i++) {
-            Square move = moves[i];
-            if (isBadMove(board, move)) {
-                node->amountOfChildren--;
-                continue;
-            }
-            MCTSNode* child = &node->children[j++];
-            float eval = getEvalOfMove(board, move);
-            initializeMCTSNode(node, move, eval, child);
-        }
+        initializeChildNodes(node, board, moves);
     }
 }
 
