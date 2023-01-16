@@ -10,10 +10,10 @@ void profileSimulations() {
         Board* board = createBoard();
         MCTSNode* root = createMCTSRootNode();
         Square square = createSquare(1, 0);
-        discoverChildNodes(root, board);
-        root = updateRoot(root, board, square);
+        discoverChildNodes(root, board, -1);
+        root = updateRoot(root, board, square, -1);
         makePermanentMove(board, square);
-        totalSims += findNextMove(board, root, 0.1);
+        totalSims += findNextMove(board, root, 0.1, -1);
         freeMCTSTree(root);
         freeBoard(board);
     }

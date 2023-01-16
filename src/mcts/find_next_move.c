@@ -21,16 +21,16 @@ bool hasTimeRemaining(struct timeval start, double allocatedTime) {
 }
 
 
-int findNextMove(Board* board, MCTSNode* root, double allocatedTime) {
+int findNextMove(Board* board, MCTSNode* root, double allocatedTime, int gameId) {
     int amountOfSimulations = 0;
     struct timeval start;
     gettimeofday(&start, NULL);
-    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
+    while (++amountOfSimulations % 50000 != 0 || hasTimeRemaining(start, allocatedTime)) {
         MCTSNode* leaf = selectLeaf(board, root);
         Winner winner = getWinner(board);
         Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            backpropagateEval(expandLeaf(leaf, board));
+            backpropagateEval(expandLeaf(leaf, board, gameId));
         } else {
             backpropagate(leaf, winner, player);
         }

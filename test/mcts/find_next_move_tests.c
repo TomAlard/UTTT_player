@@ -13,7 +13,7 @@ void findNextMoveDoesNotChangeBoard() {
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountMovesBefore;
         Square* movesBefore = generateMoves(board, movesArray, &amountMovesBefore);
-        findNextMove(board, root, 0.005);
+        findNextMove(board, root, 0.005, -1);
         Square nextMove = getMostPromisingMove(root);
         myAssert(winnerBefore == getWinner(board));
         int8_t amountMovesAfter;
@@ -23,7 +23,7 @@ void findNextMoveDoesNotChangeBoard() {
             myAssert(squaresAreEqual(movesBefore[i], movesAfter[i]));
         }
         makePermanentMove(board, nextMove);
-        root = updateRoot(root, board, nextMove);
+        root = updateRoot(root, board, nextMove, -1);
     }
     freeMCTSTree(root);
     freeBoard(board);
@@ -37,7 +37,7 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
         struct timeval start, end;
         int timeMs = 100;
         gettimeofday(&start, NULL);
-        findNextMove(board, root, timeMs / 1000.0);
+        findNextMove(board, root, timeMs / 1000.0, -1);
         Square nextMove = getMostPromisingMove(root);
         gettimeofday(&end, NULL);
         double elapsedTime = (double) (end.tv_sec - start.tv_sec) * 1000.0;
@@ -47,7 +47,7 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
             printf("%f\n", elapsedTime);
         }
         makePermanentMove(board, nextMove);
-        root = updateRoot(root, board, nextMove);
+        root = updateRoot(root, board, nextMove, -1);
     }
     freeMCTSTree(root);
     freeBoard(board);

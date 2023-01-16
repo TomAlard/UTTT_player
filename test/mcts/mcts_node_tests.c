@@ -19,12 +19,12 @@ void between17And81MovesInOneGame() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     MCTSNode* node = root;
-    discoverChildNodes(node, board);
+    discoverChildNodes(node, board, -1);
     int count = 0;
     while (node->amountOfChildren > 0) {
         node = selectNextChild(node);
         visitNode(node, board);
-        discoverChildNodes(node, board);
+        discoverChildNodes(node, board, -1);
         count++;
     }
     myAssert(count >= 17 && count <= 81);
@@ -36,12 +36,12 @@ void between17And81MovesInOneGame() {
 void updateRootTest() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    discoverChildNodes(root, board);
+    discoverChildNodes(root, board, -1);
     backpropagate(&root->children[0], DRAW, getCurrentPlayer(board));
     Square square = getMostPromisingMove(root);
     makePermanentMove(board, square);
-    MCTSNode* newRoot = updateRoot(root, board, square);
-    discoverChildNodes(newRoot, board);
+    MCTSNode* newRoot = updateRoot(root, board, square, -1);
+    discoverChildNodes(newRoot, board, -1);
     backpropagate(&newRoot->children[0], DRAW, getCurrentPlayer(board));
     myAssert(getMostPromisingMove(newRoot).board == square.position);
     freeBoard(board);
@@ -53,14 +53,14 @@ void updateRootStillWorksWhenPlayedMoveWasPruned() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     Square firstMove = {4, 4};
-    discoverChildNodes(root, board);
-    root = updateRoot(root, board, firstMove);
+    discoverChildNodes(root, board, -1);
+    root = updateRoot(root, board, firstMove, -1);
     makePermanentMove(board, firstMove);
-    discoverChildNodes(root, board);
+    discoverChildNodes(root, board, -1);
     root->amountOfChildren = 1;  // 'prune' the other 8 moves
     Square prunedMove = {4, 5};
     myAssert(!squaresAreEqual(root->children[0].square, prunedMove));
-    root = updateRoot(root, board, prunedMove);
+    root = updateRoot(root, board, prunedMove, -1);
     freeBoard(board);
     freeMCTSTree(root);
 }
@@ -70,7 +70,7 @@ void alwaysPlays44WhenGoingFirst() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
     setMe(board, PLAYER1);
-    discoverChildNodes(root, board);
+    discoverChildNodes(root, board, -1);
     Square expected = {4, 4};
     myAssert(squaresAreEqual(getMostPromisingMove(root), expected));
     freeBoard(board);
@@ -81,7 +81,7 @@ void alwaysPlays44WhenGoingFirst() {
 void optimizedNNEvalTest() {
     MCTSNode* root = createMCTSRootNode();
     Board* board = createBoard();
-    discoverChildNodes(root, board);
+    discoverChildNodes(root, board, -1);
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &root->children[i];
         makeTemporaryMove(board, child->square);

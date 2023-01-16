@@ -6,11 +6,11 @@
 #include "../misc/util.h"
 
 
-#define ROUNDS 1000
+#define ROUNDS 1000000000
 #define TIME 0.1
 
 
-Winner simulateSingleGame(bool weArePlayer1) {
+Winner simulateSingleGame(bool weArePlayer1, int gameId) {
     Board* board = createBoard();
     MCTSNode* root = createMCTSRootNode();
     StateOpponent* stateOpponent = initializeStateOpponent();
@@ -18,7 +18,7 @@ Winner simulateSingleGame(bool weArePlayer1) {
     bool weAreCurrentPlayer = weArePlayer1;
     while (getWinner(board) == NONE && stateOpponent != NULL) {
         if (weAreCurrentPlayer) {
-            previousMove = playTurn(board, &root, TIME, previousMove);
+            previousMove = playTurn(board, &root, TIME, previousMove, gameId);
         } else {
             previousMove = playTurnOpponent(&stateOpponent, TIME, previousMove);
         }
@@ -45,7 +45,7 @@ void runArena() {
     int lossesGoingSecond = 0;
     #pragma omp parallel for default(none) shared(winsGoingFirst, winsGoingSecond, drawsGoingFirst, drawsGoingSecond, lossesGoingFirst, lossesGoingSecond)
     for (int i = 0; i < ROUNDS/2; i++) {
-        Winner winner = simulateSingleGame(true);
+        Winner winner = simulateSingleGame(true, i*2);
         if (winner == WIN_P1) {
             winsGoingFirst++;
         } else if (winner == WIN_P2) {
@@ -53,7 +53,7 @@ void runArena() {
         } else {
             drawsGoingFirst++;
         }
-        winner = simulateSingleGame(false);
+        winner = simulateSingleGame(false, i*2 + 1);
         if (winner == WIN_P2) {
             winsGoingSecond++;
         } else if (winner == WIN_P1) {

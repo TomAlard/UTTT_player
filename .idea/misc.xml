@@ -12,6 +12,7 @@
       <file path="$PROJECT_DIR$/src/arena/games" />
       <file path="$PROJECT_DIR$/src/arena/new_positions" />
       <file path="$PROJECT_DIR$/src/arena/positions" />
+      <file path="$PROJECT_DIR$/src/arena/positions_v2" />
     </excludeRoots>
   </component>
 </project>

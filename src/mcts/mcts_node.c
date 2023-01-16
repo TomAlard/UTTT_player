@@ -1,8 +1,10 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include <string.h>
 #include <emmintrin.h>
 #include "mcts_node.h"
+#include "find_next_move.h"
 #include "../misc/util.h"
 #include "../nn/forward.h"
 
@@ -59,35 +61,75 @@ void freeMCTSTree(MCTSNode* root) {
 }
 
 
-float getEvalOfMove(Board* board, Square square) {
+void writePositionToFile(State* state, FILE* file, float winrate, Square bestMove) {
+    char p1SmallBoardBits[81];
+    char p2SmallBoardBits[81];
+    for (int j = 0; j < 81; j++) {
+        p1SmallBoardBits[j] = (char)((BIT_CHECK(state->player1.smallBoards[j/9], j%9) != 0) + '0');
+        p2SmallBoardBits[j] = (char)((BIT_CHECK(state->player2.smallBoards[j/9], j%9) != 0) + '0');
+    }
+    char p1BigBoardBits[9];
+    char p2BigBoardBits[9];
+    for (int j = 0; j < 9; j++) {
+        p1BigBoardBits[j] = (char)((BIT_CHECK(state->player1.bigBoard, j) != 0) + '0');
+        p2BigBoardBits[j] = (char)((BIT_CHECK(state->player2.bigBoard, j) != 0) + '0');
+    }
+    fprintf(file, "%.*s,%.*s,%.*s,%.*s,%d,%d,%.4f,%d%d\n", 81, p1SmallBoardBits, 81, p2SmallBoardBits,
+            9, p1BigBoardBits, 9, p2BigBoardBits, state->currentPlayer, state->currentBoard, winrate, bestMove.board, bestMove.position);
+}
+
+
+void saveData(Board* board, int gameId) {
+    double randomDouble = ((double) rand() / RAND_MAX);  // NOLINT(cert-msc50-cpp)
+    assert(randomDouble >= 0 && randomDouble <= 1);
+    if (gameId != -1 && randomDouble < 0.0001) {
+        MCTSNode* root = createMCTSRootNode();
+        Board boardCopy = *board;
+        boardCopy.stateCheckpoint = boardCopy.state;
+        findNextMove(&boardCopy, root, 1, -1);
+        float eval = getEval(root);
+        Square bestMove = getMostPromisingMove(root);
+        freeMCTSTree(root);
+        char buffer[1000];
+        snprintf(buffer, 1000, "./src/arena/positions_v2/game_%d_positions.csv", gameId);
+        FILE* file = fopen(buffer, "a");
+        writePositionToFile(&board->state, file, eval, bestMove);
+        fclose(file);
+    }
+}
+
+
+float getEvalOfMove(Board* board, Square square, int gameId) {
     State temp = board->stateCheckpoint;
     updateCheckpoint(board);
     makeTemporaryMove(board, square);
     float eval = neuralNetworkEval(board);
+    saveData(board, gameId);
     revertToCheckpoint(board);
     board->stateCheckpoint = temp;
     return eval;
 }
 
 
-void singleChild(MCTSNode* node, Board* board, Square square) {
+void singleChild(MCTSNode* node, Board* board, Square square, int gameId) {
     node->amountOfChildren = 1;
     node->children = safe_malloc(sizeof(MCTSNode));
-    float eval = getEvalOfMove(board, square);
+    float eval = getEvalOfMove(board, square, gameId);
+    saveData(board, gameId);
     initializeMCTSNode(node, square, eval, &node->children[0]);
 }
 
 
-bool handleSpecialCases(MCTSNode* node, Board* board) {
+bool handleSpecialCases(MCTSNode* node, Board* board, int gameId) {
     if (nextBoardIsEmpty(board) && getPly(board) <= 20) {
         uint8_t currentBoard = getCurrentBoard(board);
         Square sameBoard = {currentBoard, currentBoard};
-        singleChild(node, board, sameBoard);
+        singleChild(node, board, sameBoard, gameId);
         return true;
     }
     if (currentPlayerIsMe(board) && getPly(board) == 0) {
         Square bestFirstMove = {4, 4};
-        singleChild(node, board, bestFirstMove);
+        singleChild(node, board, bestFirstMove, gameId);
         return true;
     }
     return false;
@@ -100,7 +142,7 @@ bool isBadMove(Board* board, Square square) {
 }
 
 
-void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
+void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves, int gameId) {
     float NNInputs[256];
     board->state.currentPlayer ^= 1;
     setHidden(board, NNInputs);
@@ -138,15 +180,15 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
         }
         addHiddenWeights((smallBoardIsDecided? ANY_BOARD : move.position) + 180, NNInputs);
         float eval = neuralNetworkEvalFromHidden(NNInputs);
-        assert(fabsf(eval - getEvalOfMove(board, move)) < 1e-5);
+        saveData(board, gameId);
         initializeMCTSNode(parent, move, eval, child);
         memcpy(NNInputs, originalNNInputs, 256 * sizeof(float));
     }
 }
 
 
-void discoverChildNodes(MCTSNode* node, Board* board) {
-    if (node->amountOfChildren == -1 && !handleSpecialCases(node, board)) {
+void discoverChildNodes(MCTSNode* node, Board* board, int gameId) {
+    if (node->amountOfChildren == -1 && !handleSpecialCases(node, board, gameId)) {
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves;
         Square* moves = generateMoves(board, movesArray, &amountOfMoves);
@@ -154,14 +196,14 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             Player player = getCurrentPlayer(board);
             for (int i = 0; i < amountOfMoves; i++) {
                 if (getWinnerAfterMove(board, moves[i]) == player + 1) {
-                    singleChild(node, board, moves[i]);
+                    singleChild(node, board, moves[i], gameId);
                     return;
                 }
             }
         }
         node->amountOfChildren = amountOfMoves;
         node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
-        initializeChildNodes(node, board, moves);
+        initializeChildNodes(node, board, moves, gameId);
     }
 }
 
@@ -213,14 +255,14 @@ MCTSNode* selectNextChild(MCTSNode* node) {
 }
 
 
-MCTSNode* expandLeaf(MCTSNode* leaf, Board* board) {
+MCTSNode* expandLeaf(MCTSNode* leaf, Board* board, int gameId) {
     assert(isLeafNode(leaf));
-    discoverChildNodes(leaf, board);
+    discoverChildNodes(leaf, board, gameId);
     return selectNextChild(leaf);
 }
 
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, int gameId) {
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &root->children[i];
@@ -238,7 +280,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
         for (int i = 0; i < amountOfMoves; i++) {
             if (squaresAreEqual(moves[i], square)) {
                 MCTSNode temp;
-                float eval = getEvalOfMove(board, square);
+                float eval = getEvalOfMove(board, square, gameId);
                 initializeMCTSNode(NULL, square, eval, &temp);
                 newRoot = copyMCTSNode(&temp);
                 break;
