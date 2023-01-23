@@ -11,7 +11,7 @@ void profileSimulations() {
         MCTSNode* root = createMCTSRootNode();
         Square square = createSquare(1, 0);
         discoverChildNodes(root, board, -1);
-        root = updateRoot(root, board, square, -1);
+        root = updateRoot(root, board, square);
         makePermanentMove(board, square);
         totalSims += findNextMove(board, root, 0.1, -1);
         freeMCTSTree(root);

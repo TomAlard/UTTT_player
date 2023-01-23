@@ -57,6 +57,7 @@ void playGame(FILE* file, double timePerMove) {
 
 #define TIME 0.0999
 int main() {
+    initializeBoardLookupTables();
     // runTests();
     runArena();
     // playGame(stdin, TIME);

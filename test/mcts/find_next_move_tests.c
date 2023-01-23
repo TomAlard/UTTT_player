@@ -23,7 +23,7 @@ void findNextMoveDoesNotChangeBoard() {
             myAssert(squaresAreEqual(movesBefore[i], movesAfter[i]));
         }
         makePermanentMove(board, nextMove);
-        root = updateRoot(root, board, nextMove, -1);
+        root = updateRoot(root, board, nextMove);
     }
     freeMCTSTree(root);
     freeBoard(board);
@@ -47,7 +47,7 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
             printf("%f\n", elapsedTime);
         }
         makePermanentMove(board, nextMove);
-        root = updateRoot(root, board, nextMove, -1);
+        root = updateRoot(root, board, nextMove);
     }
     freeMCTSTree(root);
     freeBoard(board);

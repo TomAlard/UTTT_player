@@ -38,15 +38,7 @@ Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard) {
 }
 
 
-Board* createBoard() {
-    Board* board = safe_malloc(sizeof(Board));
-    initializePlayerBitBoard(&board->state.player1);
-    initializePlayerBitBoard(&board->state.player2);
-    board->state.currentPlayer = PLAYER1;
-    board->state.currentBoard = ANY_BOARD;
-    board->state.winner = NONE;
-    board->state.ply = 0;
-    board->stateCheckpoint = board->state;
+void initializeBoardLookupTables() {
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
             amountOfOpenSquares[bitBoard] =
@@ -59,6 +51,18 @@ Board* createBoard() {
             winnerByBigBoards[player1BigBoard][player2BigBoard] = winner;
         }
     }
+}
+
+
+Board* createBoard() {
+    Board* board = safe_malloc(sizeof(Board));
+    initializePlayerBitBoard(&board->state.player1);
+    initializePlayerBitBoard(&board->state.player2);
+    board->state.currentPlayer = PLAYER1;
+    board->state.currentBoard = ANY_BOARD;
+    board->state.winner = NONE;
+    board->state.ply = 0;
+    board->stateCheckpoint = board->state;
     board->me = PLAYER2;
     return board;
 }

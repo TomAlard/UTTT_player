@@ -80,9 +80,7 @@ void writePositionToFile(State* state, FILE* file, float winrate, Square bestMov
 
 
 void saveData(Board* board, int gameId) {
-    double randomDouble = ((double) rand() / RAND_MAX);  // NOLINT(cert-msc50-cpp)
-    assert(randomDouble >= 0 && randomDouble <= 1);
-    if (gameId != -1 && randomDouble < 0.0001) {
+    if (gameId != -1 && ((double) rand() / RAND_MAX) < 0.0001) {  // NOLINT(cert-msc50-cpp)
         MCTSNode* root = createMCTSRootNode();
         Board boardCopy = *board;
         boardCopy.stateCheckpoint = boardCopy.state;
@@ -90,21 +88,22 @@ void saveData(Board* board, int gameId) {
         float eval = getEval(root);
         Square bestMove = getMostPromisingMove(root);
         freeMCTSTree(root);
+        /*
         char buffer[1000];
         snprintf(buffer, 1000, "./src/arena/positions_v2/game_%d_positions.csv", gameId);
         FILE* file = fopen(buffer, "a");
         writePositionToFile(&board->state, file, eval, bestMove);
         fclose(file);
+        */
     }
 }
 
 
-float getEvalOfMove(Board* board, Square square, int gameId) {
+float getEvalOfMove(Board* board, Square square) {
     State temp = board->stateCheckpoint;
     updateCheckpoint(board);
     makeTemporaryMove(board, square);
     float eval = neuralNetworkEval(board);
-    saveData(board, gameId);
     revertToCheckpoint(board);
     board->stateCheckpoint = temp;
     return eval;
@@ -114,7 +113,7 @@ float getEvalOfMove(Board* board, Square square, int gameId) {
 void singleChild(MCTSNode* node, Board* board, Square square, int gameId) {
     node->amountOfChildren = 1;
     node->children = safe_malloc(sizeof(MCTSNode));
-    float eval = getEvalOfMove(board, square, gameId);
+    float eval = getEvalOfMove(board, square);
     saveData(board, gameId);
     initializeMCTSNode(node, square, eval, &node->children[0]);
 }
@@ -143,6 +142,7 @@ bool isBadMove(Board* board, Square square) {
 
 
 void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves, int gameId) {
+    saveData(board, gameId);
     float NNInputs[256];
     board->state.currentPlayer ^= 1;
     setHidden(board, NNInputs);
@@ -180,7 +180,6 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves, int gam
         }
         addHiddenWeights((smallBoardIsDecided? ANY_BOARD : move.position) + 180, NNInputs);
         float eval = neuralNetworkEvalFromHidden(NNInputs);
-        saveData(board, gameId);
         initializeMCTSNode(parent, move, eval, child);
         memcpy(NNInputs, originalNNInputs, 256 * sizeof(float));
     }
@@ -262,7 +261,7 @@ MCTSNode* expandLeaf(MCTSNode* leaf, Board* board, int gameId) {
 }
 
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, int gameId) {
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &root->children[i];
@@ -280,7 +279,7 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, int gameId) {
         for (int i = 0; i < amountOfMoves; i++) {
             if (squaresAreEqual(moves[i], square)) {
                 MCTSNode temp;
-                float eval = getEvalOfMove(board, square, gameId);
+                float eval = getEvalOfMove(board, square);
                 initializeMCTSNode(NULL, square, eval, &temp);
                 newRoot = copyMCTSNode(&temp);
                 break;

@@ -1,4 +1,6 @@
 #include <sys/time.h>
+#include <stdlib.h>
+#include <assert.h>
 #include "find_next_move.h"
 #include "../misc/util.h"
 
@@ -21,11 +23,17 @@ bool hasTimeRemaining(struct timeval start, double allocatedTime) {
 }
 
 
+int randomRange(int min, int max) {
+    return min + rand() / (RAND_MAX / (max - min + 1) + 1);  // NOLINT(cert-msc50-cpp)
+}
+
+
 int findNextMove(Board* board, MCTSNode* root, double allocatedTime, int gameId) {
     int amountOfSimulations = 0;
     struct timeval start;
     gettimeofday(&start, NULL);
-    while (++amountOfSimulations % 50000 != 0 || hasTimeRemaining(start, allocatedTime)) {
+    int amountSims = gameId == -1? 128 : 50000 + randomRange(-5000, 5000);
+    while (++amountOfSimulations % amountSims != 0 || hasTimeRemaining(start, allocatedTime)) {
         MCTSNode* leaf = selectLeaf(board, root);
         Winner winner = getWinner(board);
         Player player = OTHER_PLAYER(getCurrentPlayer(board));

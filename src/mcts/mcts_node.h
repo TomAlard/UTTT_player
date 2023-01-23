@@ -26,7 +26,7 @@ MCTSNode* selectNextChild(MCTSNode* node);
 
 MCTSNode* expandLeaf(MCTSNode* leaf, Board* board, int gameId);
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square, int gameId);
+MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
 
 void backpropagate(MCTSNode* node, Winner winner, Player player);
 

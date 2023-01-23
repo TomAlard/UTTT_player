@@ -40,7 +40,7 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, int ga
         return root;
     }
     discoverChildNodes(root, board, gameId);
-    MCTSNode* newRoot = updateRoot(root, board, enemyMove, gameId);
+    MCTSNode* newRoot = updateRoot(root, board, enemyMove);
     makePermanentMove(board, enemyMove);
     return newRoot;
 }
@@ -48,16 +48,16 @@ MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove, int ga
 
 HandleTurnResult handleTurn(Board* board, MCTSNode* root, double allocatedTime, Square enemyMove, int gameId) {
     root = handleEnemyTurn(board, root, enemyMove, gameId);
-    Square openingMove = handleOpening(board);
+    Square openingMove = {9, 9};
     if (openingMove.board != 9) {
-        MCTSNode* newRoot = updateRoot(root, board, openingMove, gameId);
+        MCTSNode* newRoot = updateRoot(root, board, openingMove);
         makePermanentMove(board, openingMove);
         HandleTurnResult result = {openingMove, newRoot, 0};
         return result;
     }
     int amountOfSimulations = findNextMove(board, root, allocatedTime, gameId);
     Square move = getMostPromisingMove(root);
-    MCTSNode* newRoot = updateRoot(root, board, move, gameId);
+    MCTSNode* newRoot = updateRoot(root, board, move);
     makePermanentMove(board, move);
     HandleTurnResult result = {move, newRoot, amountOfSimulations};
     return result;
