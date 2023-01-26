@@ -88,13 +88,7 @@ void saveData(Board* board, int gameId) {
         float eval = getEval(root);
         Square bestMove = getMostPromisingMove(root);
         freeMCTSTree(root);
-        /*
-        char buffer[1000];
-        snprintf(buffer, 1000, "./src/arena/positions_v2/game_%d_positions.csv", gameId);
-        FILE* file = fopen(buffer, "a");
-        writePositionToFile(&board->state, file, eval, bestMove);
-        fclose(file);
-        */
+        writePositionToFile(&board->state, stdout, eval, bestMove);
     }
 }
 
@@ -156,7 +150,7 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves, int gam
     int j = 0;
     for (int i = 0; i < amountOfMoves; i++) {
         Square move = moves[i];
-        if (isBadMove(board, move)) {
+        if (isBadMove(board, move) && parent->amountOfChildren > 1) {
             parent->amountOfChildren--;
             continue;
         }
@@ -255,7 +249,7 @@ MCTSNode* selectNextChild(MCTSNode* node) {
 
 
 MCTSNode* expandLeaf(MCTSNode* leaf, Board* board, int gameId) {
-    assert(isLeafNode(leaf));
+    assert(isLeafNode(leaf) && leaf->amountOfChildren == -1);
     discoverChildNodes(leaf, board, gameId);
     return selectNextChild(leaf);
 }
