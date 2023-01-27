@@ -64,7 +64,7 @@ def test_loop(dataloader, model, loss_fn):
 
 
 def main():
-    learning_rate = 0.1
+    learning_rate = 0.001
     batch_size = 1024
     epochs = 1000
 
@@ -73,10 +73,10 @@ def main():
     train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=4, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
-    model = NeuralNetwork().cuda()
+    model = torch.load('model_latest.pth')
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.75, patience=3)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3)
     for i in range(epochs):
         print(f'Epoch {i+1}\n-------------------------------')
         start = time()
