@@ -138,7 +138,6 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
         }
         addHiddenWeights((smallBoardIsDecided? ANY_BOARD : move.position) + 180, NNInputs);
         float eval = neuralNetworkEvalFromHidden(NNInputs);
-        assert(fabsf(eval - getEvalOfMove(board, move)) < 1e-5);
         initializeMCTSNode(parent, move, eval, child);
         memcpy(NNInputs, originalNNInputs, 256 * sizeof(float));
     }

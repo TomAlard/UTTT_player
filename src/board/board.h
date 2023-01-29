@@ -23,10 +23,6 @@ typedef struct Board {
     Player me;
 } Board;
 
-Square openSquares[512][9][9];
-int8_t amountOfOpenSquares[512];
-Winner winnerByBigBoards[512][512];
-
 Board* createBoard();
 
 void freeBoard(Board* board);

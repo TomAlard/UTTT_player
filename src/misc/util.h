@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include "../board/square.h"
 
+#define assume(cond) do { if (!(cond)) __builtin_unreachable(); } while (0)
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))

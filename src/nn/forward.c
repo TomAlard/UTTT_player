@@ -1,5 +1,6 @@
-#pragma GCC optimize("Ofast")
-#pragma GCC target("avx", "fma")
+#pragma GCC optimize("Ofast", "unroll-loops", "omit-frame-pointer")
+#pragma GCC option("arch=native", "tune=native", "no-zero-upper")
+#pragma GCC target("avx2", "fma")
 
 
 #include <string.h>
@@ -80,10 +81,7 @@ float neuralNetworkEvalFromHidden(float* restrict input) {
 
 float neuralNetworkEval(Board* board) {
     float input[HIDDEN_NEURONS];
-    memcpy(input, hiddenBiases, HIDDEN_NEURONS * sizeof(float));
-    boardToInput(board, input);
+    setHidden(board, input);
     addHiddenWeights(board->state.currentBoard + 180, input);
-    applyLeakyReLU(input);
-    float x = multiplyOutputWeights(input) + outputBias + 0.5f;
-    return x < 0? 0 : x > 1? 1 : x;
+    return neuralNetworkEvalFromHidden(input);
 }
