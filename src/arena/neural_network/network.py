@@ -7,11 +7,10 @@ class NeuralNetwork(nn.Module):
         super(NeuralNetwork, self).__init__()
         self.l1 = nn.Linear(190, 256)
         self.l2 = nn.Linear(256, 1)
-        self.relu = nn.LeakyReLU()
 
     def forward(self, x):
         x = self.l1(x)
-        x = self.relu(x)
+        x = torch.clamp(x, min=0, max=1)
         x = self.l2(x)
         x = torch.clamp(x, min=-0.5, max=0.5)
         return x

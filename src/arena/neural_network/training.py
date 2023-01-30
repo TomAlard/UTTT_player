@@ -19,11 +19,13 @@ class PositionDataset(Dataset):
             self.amount_of_lines = f.tell() // self.POSITIONS_LINE_LENGTH
             f.seek(0)
             self.positions = np.fromfile(f, dtype=np.uint8).reshape((self.amount_of_lines, self.POSITIONS_LINE_LENGTH))
+            self.positions = torch.from_numpy(self.positions)
         with open(evaluations_filename, 'rb') as f:
             evals = []
             while e := f.read(self.EVALUATIONS_LINE_LENGTH):
                 evals.append(float(e) - 0.5)
             self.evaluations = np.array(evals, dtype=np.float32)
+            self.evaluations = torch.from_numpy(self.evaluations)
 
     def __len__(self):
         return self.amount_of_lines
@@ -75,7 +77,7 @@ def main():
 
     training_data = PositionDataset(True)
     testing_data = PositionDataset(False)
-    train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=4, persistent_workers=True,
+    train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=8, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
     model = NeuralNetwork().cuda()
