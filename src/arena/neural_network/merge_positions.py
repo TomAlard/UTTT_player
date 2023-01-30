@@ -2,7 +2,7 @@ import os
 import csv
 import random
 
-PATH = 'D:/new_positions'
+PATH = '../new_positions'
 
 
 def merge():

@@ -7,27 +7,30 @@ from neural_network.network import NeuralNetwork, WeightClipper
 
 
 class PositionDataset(Dataset):
-    LINE_SIZE = 30
-    SPLIT_INDEX = 24
+    POSITIONS_LINE_LENGTH = 24
+    EVALUATIONS_LINE_LENGTH = 6
 
-    def __init__(self, filename: str):
-        with open(filename, 'rb') as f:
+    def __init__(self, is_train: bool):
+        base_filename = f"../{'train' if is_train else 'test'}_compressed"
+        positions_filename = f'{base_filename}_positions.csv'
+        evaluations_filename = f'{base_filename}_evaluations.csv'
+        with open(positions_filename, 'rb') as f:
             f.seek(0, 2)
-            self.amount_of_lines = f.tell() // self.LINE_SIZE
+            self.amount_of_lines = f.tell() // self.POSITIONS_LINE_LENGTH
             f.seek(0)
-            self.data = f.read()
+            self.positions = np.fromfile(f, dtype=np.uint8).reshape((self.amount_of_lines, self.POSITIONS_LINE_LENGTH))
+        with open(evaluations_filename, 'rb') as f:
+            evals = []
+            while e := f.read(self.EVALUATIONS_LINE_LENGTH):
+                evals.append(float(e) - 0.5)
+            self.evaluations = np.array(evals, dtype=np.float32)
 
     def __len__(self):
         return self.amount_of_lines
 
     def __getitem__(self, index):
-        pos = index * self.LINE_SIZE
-        position = self.data[pos:pos+self.SPLIT_INDEX]
-        evaluation = self.data[pos+self.SPLIT_INDEX:pos+self.LINE_SIZE]
-        X = np.frombuffer(position, dtype=np.uint8)
-        X = np.unpackbits(X)[:190]
-        X = torch.from_numpy(X).to(torch.float32)
-        y = torch.tensor([float(evaluation)], dtype=torch.float32)
+        X = np.unpackbits(self.positions[index])[:190].astype(np.float32)
+        y = self.evaluations[index].reshape((1,))
         return X, y
 
 
@@ -66,16 +69,16 @@ def test_loop(dataloader, model, loss_fn):
 
 
 def main():
-    learning_rate = 0.001
+    learning_rate = 0.1
     batch_size = 1024
     epochs = 1000
 
-    training_data = PositionDataset('../old_train_positions2.csv')
-    testing_data = PositionDataset('../old_test_positions2.csv')
+    training_data = PositionDataset(True)
+    testing_data = PositionDataset(False)
     train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=4, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
-    model = torch.load('model_latest.pth')
+    model = NeuralNetwork().cuda()
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
     for i in range(epochs):

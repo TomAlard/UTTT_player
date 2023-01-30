@@ -1,13 +1,13 @@
 import csv
 
 
-def convert(position) -> bytes:
+def convert(position) -> (bytes, bytes):
     if len(position) != 8 or sum(map(len, position)) != 190:
-        return b''
+        return b'', b''
     try:
         float(position[6])
     except ValueError:
-        return b''
+        return b'', b''
     current_board = ['0'] * 10
     current_board[int(position[5])] = '1'
     current_board = ''.join(current_board)
@@ -16,27 +16,29 @@ def convert(position) -> bytes:
     else:
         X = position[3] + position[1] + position[2] + position[0] + current_board + '00'
     b = bytes(int(X[i:i+8], 2) for i in range(0, len(X), 8))
-    return b + bytes(position[6], encoding='UTF-8')
+    return b, bytes(position[6], encoding='UTF-8')
 
 
-def convert_positions(filename):
+def convert_positions(filename, new_filename):
     with open(filename, 'r') as read_file:
         reader = csv.reader(read_file, delimiter=',')
         next(reader)
         converted = map(convert, reader)
-        with open(filename[:-4] + '2.csv', 'wb') as write_file:
-            i = 0
-            for position in converted:
-                if position != b'':
-                    write_file.write(position)
-                if i % 100_000 == 0:
-                    print(f'{i:>7d}/?')
-                i += 1
+        with open(f'../{new_filename}_compressed_positions.csv', 'wb') as positions_file:
+            with open(f'../{new_filename}_compressed_evaluations.csv', 'wb') as evaluations_file:
+                i = 0
+                for position, evaluation in converted:
+                    if position != b'' and evaluation != b'':
+                        positions_file.write(position)
+                        evaluations_file.write(evaluation)
+                    if i % 100_000 == 0:
+                        print(f'{i:>7d}/?')
+                    i += 1
 
 
 def main():
-    convert_positions('../train_positions.csv')
-    convert_positions('../test_positions.csv')
+    convert_positions('../train_positions.csv', 'train')
+    convert_positions('../test_positions.csv', 'test')
 
 
 if __name__ == '__main__':

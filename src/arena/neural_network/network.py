@@ -6,19 +6,14 @@ class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
         self.l1 = nn.Linear(190, 256)
-        self.l2 = nn.Linear(256, 32)
-        self.l3 = nn.Linear(32, 32)
-        self.l4 = nn.Linear(32, 1)
+        self.l2 = nn.Linear(256, 1)
+        self.relu = nn.LeakyReLU()
 
     def forward(self, x):
         x = self.l1(x)
-        x = torch.clamp(x, min=0, max=1)
+        x = self.relu(x)
         x = self.l2(x)
-        x = torch.clamp(x, min=0, max=1)
-        x = self.l3(x)
-        x = torch.clamp(x, min=0, max=1)
-        x = self.l4(x)
-        x = torch.clamp(x, min=0, max=1)
+        x = torch.clamp(x, min=-0.5, max=0.5)
         return x
 
 
