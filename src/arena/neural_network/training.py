@@ -1,16 +1,18 @@
+import math
 import torch
 from torch import nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import IterableDataset, DataLoader
 import numpy as np
 from time import time
 from neural_network.network import NeuralNetwork, WeightClipper
 
 
-class PositionDataset(Dataset):
+class PositionDataset(IterableDataset):
     POSITIONS_LINE_LENGTH = 24
     EVALUATIONS_LINE_LENGTH = 6
 
-    def __init__(self, is_train: bool):
+    def __init__(self, is_train: bool, batch_size: int):
+        self.batch_size = batch_size
         base_filename = f"../{'train' if is_train else 'test'}_compressed"
         positions_filename = f'{base_filename}_positions.csv'
         evaluations_filename = f'{base_filename}_evaluations.csv'
@@ -30,18 +32,31 @@ class PositionDataset(Dataset):
     def __len__(self):
         return self.amount_of_lines
 
-    def __getitem__(self, index):
-        X = np.unpackbits(self.positions[index])[:190].astype(np.float32)
-        y = self.evaluations[index].reshape((1,))
-        return X, y
+    def __iter__(self):
+        end = self.amount_of_lines - self.batch_size
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is None:
+            iter_start = 0
+            iter_end = end
+        else:
+            per_worker = int(math.ceil(end / float(worker_info.num_workers)))
+            worker_id = worker_info.id
+            iter_start = worker_id * per_worker
+            iter_end = min(iter_start + per_worker, end)
+        for i in range(iter_start, iter_end, self.batch_size):
+            X = np.unpackbits(self.positions[i:i+self.batch_size], axis=1)[:, :190].astype(np.float32)
+            y = self.evaluations[i:i+self.batch_size].reshape((self.batch_size, 1))
+            result = np.hstack((X, y))
+            yield from result
 
 
-def train_loop(dataloader, model, loss_fn, optimizer):
+def train_loop(dataloader, model, loss_fn, optimizer, batch_size):
     size = len(dataloader.dataset)
     train_loss = 0
     clipper = WeightClipper()
-    for i, (X, y) in enumerate(dataloader):
-        X, y = X.cuda(), y.cuda()
+    for i, tensor in enumerate(dataloader):
+        tensor = tensor.cuda()
+        X, y = tensor[:, :-1], tensor[:, -1].reshape((batch_size, 1))
         pred = model(X)
         loss = loss_fn(pred, y)
         train_loss += loss.item()
@@ -58,36 +73,39 @@ def train_loop(dataloader, model, loss_fn, optimizer):
     print(f'Train average loss: {train_loss:>8f}')
 
 
-def test_loop(dataloader, model, loss_fn):
+def test_loop(dataloader, model, loss_fn, batch_size, scheduler):
     test_loss = 0
     with torch.no_grad():
-        for X, y in dataloader:
-            X, y = X.cuda(), y.cuda()
+        for tensor in dataloader:
+            tensor = tensor.cuda()
+            X, y = tensor[:, :-1], tensor[:, -1].reshape((batch_size, 1))
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
     num_batches = len(dataloader)
     test_loss /= num_batches
+    scheduler.step(test_loss)
     print(f'Test average loss: {test_loss:>8f}')
 
 
 def main():
-    learning_rate = 0.1
-    batch_size = 1024
+    learning_rate = 0.4
+    batch_size = 4096
     epochs = 1000
 
-    training_data = PositionDataset(True)
-    testing_data = PositionDataset(False)
+    training_data = PositionDataset(True, batch_size)
+    testing_data = PositionDataset(False, batch_size)
     train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=8, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
-    model = NeuralNetwork().cuda()
+    model = torch.load('model_latest.pth')
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=0.5)
     for i in range(epochs):
         print(f'Epoch {i+1}\n-------------------------------')
         start = time()
-        train_loop(train_dataloader, model, loss_fn, optimizer)
-        test_loop(test_dataloader, model, loss_fn)
+        train_loop(train_dataloader, model, loss_fn, optimizer, batch_size)
+        test_loop(test_dataloader, model, loss_fn, batch_size, scheduler)
         print(f'Epoch completed in {time() - start:<7f}\n')
         torch.save(model, 'model_latest.pth')
 
