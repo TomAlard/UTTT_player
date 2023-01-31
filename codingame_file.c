@@ -295,10 +295,6 @@ typedef struct Board {
     Player me;
 } Board;
 
-Square openSquares[512][9][9];
-int8_t amountOfOpenSquares[512];
-Winner winnerByBigBoards[512][512];
-
 Board* createBoard();
 
 void freeBoard(Board* board);
@@ -545,6 +541,11 @@ bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
 
 
 // START BOARD
+Square openSquares[512][9][9];
+int8_t amountOfOpenSquares[512];
+Winner winnerByBigBoards[512][512];
+
+
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
     int8_t amountOfMoves = 0;
     while (bitBoard) {

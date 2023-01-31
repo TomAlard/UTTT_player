@@ -97,7 +97,7 @@ def main():
     train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=8, persistent_workers=True,
                                   pin_memory=True)
     test_dataloader = DataLoader(testing_data, batch_size=batch_size)
-    model = torch.load('model_latest.pth')
+    model = NeuralNetwork().cuda()
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=0.5)

@@ -49,10 +49,9 @@ void boardToInput(Board* board, float* restrict output) {
 }
 
 
-#define NEGATIVE_SLOPE 0.01f
-void applyLeakyReLU(float* restrict input) {
+void applyClippedReLU(float* restrict input) {
     for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        input[i] = input[i] < 0? input[i] * NEGATIVE_SLOPE : input[i];
+        input[i] = input[i] <= 0? 0 : input[i] >= 1? 1 : input[i];
     }
 }
 
@@ -73,7 +72,7 @@ void setHidden(Board* board, float* restrict input) {
 
 
 float neuralNetworkEvalFromHidden(float* restrict input) {
-    applyLeakyReLU(input);
+    applyClippedReLU(input);
     float x = multiplyOutputWeights(input) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
