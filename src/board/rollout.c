@@ -40,7 +40,7 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 Winner rollout(Board* board, RNG* rng, int gameId) {
     double randomDouble = ((double) rand() / RAND_MAX);  // NOLINT(cert-msc50-cpp)
     assert(randomDouble >= 0 && randomDouble <= 1);
-    if (gameId != -1 && randomDouble < 0.003) {
+    if (gameId != -1 && randomDouble < 0.0001) {
         MCTSNode* root = createMCTSRootNode();
         Board boardCopy = *board;
         boardCopy.stateCheckpoint = boardCopy.state;
