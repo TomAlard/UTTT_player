@@ -1,9 +1,10 @@
 import math
+import time
 import torch
 from torch import nn
 from torch.utils.data import IterableDataset, DataLoader
+import ranger
 import numpy as np
-from time import time
 from neural_network.network import NeuralNetwork, WeightClipper
 
 
@@ -46,17 +47,15 @@ class PositionDataset(IterableDataset):
         for i in range(iter_start, iter_end, self.batch_size):
             X = np.unpackbits(self.positions[i:i+self.batch_size], axis=1)[:, :190].astype(np.float32)
             y = self.evaluations[i:i+self.batch_size].reshape((self.batch_size, 1))
-            result = np.hstack((X, y))
-            yield from result
+            yield X, y
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, batch_size):
     size = len(dataloader.dataset)
     train_loss = 0
     clipper = WeightClipper()
-    for i, tensor in enumerate(dataloader):
-        tensor = tensor.cuda()
-        X, y = tensor[:, :-1], tensor[:, -1].reshape((batch_size, 1))
+    for i, (X, y) in enumerate(dataloader):
+        X, y = X.cuda(), y.cuda()
         pred = model(X)
         loss = loss_fn(pred, y)
         train_loss += loss.item()
@@ -66,47 +65,46 @@ def train_loop(dataloader, model, loss_fn, optimizer, batch_size):
         if i % clipper.frequency == 0:
             model.apply(clipper)
         if i % 10_000 == 0:
-            loss, current = loss.item(), i * len(X)
+            loss, current = loss.item(), i * len(X) * batch_size
             print(f'loss: {loss:>7f} [{current:>7d}/{size:>7d}]')
-    num_batches = len(dataloader)
+    num_batches = len(dataloader) // batch_size
     train_loss /= num_batches
     print(f'Train average loss: {train_loss:>8f}')
 
 
-def test_loop(dataloader, model, loss_fn, batch_size, scheduler):
+def test_loop(dataloader, model, loss_fn, batch_size):
     test_loss = 0
     with torch.no_grad():
-        for tensor in dataloader:
-            tensor = tensor.cuda()
-            X, y = tensor[:, :-1], tensor[:, -1].reshape((batch_size, 1))
+        for X, y in dataloader:
+            X, y = X.cuda(), y.cuda()
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
-    num_batches = len(dataloader)
+    num_batches = len(dataloader) // batch_size
     test_loss /= num_batches
-    scheduler.step(test_loss)
     print(f'Test average loss: {test_loss:>8f}')
 
 
 def main():
-    learning_rate = 0.4
-    batch_size = 4096
-    epochs = 1000
+    learning_rate = 0.001
+    batch_size = 16384
+    epochs = 600
 
     training_data = PositionDataset(True, batch_size)
-    testing_data = PositionDataset(False, batch_size)
-    train_dataloader = DataLoader(training_data, batch_size=batch_size, num_workers=8, persistent_workers=True,
+    # testing_data = PositionDataset(False, batch_size)
+    train_dataloader = DataLoader(training_data, batch_size=1, num_workers=8, persistent_workers=True,
                                   pin_memory=True)
-    test_dataloader = DataLoader(testing_data, batch_size=batch_size)
-    model = NeuralNetwork().cuda()
+    # test_dataloader = DataLoader(testing_data, batch_size=1)
+    model = torch.load('model_latest.pth')
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, factor=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.992)
     for i in range(epochs):
         print(f'Epoch {i+1}\n-------------------------------')
-        start = time()
+        start = time.time()
         train_loop(train_dataloader, model, loss_fn, optimizer, batch_size)
-        test_loop(test_dataloader, model, loss_fn, batch_size, scheduler)
-        print(f'Epoch completed in {time() - start:<7f}\n')
+        # test_loop(test_dataloader, model, loss_fn, batch_size)
+        scheduler.step()
+        print(f'Epoch completed in {time.time() - start:<7f}\n')
         torch.save(model, 'model_latest.pth')
 
 

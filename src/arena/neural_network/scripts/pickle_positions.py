@@ -31,7 +31,7 @@ def convert_positions(filename, new_filename):
                     if position != b'' and evaluation != b'':
                         positions_file.write(position)
                         evaluations_file.write(evaluation)
-                    if i % 100_000 == 0:
+                    if i % 1_000_000 == 0:
                         print(f'{i:>7d}/?')
                     i += 1
 

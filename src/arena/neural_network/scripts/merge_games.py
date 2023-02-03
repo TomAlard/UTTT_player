@@ -5,7 +5,7 @@ import random
 
 def merge():
     all_positions = []
-    for _, _, files in os.walk("../games"):
+    for _, _, files in os.walk("../../games"):
         for filename in files:
             with open(f'../games/{filename}', 'r') as f:
                 contents = f.read()
