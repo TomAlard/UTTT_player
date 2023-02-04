@@ -1,7 +1,7 @@
 import torch
 import shutil
 
-VERSION = 'NNUE_100ms'
+VERSION = 'MCTS_20ms'
 MODEL_FILENAME = '../model_latest.pth'
 
 

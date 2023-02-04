@@ -3,7 +3,6 @@ import time
 import torch
 from torch import nn
 from torch.utils.data import IterableDataset, DataLoader
-import ranger
 import numpy as np
 from neural_network.network import NeuralNetwork, WeightClipper
 
@@ -50,8 +49,7 @@ class PositionDataset(IterableDataset):
             yield X, y
 
 
-def train_loop(dataloader, model, loss_fn, optimizer, batch_size):
-    size = len(dataloader.dataset)
+def train_loop(dataloader, model, loss_fn, optimizer, scheduler, batch_size):
     train_loss = 0
     clipper = WeightClipper()
     for i, (X, y) in enumerate(dataloader):
@@ -64,11 +62,9 @@ def train_loop(dataloader, model, loss_fn, optimizer, batch_size):
         optimizer.step()
         if i % clipper.frequency == 0:
             model.apply(clipper)
-        if i % 10_000 == 0:
-            loss, current = loss.item(), i * len(X) * batch_size
-            print(f'loss: {loss:>7f} [{current:>7d}/{size:>7d}]')
     num_batches = len(dataloader) // batch_size
     train_loss /= num_batches
+    scheduler.step(train_loss)
     print(f'Train average loss: {train_loss:>8f}')
 
 
@@ -85,7 +81,7 @@ def test_loop(dataloader, model, loss_fn, batch_size):
 
 
 def main():
-    learning_rate = 0.001
+    learning_rate = 0.4
     batch_size = 16384
     epochs = 600
 
@@ -94,16 +90,15 @@ def main():
     train_dataloader = DataLoader(training_data, batch_size=1, num_workers=8, persistent_workers=True,
                                   pin_memory=True)
     # test_dataloader = DataLoader(testing_data, batch_size=1)
-    model = torch.load('model_latest.pth')
+    model = NeuralNetwork().cuda()
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.992)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, threshold=0.0002, factor=0.5)
     for i in range(epochs):
-        print(f'Epoch {i+1}\n-------------------------------')
+        print(f'Epoch {i+1}')
         start = time.time()
-        train_loop(train_dataloader, model, loss_fn, optimizer, batch_size)
+        train_loop(train_dataloader, model, loss_fn, optimizer, scheduler, batch_size)
         # test_loop(test_dataloader, model, loss_fn, batch_size)
-        scheduler.step()
         print(f'Epoch completed in {time.time() - start:<7f}\n')
         torch.save(model, 'model_latest.pth')
 
