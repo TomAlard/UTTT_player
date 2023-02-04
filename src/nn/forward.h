@@ -3,11 +3,11 @@
 
 #include "../board/board.h"
 
-void addHiddenWeights(int i, float* restrict output);
+void addHiddenWeights(int i, int16_t* restrict output);
 
-void setHidden(Board* board, float* restrict input);
+void setHidden(Board* board, int16_t* restrict input);
 
-float neuralNetworkEvalFromHidden(float* restrict input);
+float neuralNetworkEvalFromHidden(int16_t* restrict input);
 
 float neuralNetworkEval(Board* board);
 

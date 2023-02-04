@@ -10,14 +10,14 @@
 #define HIDDEN_NEURONS 256
 
 
-void addHiddenWeights(int i, float* restrict output) {
+void addHiddenWeights(int i, int16_t* restrict output) {
     for (int j = 0; j < HIDDEN_NEURONS; j++) {
-        output[j] += hiddenWeights[i][j];
+        output[j] = (int16_t)(output[j] + hiddenWeights[i][j]);
     }
 }
 
 
-void boardToInput(Board* board, float* restrict output) {
+void boardToInput(Board* board, int16_t* restrict output) {
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayer = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayer = p1 + !board->state.currentPlayer;
@@ -49,37 +49,38 @@ void boardToInput(Board* board, float* restrict output) {
 }
 
 
-void applyClippedReLU(float* restrict input) {
+void applyClippedReLU(const int16_t* restrict input, int8_t* restrict output) {
     for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        input[i] = input[i] <= 0? 0 : input[i] >= 1? 1 : input[i];
+        output[i] = (int8_t)(input[i] <= 0? 0 : input[i] >= 127? 127 : input[i]);
     }
 }
 
 
-float multiplyOutputWeights(const float* restrict input) {
-    float result = 0.0f;
+float multiplyOutputWeights(const int8_t* restrict input) {
+    int32_t result = 0;
     for (int i = 0; i < HIDDEN_NEURONS; i++) {
         result += input[i] * outputWeights[i];
     }
-    return result;
+    return (float)result / (127*64);
 }
 
 
-void setHidden(Board* board, float* restrict input) {
-    memcpy(input, hiddenBiases, HIDDEN_NEURONS * sizeof(float));
+void setHidden(Board* board, int16_t* restrict input) {
+    memcpy(input, hiddenBiases, HIDDEN_NEURONS * sizeof(int16_t));
     boardToInput(board, input);
 }
 
 
-float neuralNetworkEvalFromHidden(float* restrict input) {
-    applyClippedReLU(input);
-    float x = multiplyOutputWeights(input) + outputBias + 0.5f;
+float neuralNetworkEvalFromHidden(int16_t* restrict input) {
+    int8_t output[HIDDEN_NEURONS];
+    applyClippedReLU(input, output);
+    float x = multiplyOutputWeights(output) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
 
 
 float neuralNetworkEval(Board* board) {
-    float input[HIDDEN_NEURONS];
+    int16_t input[HIDDEN_NEURONS];
     setHidden(board, input);
     addHiddenWeights(board->state.currentBoard + 180, input);
     return neuralNetworkEvalFromHidden(input);

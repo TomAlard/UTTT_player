@@ -101,12 +101,12 @@ bool isBadMove(Board* board, Square square) {
 
 
 void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
-    float NNInputs[256];
+    int16_t NNInputs[256];
     board->state.currentPlayer ^= 1;
     setHidden(board, NNInputs);
     board->state.currentPlayer ^= 1;
-    float originalNNInputs[256];
-    memcpy(originalNNInputs, NNInputs, 256 * sizeof(float));
+    int16_t originalNNInputs[256];
+    memcpy(originalNNInputs, NNInputs, 256 * sizeof(int16_t));
     int8_t amountOfMoves = parent->amountOfChildren;
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayerBitBoard = p1 + board->state.currentPlayer;
@@ -138,7 +138,7 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
         addHiddenWeights((smallBoardIsDecided? ANY_BOARD : move.position) + 180, NNInputs);
         float eval = neuralNetworkEvalFromHidden(NNInputs);
         initializeMCTSNode(parent, move, eval, child);
-        memcpy(NNInputs, originalNNInputs, 256 * sizeof(float));
+        memcpy(NNInputs, originalNNInputs, 256 * sizeof(int16_t));
     }
 }
 
