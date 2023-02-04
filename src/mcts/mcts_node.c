@@ -114,7 +114,7 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
     int j = 0;
     for (int i = 0; i < amountOfMoves; i++) {
         Square move = moves[i];
-        if (isBadMove(board, move)) {
+        if (isBadMove(board, move) && parent->amountOfChildren > 1) {
             parent->amountOfChildren--;
             continue;
         }
@@ -127,7 +127,6 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
             addHiddenWeights(move.board + 90, NNInputs);
-
         } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
