@@ -40,16 +40,16 @@ void makeRandomTemporaryMove(Board* board, RNG* rng) {
 Winner rollout(Board* board, RNG* rng, int gameId) {
     double randomDouble = ((double) rand() / RAND_MAX);  // NOLINT(cert-msc50-cpp)
     assert(randomDouble >= 0 && randomDouble <= 1);
-    if (gameId != -1 && randomDouble < 0.0001) {
+    if (gameId != -1 && randomDouble < 0.001) {
         MCTSNode* root = createMCTSRootNode();
         Board boardCopy = *board;
         boardCopy.stateCheckpoint = boardCopy.state;
-        findNextMove(&boardCopy, root, rng, 1, -1);
+        findNextMove(&boardCopy, root, rng, 0.01, -1);
         float winrate = getWinrate(root);
         Square bestMove = getMostPromisingMove(root);
         freeMCTSTree(root);
         char buffer[1000];
-        snprintf(buffer, 1000, "./src/arena/positions/fix2_game_%d_positions.csv", gameId);
+        snprintf(buffer, 1000, "./src/arena/positions_mcts_20ms/game_%d_positions.csv", gameId);
         FILE* file = fopen(buffer, "a");
         writePositionToFile(&board->state, file, winrate, bestMove);
         fclose(file);

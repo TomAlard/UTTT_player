@@ -8,7 +8,7 @@
 #include "../misc/util.h"
 
 
-#define ROUNDS 24
+#define ROUNDS 1000000000
 #define TIME 0.1
 
 
