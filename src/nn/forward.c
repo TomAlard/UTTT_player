@@ -3,7 +3,7 @@
 #pragma GCC target("avx2", "fma")
 
 
-#include <string.h>
+#include <immintrin.h>
 #include "forward.h"
 #include "parameters.h"
 
@@ -11,41 +11,56 @@
 
 
 void addHiddenWeights(int i, int16_t* restrict output) {
-    output = __builtin_assume_aligned(output, 32);
     for (int j = 0; j < HIDDEN_NEURONS; j++) {
-        output[j] = (int16_t)(output[j] + hiddenWeights[i][j]);
+        output[j] = (int16_t) (output[j] + hiddenWeights[i][j]);
+    }
+}
+
+
+void addFeature(int feature, __m256i regs[16]) {
+    for (int i = 0; i < 16; i++) {
+        regs[i] = _mm256_add_epi16(regs[i], _mm256_load_si256((__m256i*) &hiddenWeights[feature][i * 16]));
     }
 }
 
 
 void boardToInput(Board* board, int16_t* restrict output) {
+    __m256i regs[16];
+    for (int i = 0; i < 16; i++) {
+        regs[i] = _mm256_load_si256((__m256i*) &hiddenBiases[i * 16]);
+    }
+
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayer = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayer = p1 + !board->state.currentPlayer;
     uint16_t bigBoard = currentPlayer->bigBoard;
     while (bigBoard) {
-        addHiddenWeights(__builtin_ffs(bigBoard) - 1, output);
+        addFeature(__builtin_ffs(bigBoard) - 1, regs);
         bigBoard &= bigBoard - 1;
     }
     for (int i = 0; i < 9; i++) {
         uint16_t smallBoard = currentPlayer->smallBoards[i];
         while (smallBoard) {
-            addHiddenWeights(__builtin_ffs(smallBoard) + 8 + 9 * i, output);
+            addFeature(__builtin_ffs(smallBoard) + 8 + 9 * i, regs);
             smallBoard &= smallBoard - 1;
         }
     }
 
     bigBoard = otherPlayer->bigBoard;
     while (bigBoard) {
-        addHiddenWeights(__builtin_ffs(bigBoard) + 89, output);
+        addFeature(__builtin_ffs(bigBoard) + 89, regs);
         bigBoard &= bigBoard - 1;
     }
     for (int i = 0; i < 9; i++) {
         uint16_t smallBoard = otherPlayer->smallBoards[i];
         while (smallBoard) {
-            addHiddenWeights(__builtin_ffs(smallBoard) + 98 + 9 * i, output);
+            addFeature(__builtin_ffs(smallBoard) + 98 + 9 * i, regs);
             smallBoard &= smallBoard - 1;
         }
+    }
+
+    for (int i = 0; i < 16; i++) {
+        _mm256_store_si256((__m256i*) &output[i * 16], regs[i]);
     }
 }
 
@@ -67,7 +82,6 @@ float multiplyOutputWeights(const int8_t* restrict input) {
 
 
 void setHidden(Board* board, int16_t* restrict input) {
-    memcpy(input, hiddenBiases, HIDDEN_NEURONS * sizeof(int16_t));
     boardToInput(board, input);
 }
 
@@ -81,7 +95,7 @@ float neuralNetworkEvalFromHidden(int16_t* restrict input) {
 
 
 float neuralNetworkEval(Board* board) {
-    int16_t input[HIDDEN_NEURONS];
+    alignas(32) int16_t input[HIDDEN_NEURONS];
     setHidden(board, input);
     addHiddenWeights(board->state.currentBoard + 180, input);
     return neuralNetworkEvalFromHidden(input);
