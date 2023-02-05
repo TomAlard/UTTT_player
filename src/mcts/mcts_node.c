@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <string.h>
 #include <emmintrin.h>
+#include <stdalign.h>
 #include "mcts_node.h"
 #include "../misc/util.h"
 #include "../nn/forward.h"
@@ -101,11 +102,11 @@ bool isBadMove(Board* board, Square square) {
 
 
 void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
-    int16_t NNInputs[256];
+    alignas(32) int16_t NNInputs[256];
     board->state.currentPlayer ^= 1;
     setHidden(board, NNInputs);
     board->state.currentPlayer ^= 1;
-    int16_t originalNNInputs[256];
+    alignas(32) int16_t originalNNInputs[256];
     memcpy(originalNNInputs, NNInputs, 256 * sizeof(int16_t));
     int8_t amountOfMoves = parent->amountOfChildren;
     PlayerBitBoard* p1 = &board->state.player1;

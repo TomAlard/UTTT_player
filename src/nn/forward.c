@@ -11,6 +11,7 @@
 
 
 void addHiddenWeights(int i, int16_t* restrict output) {
+    output = __builtin_assume_aligned(output, 32);
     for (int j = 0; j < HIDDEN_NEURONS; j++) {
         output[j] = (int16_t)(output[j] + hiddenWeights[i][j]);
     }
