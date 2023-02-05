@@ -3,9 +3,8 @@
 #pragma GCC target("avx2", "fma")
 
 
-#include <immintrin.h>
+#include <stdalign.h>
 #include "forward.h"
-#include "parameters.h"
 
 #define HIDDEN_NEURONS 256
 
@@ -13,13 +12,6 @@
 void addHiddenWeights(int i, int16_t* restrict output) {
     for (int j = 0; j < HIDDEN_NEURONS; j++) {
         output[j] = (int16_t) (output[j] + hiddenWeights[i][j]);
-    }
-}
-
-
-void addFeature(int feature, __m256i regs[16]) {
-    for (int i = 0; i < 16; i++) {
-        regs[i] = _mm256_add_epi16(regs[i], _mm256_load_si256((__m256i*) &hiddenWeights[feature][i * 16]));
     }
 }
 
@@ -96,7 +88,7 @@ float neuralNetworkEvalFromHidden(int16_t* restrict input) {
 
 float neuralNetworkEval(Board* board) {
     alignas(32) int16_t input[HIDDEN_NEURONS];
-    setHidden(board, input);
+    boardToInput(board, input);
     addHiddenWeights(board->state.currentBoard + 180, input);
     return neuralNetworkEvalFromHidden(input);
 }

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <emmintrin.h>
+#include <immintrin.h>
 #include <stdalign.h>
 #include "mcts_node.h"
 #include "../misc/util.h"
@@ -106,40 +106,45 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
     board->state.currentPlayer ^= 1;
     setHidden(board, NNInputs);
     board->state.currentPlayer ^= 1;
-    alignas(32) int16_t originalNNInputs[256];
-    memcpy(originalNNInputs, NNInputs, 256 * sizeof(int16_t));
     int8_t amountOfMoves = parent->amountOfChildren;
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayerBitBoard = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayerBitBoard = p1 + !board->state.currentPlayer;
-    int j = 0;
+    int childIndex = 0;
+    __m256i regs[16];
     for (int i = 0; i < amountOfMoves; i++) {
+        for (int j = 0; j < 16; j++) {
+            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
+        }
         Square move = moves[i];
         if (isBadMove(board, move) && parent->amountOfChildren > 1) {
             parent->amountOfChildren--;
             continue;
         }
-        MCTSNode* child = &parent->children[j++];
-        addHiddenWeights(move.position + 99 + 9*move.board, NNInputs);
+        MCTSNode* child = &parent->children[childIndex++];
+        addFeature(move.position + 99 + 9*move.board, regs);
         uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
         if (isWin(smallBoard)) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            addHiddenWeights(move.board + 90, NNInputs);
+            addFeature(move.board + 90, regs);
         } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            addHiddenWeights(move.board, NNInputs);
-            addHiddenWeights(move.board + 90, NNInputs);
+            addFeature(move.board, regs);
+            addFeature(move.board + 90, regs);
         } else {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard, move.position);
         }
-        addHiddenWeights((smallBoardIsDecided? ANY_BOARD : move.position) + 180, NNInputs);
-        float eval = neuralNetworkEvalFromHidden(NNInputs);
+        addFeature((smallBoardIsDecided? ANY_BOARD : move.position) + 180, regs);
+        alignas(32) int16_t result[256];
+        for (int j = 0; j < 16; j++) {
+            _mm256_store_si256((__m256i*) &result[j * 16], regs[j]);
+        }
+        float eval = neuralNetworkEvalFromHidden(result);
         initializeMCTSNode(parent, move, eval, child);
-        memcpy(NNInputs, originalNNInputs, 256 * sizeof(int16_t));
     }
 }
 
