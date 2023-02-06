@@ -113,13 +113,13 @@ void initializeChildNodes(MCTSNode* parent, Board* board, Square* moves) {
     int childIndex = 0;
     __m256i regs[16];
     for (int i = 0; i < amountOfMoves; i++) {
-        for (int j = 0; j < 16; j++) {
-            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
-        }
         Square move = moves[i];
         if (isBadMove(board, move) && parent->amountOfChildren > 1) {
             parent->amountOfChildren--;
             continue;
+        }
+        for (int j = 0; j < 16; j++) {
+            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
         }
         MCTSNode* child = &parent->children[childIndex++];
         addFeature(move.position + 99 + 9*move.board, regs);
