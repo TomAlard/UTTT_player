@@ -5,8 +5,8 @@
 #include "../board/board.h"
 
 typedef struct MCTSNode {
-    struct MCTSNode* parent;
-    struct MCTSNode* children;
+    int parentIndex;
+    int childrenIndex;
     float eval;
     float sims;
     float simsInverted;
@@ -14,25 +14,25 @@ typedef struct MCTSNode {
     int8_t amountOfChildren;
 } MCTSNode;
 
-MCTSNode* createMCTSRootNode(Board* board);
+int createMCTSRootNode(Board* board);
 
-void discoverChildNodes(MCTSNode* node, Board* board);
+void discoverChildNodes(int nodeIndex, Board* board);
 
-bool isLeafNode(MCTSNode* node);
+bool isLeafNode(int nodeIndex, Board* board);
 
-MCTSNode* selectNextChild(MCTSNode* node);
+int selectNextChild(Board* board, int nodeIndex);
 
-MCTSNode* expandLeaf(MCTSNode* leaf, Board* board);
+MCTSNode* expandLeaf(int leafIndex, Board* board);
 
-MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square);
+int updateRoot(MCTSNode* root, Board* board, Square square);
 
-void backpropagate(MCTSNode* node, Winner winner, Player player);
+void backpropagate(Board* board, int nodeIndex, Winner winner, Player player);
 
-void backpropagateEval(MCTSNode* node);
+void backpropagateEval(Board* board, MCTSNode* node);
 
-void visitNode(MCTSNode* node, Board* board);
+void visitNode(int nodeIndex, Board* board);
 
-Square getMostPromisingMove(MCTSNode* node);
+Square getMostPromisingMove(Board* board, MCTSNode* node);
 
 float getEval(MCTSNode* node);
 

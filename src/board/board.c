@@ -81,12 +81,9 @@ void freeBoard(Board* board) {
 }
 
 
-MCTSNode* allocateNodes(Board* board, uint8_t amount) {
-    if (amount > NUM_NODES - board->currentNodeIndex) {
-        board->currentNodeIndex = 0;
-    }
-    MCTSNode* result = &board->nodes[board->currentNodeIndex];
-    board->currentNodeIndex += amount;
+int allocateNodes(Board* board, uint8_t amount) {
+    int result = (amount > NUM_NODES - board->currentNodeIndex)? 0 : board->currentNodeIndex;
+    board->currentNodeIndex = result + amount;
     return result;
 }
 

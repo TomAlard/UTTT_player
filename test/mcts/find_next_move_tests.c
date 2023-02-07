@@ -7,14 +7,14 @@
 
 void findNextMoveDoesNotChangeBoard() {
     Board* board = createBoard();
-    MCTSNode* root = createMCTSRootNode(board);
+    int rootIndex = createMCTSRootNode(board);
     while (getWinner(board) == NONE) {
         Winner winnerBefore = getWinner(board);
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountMovesBefore;
         Square* movesBefore = generateMoves(board, movesArray, &amountMovesBefore);
-        findNextMove(board, root, 0.005);
-        Square nextMove = getMostPromisingMove(root);
+        findNextMove(board, rootIndex, 0.005);
+        Square nextMove = getMostPromisingMove(board, &board->nodes[rootIndex]);
         myAssert(winnerBefore == getWinner(board));
         int8_t amountMovesAfter;
         Square* movesAfter = generateMoves(board, movesArray, &amountMovesAfter);
@@ -23,7 +23,7 @@ void findNextMoveDoesNotChangeBoard() {
             myAssert(squaresAreEqual(movesBefore[i], movesAfter[i]));
         }
         makePermanentMove(board, nextMove);
-        root = updateRoot(root, board, nextMove);
+        rootIndex = updateRoot(&board->nodes[rootIndex], board, nextMove);
     }
     freeBoard(board);
 }
@@ -31,13 +31,13 @@ void findNextMoveDoesNotChangeBoard() {
 
 void findNextMoveUsesAsMuchTimeAsWasGiven() {
     Board* board = createBoard();
-    MCTSNode* root = createMCTSRootNode(board);
+    int rootIndex = createMCTSRootNode(board);
     while (getWinner(board) == NONE) {
         struct timeval start, end;
         int timeMs = 100;
         gettimeofday(&start, NULL);
-        findNextMove(board, root, timeMs / 1000.0);
-        Square nextMove = getMostPromisingMove(root);
+        findNextMove(board, rootIndex, timeMs / 1000.0);
+        Square nextMove = getMostPromisingMove(board, &board->nodes[rootIndex]);
         gettimeofday(&end, NULL);
         double elapsedTime = (double) (end.tv_sec - start.tv_sec) * 1000.0;
         elapsedTime += (double) (end.tv_usec - start.tv_usec) / 1000.0;
@@ -46,7 +46,7 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
             printf("%f\n", elapsedTime);
         }
         makePermanentMove(board, nextMove);
-        root = updateRoot(root, board, nextMove);
+        rootIndex = updateRoot(&board->nodes[rootIndex], board, nextMove);
     }
     freeBoard(board);
 }

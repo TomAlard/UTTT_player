@@ -34,31 +34,32 @@ Square handleOpening(Board* board) {
 }
 
 
-MCTSNode* handleEnemyTurn(Board* board, MCTSNode* root, Square enemyMove) {
+int handleEnemyTurn(Board* board, int rootIndex, Square enemyMove) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
         setMe(board, PLAYER1);
-        return root;
+        return rootIndex;
     }
-    discoverChildNodes(root, board);
-    MCTSNode* newRoot = updateRoot(root, board, enemyMove);
+    discoverChildNodes(rootIndex, board);
+    int newRootIndex = updateRoot(&board->nodes[rootIndex], board, enemyMove);
     makePermanentMove(board, enemyMove);
-    return newRoot;
+    return newRootIndex;
 }
 
 
-HandleTurnResult handleTurn(Board* board, MCTSNode* root, double allocatedTime, Square enemyMove) {
-    root = handleEnemyTurn(board, root, enemyMove);
+HandleTurnResult handleTurn(Board* board, int rootIndex, double allocatedTime, Square enemyMove) {
+    rootIndex = handleEnemyTurn(board, rootIndex, enemyMove);
+    MCTSNode* root = &board->nodes[rootIndex];
     Square openingMove = handleOpening(board);
     if (openingMove.board != 9) {
-        MCTSNode* newRoot = updateRoot(root, board, openingMove);
+        int newRootIndex = updateRoot(root, board, openingMove);
         makePermanentMove(board, openingMove);
-        HandleTurnResult result = {openingMove, newRoot, 0};
+        HandleTurnResult result = {openingMove, newRootIndex, 0};
         return result;
     }
-    int amountOfSimulations = findNextMove(board, root, allocatedTime);
-    Square move = getMostPromisingMove(root);
-    MCTSNode* newRoot = updateRoot(root, board, move);
+    int amountOfSimulations = findNextMove(board, rootIndex, allocatedTime);
+    Square move = getMostPromisingMove(board, root);
+    int newRootIndex = updateRoot(root, board, move);
     makePermanentMove(board, move);
-    HandleTurnResult result = {move, newRoot, amountOfSimulations};
+    HandleTurnResult result = {move, newRootIndex, amountOfSimulations};
     return result;
 }

@@ -12,13 +12,13 @@
 
 Winner simulateSingleGame(bool weArePlayer1) {
     Board* board = createBoard();
-    MCTSNode* root = createMCTSRootNode(board);
+    int rootIndex = createMCTSRootNode(board);
     StateOpponent* stateOpponent = initializeStateOpponent();
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;
     while (getWinner(board) == NONE && stateOpponent != NULL) {
         if (weAreCurrentPlayer) {
-            previousMove = playTurn(board, &root, TIME, previousMove);
+            previousMove = playTurn(board, &rootIndex, TIME, previousMove);
         } else {
             previousMove = playTurnOpponent(&stateOpponent, TIME, previousMove);
         }

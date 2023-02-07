@@ -13,6 +13,8 @@
       <file path="$PROJECT_DIR$/src/arena/new_positions" />
       <file path="$PROJECT_DIR$/src/arena/positions" />
       <file path="$PROJECT_DIR$/src/arena/positions_jacekmax" />
+      <file path="$PROJECT_DIR$/src/arena/positions_jacekmax_100ms" />
+      <file path="$PROJECT_DIR$/src/arena/positions_mcts_20ms" />
     </excludeRoots>
   </component>
 </project>

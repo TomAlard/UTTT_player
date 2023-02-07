@@ -5,10 +5,10 @@
 
 typedef struct HandleTurnResult {
     Square move;
-    MCTSNode* newRoot;
+    int newRootIndex;
     int amountOfSimulations;
 } HandleTurnResult;
 
-HandleTurnResult handleTurn(Board* board, MCTSNode* root, double allocatedTime, Square enemyMove);
+HandleTurnResult handleTurn(Board* board, int rootIndex, double allocatedTime, Square enemyMove);
 
 #endif //UTTT2_HANDLE_TURN_H

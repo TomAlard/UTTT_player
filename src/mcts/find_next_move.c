@@ -3,13 +3,13 @@
 #include "../misc/util.h"
 
 
-MCTSNode* selectLeaf(Board* board, MCTSNode* root) {
-    MCTSNode* currentNode = root;
-    while (!isLeafNode(currentNode) && getWinner(board) == NONE) {
-        currentNode = selectNextChild(currentNode);
-        visitNode(currentNode, board);
+int selectLeaf(Board* board, int rootIndex) {
+    int currentNodeIndex = rootIndex;
+    while (!isLeafNode(currentNodeIndex, board) && getWinner(board) == NONE) {
+        currentNodeIndex = selectNextChild(board, currentNodeIndex);
+        visitNode(currentNodeIndex, board);
     }
-    return currentNode;
+    return currentNodeIndex;
 }
 
 
@@ -21,18 +21,18 @@ bool hasTimeRemaining(struct timeval start, double allocatedTime) {
 }
 
 
-int findNextMove(Board* board, MCTSNode* root, double allocatedTime) {
+int findNextMove(Board* board, int rootIndex, double allocatedTime) {
     int amountOfSimulations = 0;
     struct timeval start;
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
-        MCTSNode* leaf = selectLeaf(board, root);
+        int leafIndex = selectLeaf(board, rootIndex);
         Winner winner = getWinner(board);
         Player player = OTHER_PLAYER(getCurrentPlayer(board));
         if (winner == NONE) {
-            backpropagateEval(expandLeaf(leaf, board));
+            backpropagateEval(board, expandLeaf(leafIndex, board));
         } else {
-            backpropagate(leaf, winner, player);
+            backpropagate(board, leafIndex, winner, player);
         }
         revertToCheckpoint(board);
     }

@@ -8,12 +8,12 @@ void profileSimulations() {
     int totalSims = 0;
     for (int i = 0; i < runs; i++) {
         Board* board = createBoard();
-        MCTSNode* root = createMCTSRootNode(board);
+        int rootIndex = createMCTSRootNode(board);
         Square square = createSquare(1, 0);
-        discoverChildNodes(root, board);
-        root = updateRoot(root, board, square);
+        discoverChildNodes(rootIndex, board);
+        rootIndex = updateRoot(&board->nodes[rootIndex], board, square);
         makePermanentMove(board, square);
-        totalSims += findNextMove(board, root, 0.1);
+        totalSims += findNextMove(board, rootIndex, 0.1);
         freeBoard(board);
     }
     printf("Amount of simulations on second move: %d\n", totalSims / runs);
