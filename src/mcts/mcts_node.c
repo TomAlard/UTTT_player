@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <immintrin.h>
@@ -8,11 +7,16 @@
 #include "../nn/forward.h"
 
 
-MCTSNode* createMCTSRootNode() {
-    MCTSNode* root = safe_calloc(sizeof(MCTSNode));
-    root->amountOfChildren = -1;
+MCTSNode* createMCTSRootNode(Board* board) {
+    MCTSNode* root = allocateNodes(board, 1);
+    root->parent = NULL;
+    root->children = NULL;
+    root->eval = 0.0f;
+    root->sims = 0.0f;
+    root->simsInverted = 0.0f;
     root->square.board = 9;
     root->square.position = 9;
+    root->amountOfChildren = -1;
     return root;
 }
 
@@ -28,8 +32,8 @@ void initializeMCTSNode(MCTSNode* parent, Square square, float eval, MCTSNode* n
 }
 
 
-MCTSNode* copyMCTSNode(MCTSNode* original) {
-    MCTSNode* copy = safe_malloc(sizeof(MCTSNode));
+MCTSNode* copyMCTSNode(Board* board, MCTSNode* original) {
+    MCTSNode* copy = allocateNodes(board, 1);
     copy->parent = original->parent;
     copy->children = original->children;
     copy->eval = original->eval;
@@ -41,22 +45,6 @@ MCTSNode* copyMCTSNode(MCTSNode* original) {
         copy->children[i].parent = copy;
     }
     return copy;
-}
-
-
-void freeMCTSTreeRecursive(MCTSNode* node) {
-    for (int i = 0; i < node->amountOfChildren; i++) {
-        freeMCTSTreeRecursive(&node->children[i]);
-    }
-    free(node->children);
-}
-
-
-void freeMCTSTree(MCTSNode* root) {
-    freeMCTSTreeRecursive(root);
-    if (root->parent == NULL) {
-        free(root);
-    }
 }
 
 
@@ -73,7 +61,7 @@ float getEvalOfMove(Board* board, Square square) {
 
 void singleChild(MCTSNode* node, Board* board, Square square) {
     node->amountOfChildren = 1;
-    node->children = safe_malloc(sizeof(MCTSNode));
+    node->children = allocateNodes(board, 1);
     float eval = getEvalOfMove(board, square);
     initializeMCTSNode(node, square, eval, &node->children[0]);
 }
@@ -164,7 +152,7 @@ void discoverChildNodes(MCTSNode* node, Board* board) {
             }
         }
         node->amountOfChildren = amountOfMoves;
-        node->children = safe_malloc(amountOfMoves * sizeof(MCTSNode));
+        node->children = allocateNodes(board, amountOfMoves);
         initializeChildNodes(node, board, moves);
     }
 }
@@ -229,10 +217,8 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &root->children[i];
         if (squaresAreEqual(square, child->square)) {
-            assert(newRoot == NULL && "updateRoot: multiple children with same square found");
             newRoot = child;
-        } else {
-            freeMCTSTree(child);
+            break;
         }
     }
     if (newRoot == NULL) {
@@ -241,20 +227,16 @@ MCTSNode* updateRoot(MCTSNode* root, Board* board, Square square) {
         Square* moves = generateMoves(board, movesArray, &amountOfMoves);
         for (int i = 0; i < amountOfMoves; i++) {
             if (squaresAreEqual(moves[i], square)) {
-                MCTSNode temp;
-                float eval = getEvalOfMove(board, square);
-                initializeMCTSNode(NULL, square, eval, &temp);
-                newRoot = copyMCTSNode(&temp);
+                newRoot = allocateNodes(board, 1);
+                initializeMCTSNode(NULL, square, 0.0f, newRoot);
                 break;
             }
         }
         assert(newRoot != NULL);
     } else {
         newRoot->parent = NULL;
-        newRoot = copyMCTSNode(newRoot);
+        newRoot = copyMCTSNode(board, newRoot);
     }
-    free(root->children);
-    free(root);
     return newRoot;
 }
 

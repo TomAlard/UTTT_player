@@ -12,7 +12,7 @@
 
 Winner simulateSingleGame(bool weArePlayer1) {
     Board* board = createBoard();
-    MCTSNode* root = createMCTSRootNode();
+    MCTSNode* root = createMCTSRootNode(board);
     StateOpponent* stateOpponent = initializeStateOpponent();
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;
@@ -30,7 +30,6 @@ Winner simulateSingleGame(bool weArePlayer1) {
     Winner winner = getWinner(board);
     assert(winner != NONE && "simulateSingleGame: oops");
     freeStateOpponent(stateOpponent);
-    freeMCTSTree(root);
     freeBoard(board);
     return winner;
 }

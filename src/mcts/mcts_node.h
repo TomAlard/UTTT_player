@@ -14,9 +14,7 @@ typedef struct MCTSNode {
     int8_t amountOfChildren;
 } MCTSNode;
 
-MCTSNode* createMCTSRootNode();
-
-void freeMCTSTree(MCTSNode* root);
+MCTSNode* createMCTSRootNode(Board* board);
 
 void discoverChildNodes(MCTSNode* node, Board* board);
 

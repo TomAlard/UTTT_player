@@ -17,15 +17,21 @@ typedef struct State {
     uint8_t ply;
 } State;
 
+typedef struct MCTSNode MCTSNode;
+
 typedef struct Board {
     State state;
     State stateCheckpoint;
+    MCTSNode* nodes;
+    uint32_t currentNodeIndex;
     Player me;
 } Board;
 
 Board* createBoard();
 
 void freeBoard(Board* board);
+
+MCTSNode* allocateNodes(Board* board, uint8_t amount);
 
 Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
 

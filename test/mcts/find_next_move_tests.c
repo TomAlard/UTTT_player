@@ -7,7 +7,7 @@
 
 void findNextMoveDoesNotChangeBoard() {
     Board* board = createBoard();
-    MCTSNode* root = createMCTSRootNode();
+    MCTSNode* root = createMCTSRootNode(board);
     while (getWinner(board) == NONE) {
         Winner winnerBefore = getWinner(board);
         Square movesArray[TOTAL_SMALL_SQUARES];
@@ -25,14 +25,13 @@ void findNextMoveDoesNotChangeBoard() {
         makePermanentMove(board, nextMove);
         root = updateRoot(root, board, nextMove);
     }
-    freeMCTSTree(root);
     freeBoard(board);
 }
 
 
 void findNextMoveUsesAsMuchTimeAsWasGiven() {
     Board* board = createBoard();
-    MCTSNode* root = createMCTSRootNode();
+    MCTSNode* root = createMCTSRootNode(board);
     while (getWinner(board) == NONE) {
         struct timeval start, end;
         int timeMs = 100;
@@ -49,7 +48,6 @@ void findNextMoveUsesAsMuchTimeAsWasGiven() {
         makePermanentMove(board, nextMove);
         root = updateRoot(root, board, nextMove);
     }
-    freeMCTSTree(root);
     freeBoard(board);
 }
 

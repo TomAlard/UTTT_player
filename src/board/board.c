@@ -1,6 +1,7 @@
 #include <string.h>
 #include <assert.h>
 #include "board.h"
+#include "../mcts/mcts_node.h"
 #include "../misc/util.h"
 
 
@@ -43,8 +44,11 @@ Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard) {
 }
 
 
+#define MEGABYTE (1024*1024ULL)
+#define NODES_SIZE (512*MEGABYTE)
+#define NUM_NODES (NODES_SIZE / sizeof(MCTSNode))
 Board* createBoard() {
-    Board* board = safe_malloc(sizeof(Board));
+    Board* board = safeMalloc(sizeof(Board));
     initializePlayerBitBoard(&board->state.player1);
     initializePlayerBitBoard(&board->state.player2);
     board->state.currentPlayer = PLAYER1;
@@ -52,6 +56,9 @@ Board* createBoard() {
     board->state.winner = NONE;
     board->state.ply = 0;
     board->stateCheckpoint = board->state;
+    board->nodes = safeMalloc(NUM_NODES * sizeof(MCTSNode));
+    board->currentNodeIndex = 0;
+    board->me = PLAYER2;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
             amountOfOpenSquares[bitBoard] =
@@ -64,13 +71,23 @@ Board* createBoard() {
             winnerByBigBoards[player1BigBoard][player2BigBoard] = winner;
         }
     }
-    board->me = PLAYER2;
     return board;
 }
 
 
 void freeBoard(Board* board) {
-    safe_free(board);
+    safeFree(board->nodes);
+    safeFree(board);
+}
+
+
+MCTSNode* allocateNodes(Board* board, uint8_t amount) {
+    if (amount > NUM_NODES - board->currentNodeIndex) {
+        board->currentNodeIndex = 0;
+    }
+    MCTSNode* result = &board->nodes[board->currentNodeIndex];
+    board->currentNodeIndex += amount;
+    return result;
 }
 
 

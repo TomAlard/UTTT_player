@@ -19,6 +19,6 @@ void runTests() {
     runMCTSNodeTests();
     printf("FindNextMove tests...\n");
     runFindNextMoveTests();
-    printf("Amount of simulations on second move: ");
+    printf("Profile simulations...\n");
     profileSimulations();
 }

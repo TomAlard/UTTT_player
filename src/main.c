@@ -35,7 +35,7 @@ Square playTurn(Board* board, MCTSNode** root, double allocatedTime, Square enem
 
 void playGame(FILE* file, double timePerMove) {
     Board* board = createBoard();
-    MCTSNode* root = createMCTSRootNode();
+    MCTSNode* root = createMCTSRootNode(board);
     while (true) {
         int enemy_row;
         int enemy_col;
@@ -50,14 +50,13 @@ void playGame(FILE* file, double timePerMove) {
         root = result.newRoot;
         printMove(root, result.move, result.amountOfSimulations);
     }
-    freeMCTSTree(root);
     freeBoard(board);
 }
 
 
 #define TIME 0.0999
 int main() {
-    // runTests();
-    runArena();
+    runTests();
+    // runArena();
     // playGame(stdin, TIME);
 }
