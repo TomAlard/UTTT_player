@@ -35,7 +35,14 @@ float getEvalOfMove(Board* board, Square square) {
     State temp = board->stateCheckpoint;
     updateCheckpoint(board);
     makeTemporaryMove(board, square);
-    float eval = neuralNetworkEval(board);
+    float eval;
+    Player player = OTHER_PLAYER(board->state.currentPlayer);
+    Winner winner = board->state.winner;
+    if (winner != NONE) {
+        eval = winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
+    } else {
+        eval = neuralNetworkEval(board);
+    }
     revertToCheckpoint(board);
     board->stateCheckpoint = temp;
     return eval;
