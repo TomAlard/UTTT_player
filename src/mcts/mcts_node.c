@@ -74,13 +74,14 @@ bool handleSpecialCases(int nodeIndex, Board* board) {
 }
 
 
-bool isBadMove(Board* board, Square square) {
+bool isBadMove(Board* board, Square square, Winner winner, Player player) {
+    bool isProvenLoss = (winner == WIN_P1 && player == PLAYER2) || (winner == WIN_P2 && player == PLAYER1);
     bool sendsToDecidedBoard = (board->state.player1.bigBoard | board->state.player2.bigBoard) & (1 << square.position);
-    return sendsToDecidedBoard && getPly(board) <= 30;
+    return isProvenLoss || (sendsToDecidedBoard && getPly(board) <= 30);
 }
 
 
-void initializeChildNodes(int parentIndex, Board* board, Square* moves) {
+void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* winners) {
     MCTSNode* parent = &board->nodes[parentIndex];
     alignas(32) int16_t NNInputs[256];
     board->state.currentPlayer ^= 1;
@@ -93,8 +94,12 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves) {
     int childIndex = 0;
     for (int i = 0; i < amountOfMoves; i++) {
         Square move = moves[i];
-        if (isBadMove(board, move) && parent->amountOfChildren > 1) {
+        if (isBadMove(board, move, winners[i], board->state.currentPlayer) && parent->amountOfChildren > 1) {
             parent->amountOfChildren--;
+            continue;
+        } else if (winners[i] == DRAW) {
+            MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
+            initializeMCTSNode(parentIndex, move, 0.5f, child);
             continue;
         }
         MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
@@ -135,18 +140,23 @@ void discoverChildNodes(int nodeIndex, Board* board) {
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves;
         Square* moves = generateMoves(board, movesArray, &amountOfMoves);
+        Player player = getCurrentPlayer(board);
+        Winner winners[amountOfMoves];
+        memset(winners, NONE, amountOfMoves * sizeof(Winner));
         if (getPly(board) > 30) {
-            Player player = getCurrentPlayer(board);
             for (int i = 0; i < amountOfMoves; i++) {
-                if (getWinnerAfterMove(board, moves[i]) == player + 1) {
+                Winner winner = getWinnerAfterMove(board, moves[i]);
+                if (winner == player + 1) {
                     singleChild(nodeIndex, board, moves[i]);
                     return;
+                } else {
+                    winners[i] = winner;
                 }
             }
         }
         node->amountOfChildren = amountOfMoves;
         node->childrenIndex = allocateNodes(board, amountOfMoves);
-        initializeChildNodes(nodeIndex, board, moves);
+        initializeChildNodes(nodeIndex, board, moves, winners);
     }
 }
 
