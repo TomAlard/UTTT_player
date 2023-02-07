@@ -84,21 +84,20 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves) {
     PlayerBitBoard* currentPlayerBitBoard = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayerBitBoard = p1 + !board->state.currentPlayer;
     int childIndex = 0;
-    __m256i regs[16];
     for (int i = 0; i < amountOfMoves; i++) {
         Square move = moves[i];
         if (isBadMove(board, move) && parent->amountOfChildren > 1) {
             parent->amountOfChildren--;
             continue;
         }
-        for (int j = 0; j < 16; j++) {
-            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
-        }
         MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
-        addFeature(move.position + 99 + 9*move.board, regs);
         uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
+        __m256i regs[16];
+        for (int j = 0; j < 16; j++) {
+            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
+        }
         if (isWin(smallBoard)) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
@@ -111,6 +110,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves) {
         } else {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard, move.position);
         }
+        addFeature(move.position + 99 + 9*move.board, regs);
         addFeature((smallBoardIsDecided? ANY_BOARD : move.position) + 180, regs);
         alignas(32) int16_t result[256];
         for (int j = 0; j < 16; j++) {
