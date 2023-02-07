@@ -14,7 +14,6 @@ int createMCTSRootNode(Board* board) {
     root->childrenIndex = -1;
     root->eval = 0.0f;
     root->sims = 0.0f;
-    root->simsInverted = 0.0f;
     root->square.board = 9;
     root->square.position = 9;
     root->amountOfChildren = -1;
@@ -27,7 +26,6 @@ void initializeMCTSNode(int parentIndex, Square square, float eval, MCTSNode* no
     node->childrenIndex = -1;
     node->eval = eval;
     node->sims = 0.0f;
-    node->simsInverted = 0.0f;
     node->square = square;
     node->amountOfChildren = -1;
 }
@@ -161,7 +159,7 @@ float fastSquareRoot(float x) {
 #define FIRST_PLAY_URGENCY 0.40f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     float exploitation = node->eval;
-    float exploration = node->sims == 0? FIRST_PLAY_URGENCY : fastSquareRoot(parentLogSims * node->simsInverted);
+    float exploration = node->sims == 0? FIRST_PLAY_URGENCY : fastSquareRoot(parentLogSims / node->sims);
     return exploitation + exploration;
 }
 
@@ -250,7 +248,6 @@ void backpropagateEval(Board* board, MCTSNode* node) {
         }
         currentNode->eval = 1 - maxChildEval;
         currentNode->sims++;
-        currentNode->simsInverted = 1.0f / currentNode->sims;
         currentNode = currentNode->parentIndex == -1? NULL : &board->nodes[currentNode->parentIndex];
     }
 }

@@ -9,7 +9,6 @@ typedef struct MCTSNode {
     int childrenIndex;
     float eval;
     float sims;
-    float simsInverted;
     Square square;
     int8_t amountOfChildren;
 } MCTSNode;
