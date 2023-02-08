@@ -61,14 +61,12 @@ Board* createBoard() {
     board->me = PLAYER2;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
-            amountOfOpenSquares[bitBoard] =
-                    setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
+            amountOfOpenSquares[bitBoard] = setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
         }
     }
     for (uint16_t player1BigBoard = 0; player1BigBoard < 512; player1BigBoard++) {
         for (uint16_t player2BigBoard = 0; player2BigBoard < 512; player2BigBoard++) {
-            Winner winner = calculateWinner(player1BigBoard, player2BigBoard);
-            winnerByBigBoards[player1BigBoard][player2BigBoard] = winner;
+            winnerByBigBoards[player1BigBoard][player2BigBoard] = calculateWinner(player1BigBoard, player2BigBoard);
         }
     }
     return board;
@@ -97,8 +95,7 @@ Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMo
 
 int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
     uint16_t bitBoard = ~(board->state.player1.smallBoards[boardIndex] | board->state.player2.smallBoards[boardIndex]) & 511;
-    memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex],
-           amountOfOpenSquares[bitBoard] * sizeof(Square));
+    memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex], amountOfOpenSquares[bitBoard] * sizeof(Square));
     return (int8_t)(amountOfMoves + amountOfOpenSquares[bitBoard]);
 }
 
