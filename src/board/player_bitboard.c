@@ -23,16 +23,6 @@ void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
 }
 
 
-bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board) {
-    return BIT_CHECK(playerBitBoard->bigBoard, board);
-}
-
-
-bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
-    return BIT_CHECK(playerBitBoard->smallBoards[square.board], square.position);
-}
-
-
 bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
     return (smallBoard | otherPlayerSmallBoard) == 511;
 }

@@ -2,6 +2,12 @@
 #include "player_bitboard_tests.h"
 #include "../../src/board/player_bitboard.h"
 #include "../test_util.h"
+#include "../../src/misc/util.h"
+
+
+bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
+    return BIT_CHECK(playerBitBoard->smallBoards[square.board], square.position);
+}
 
 
 void boardInitiallyEmpty() {
@@ -29,6 +35,11 @@ void testSetSquareOccupied() {
             myAssert(squareIsOccupied(&playerBitBoard, square));
         }
     }
+}
+
+
+bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board) {
+    return BIT_CHECK(playerBitBoard->bigBoard, board);
 }
 
 

@@ -12,10 +12,6 @@ typedef struct PlayerBitBoard {
 
 void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard);
 
-bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board);
-
-bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
-
 bool isWin(uint16_t smallBoard);
 
 bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard);

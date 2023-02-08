@@ -153,12 +153,10 @@ void updateCheckpoint(Board* board) {
 
 
 void makeTemporaryMove(Board* board, Square square) {
-    assert(square.board == board->state.currentBoard
-           || board->state.currentBoard == ANY_BOARD &&
-              "Can't make a move on that board");
-    assert(!squareIsOccupied(&board->state.player1, square) && !squareIsOccupied(&board->state.player2, square)
-           && "Can't make a move on a square that is already occupied");
-    assert(board->state.winner == NONE && "Can't make a move when there is already a winner");
+    assert(square.board == board->state.currentBoard || board->state.currentBoard == ANY_BOARD);
+    assert(!BIT_CHECK(board->state.player1.smallBoards[square.board], square.position)
+        && !BIT_CHECK(board->state.player2.smallBoards[square.board], square.position));
+    assert(board->state.winner == NONE);
 
     PlayerBitBoard* p1 = &board->state.player1;
     if (setSquareOccupied(p1 + board->state.currentPlayer, p1 + !board->state.currentPlayer, square)) {
