@@ -8,14 +8,14 @@
 void findNextMoveDoesNotChangeBoard() {
     Board* board = createBoard();
     int rootIndex = createMCTSRootNode(board);
-    while (getWinner(board) == NONE) {
-        Winner winnerBefore = getWinner(board);
+    while (board->state.winner == NONE) {
+        Winner winnerBefore = board->state.winner;
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountMovesBefore;
         Square* movesBefore = generateMoves(board, movesArray, &amountMovesBefore);
         findNextMove(board, rootIndex, 0.005);
         Square nextMove = getMostPromisingMove(board, &board->nodes[rootIndex]);
-        myAssert(winnerBefore == getWinner(board));
+        myAssert(winnerBefore == board->state.winner);
         int8_t amountMovesAfter;
         Square* movesAfter = generateMoves(board, movesArray, &amountMovesAfter);
         myAssert(amountMovesBefore == amountMovesAfter);
@@ -32,7 +32,7 @@ void findNextMoveDoesNotChangeBoard() {
 void findNextMoveUsesAsMuchTimeAsWasGiven() {
     Board* board = createBoard();
     int rootIndex = createMCTSRootNode(board);
-    while (getWinner(board) == NONE) {
+    while (board->state.winner == NONE) {
         struct timeval start, end;
         int timeMs = 100;
         gettimeofday(&start, NULL);

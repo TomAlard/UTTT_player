@@ -37,13 +37,13 @@ void updateRootTest() {
     int rootIndex = createMCTSRootNode(board);
     MCTSNode* root = &board->nodes[rootIndex];
     discoverChildNodes(rootIndex, board);
-    backpropagate(board, root->childrenIndex + 0, DRAW, getCurrentPlayer(board));
+    backpropagate(board, root->childrenIndex + 0, DRAW, board->state.currentPlayer);
     Square square = getMostPromisingMove(board, root);
     makePermanentMove(board, square);
     int newRootIndex = updateRoot(root, board, square);
     MCTSNode* newRoot = &board->nodes[newRootIndex];
     discoverChildNodes(newRootIndex, board);
-    backpropagate(board, newRoot->childrenIndex + 0, DRAW, getCurrentPlayer(board));
+    backpropagate(board, newRoot->childrenIndex + 0, DRAW, board->state.currentPlayer);
     myAssert(getMostPromisingMove(board, newRoot).board == square.position);
     freeBoard(board);
 }
@@ -70,7 +70,7 @@ void updateRootStillWorksWhenPlayedMoveWasPruned() {
 void alwaysPlays44WhenGoingFirst() {
     Board* board = createBoard();
     int rootIndex = createMCTSRootNode(board);
-    setMe(board, PLAYER1);
+    board->me = PLAYER1;
     discoverChildNodes(rootIndex, board);
     Square expected = {4, 4};
     myAssert(squaresAreEqual(getMostPromisingMove(board, &board->nodes[rootIndex]), expected));

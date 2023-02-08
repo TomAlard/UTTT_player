@@ -59,13 +59,13 @@ void singleChild(int nodeIndex, Board* board, Square square) {
 
 
 bool handleSpecialCases(int nodeIndex, Board* board) {
-    if (nextBoardIsEmpty(board) && getPly(board) <= 20) {
-        uint8_t currentBoard = getCurrentBoard(board);
+    if (nextBoardIsEmpty(board) && board->state.ply <= 20) {
+        uint8_t currentBoard = board->state.currentBoard;
         Square sameBoard = {currentBoard, currentBoard};
         singleChild(nodeIndex, board, sameBoard);
         return true;
     }
-    if (currentPlayerIsMe(board) && getPly(board) == 0) {
+    if (currentPlayerIsMe(board) && board->state.ply == 0) {
         Square bestFirstMove = {4, 4};
         singleChild(nodeIndex, board, bestFirstMove);
         return true;
@@ -77,7 +77,7 @@ bool handleSpecialCases(int nodeIndex, Board* board) {
 bool isBadMove(Board* board, Square square, Winner winner, Player player) {
     bool isProvenLoss = (winner == WIN_P1 && player == PLAYER2) || (winner == WIN_P2 && player == PLAYER1);
     bool sendsToDecidedBoard = (board->state.player1.bigBoard | board->state.player2.bigBoard) & (1 << square.position);
-    return isProvenLoss || (sendsToDecidedBoard && getPly(board) <= 30);
+    return isProvenLoss || (sendsToDecidedBoard && board->state.ply <= 30);
 }
 
 
@@ -140,10 +140,10 @@ void discoverChildNodes(int nodeIndex, Board* board) {
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves;
         Square* moves = generateMoves(board, movesArray, &amountOfMoves);
-        Player player = getCurrentPlayer(board);
+        Player player = board->state.currentPlayer;
         Winner winners[amountOfMoves];
         memset(winners, NONE, amountOfMoves * sizeof(Winner));
-        if (getPly(board) > 30) {
+        if (board->state.ply > 30) {
             for (int i = 0; i < amountOfMoves; i++) {
                 Winner winner = getWinnerAfterMove(board, moves[i]);
                 if (winner == player + 1) {
@@ -278,19 +278,14 @@ void visitNode(int nodeIndex, Board* board) {
 Square getMostPromisingMove(Board* board, MCTSNode* node) {
     assert(node->amountOfChildren > 0 && "getMostPromisingMove: node has no children");
     MCTSNode* highestScoreChild = &board->nodes[node->childrenIndex + 0];
-    float highestScore = getEval(highestScoreChild) + fastLog2(highestScoreChild->sims);
+    float highestScore = highestScoreChild->eval + fastLog2(highestScoreChild->sims);
     for (int i = 1; i < node->amountOfChildren; i++) {
         MCTSNode* child = &board->nodes[node->childrenIndex + i];
-        float score = getEval(child) + fastLog2(child->sims);
+        float score = child->eval + fastLog2(child->sims);
         if (score > highestScore) {
             highestScoreChild = child;
             highestScore = score;
         }
     }
     return highestScoreChild->square;
-}
-
-
-float getEval(MCTSNode* node) {
-    return node->eval;
 }

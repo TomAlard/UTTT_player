@@ -5,7 +5,7 @@
 
 int selectLeaf(Board* board, int rootIndex) {
     int currentNodeIndex = rootIndex;
-    while (!isLeafNode(currentNodeIndex, board) && getWinner(board) == NONE) {
+    while (!isLeafNode(currentNodeIndex, board) && board->state.winner == NONE) {
         currentNodeIndex = selectNextChild(board, currentNodeIndex);
         visitNode(currentNodeIndex, board);
     }
@@ -27,8 +27,8 @@ int findNextMove(Board* board, int rootIndex, double allocatedTime) {
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
         int leafIndex = selectLeaf(board, rootIndex);
-        Winner winner = getWinner(board);
-        Player player = OTHER_PLAYER(getCurrentPlayer(board));
+        Winner winner = board->state.winner;
+        Player player = OTHER_PLAYER(board->state.currentPlayer);
         if (winner == NONE) {
             backpropagateEval(board, expandLeaf(leafIndex, board));
         } else {

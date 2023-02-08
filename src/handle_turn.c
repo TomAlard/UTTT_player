@@ -3,7 +3,7 @@
 
 
 Square handleOpening(Board* board) {
-    uint8_t ply = getPly(board);
+    uint8_t ply = board->state.ply;
     Square invalid = {9, 9};
     if (board->me != PLAYER2 || ply > 10) {
         return invalid;
@@ -13,7 +13,7 @@ Square handleOpening(Board* board) {
     bool thirdMove = BIT_CHECK(board->state.player1.smallBoards[0], 0);
     bool fourthMove = BIT_CHECK(board->state.player1.smallBoards[5], 5);
     bool fifthMove = BIT_CHECK(board->state.player1.smallBoards[7], 7);
-    uint8_t currentBoard = getCurrentBoard(board);
+    uint8_t currentBoard = board->state.currentBoard;
     if (ply == 1 && firstMove) {
         Square move = {4, 8};
         return move;
@@ -36,7 +36,7 @@ Square handleOpening(Board* board) {
 
 int handleEnemyTurn(Board* board, int rootIndex, Square enemyMove) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
-        setMe(board, PLAYER1);
+        board->me = PLAYER1;
         return rootIndex;
     }
     discoverChildNodes(rootIndex, board);

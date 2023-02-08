@@ -6,7 +6,7 @@
 #include "../misc/util.h"
 
 
-#define ROUNDS 1000
+#define ROUNDS 100
 #define TIME 0.1
 
 
@@ -16,7 +16,7 @@ Winner simulateSingleGame(bool weArePlayer1) {
     StateOpponent* stateOpponent = initializeStateOpponent();
     Square previousMove = {9, 9};
     bool weAreCurrentPlayer = weArePlayer1;
-    while (getWinner(board) == NONE && stateOpponent != NULL) {
+    while (board->state.winner == NONE && stateOpponent != NULL) {
         if (weAreCurrentPlayer) {
             previousMove = playTurn(board, &rootIndex, TIME, previousMove);
         } else {
@@ -24,10 +24,10 @@ Winner simulateSingleGame(bool weArePlayer1) {
         }
         weAreCurrentPlayer = !weAreCurrentPlayer;
     }
-    if (getWinner(board) == NONE) {
+    if (board->state.winner == NONE) {
         makePermanentMove(board, previousMove);
     }
-    Winner winner = getWinner(board);
+    Winner winner = board->state.winner;
     assert(winner != NONE && "simulateSingleGame: oops");
     freeStateOpponent(stateOpponent);
     freeBoard(board);

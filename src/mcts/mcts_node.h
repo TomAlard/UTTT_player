@@ -33,6 +33,4 @@ void visitNode(int nodeIndex, Board* board);
 
 Square getMostPromisingMove(Board* board, MCTSNode* node);
 
-float getEval(MCTSNode* node);
-
 #endif //UTTT2_MCTS_NODE_H

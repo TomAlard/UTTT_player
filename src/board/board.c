@@ -142,16 +142,6 @@ bool nextBoardIsEmpty(Board* board) {
 }
 
 
-uint8_t getCurrentBoard(Board* board) {
-    return board->state.currentBoard;
-}
-
-
-Player getCurrentPlayer(Board* board) {
-    return board->state.currentPlayer;
-}
-
-
 void revertToCheckpoint(Board* board) {
     board->state = board->stateCheckpoint;
 }
@@ -189,27 +179,12 @@ void makePermanentMove(Board* board, Square square) {
 Winner getWinnerAfterMove(Board* board, Square square) {
     State tempCheckpoint = board->state;
     makeTemporaryMove(board, square);
-    Winner winner = getWinner(board);
+    Winner winner = board->state.winner;
     board->state = tempCheckpoint;
     return winner;
 }
 
 
-Winner getWinner(Board* board) {
-    return board->state.winner;
-}
-
-
-void setMe(Board* board, Player player) {
-    board->me = player;
-}
-
-
 bool currentPlayerIsMe(Board* board) {
     return board->state.currentPlayer == board->me;
-}
-
-
-uint8_t getPly(Board* board) {
-    return board->state.ply;
 }

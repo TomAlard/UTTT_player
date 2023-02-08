@@ -58,7 +58,7 @@ void gameSimulation(int totalAmountOfMoves, Square* playedMoves, const int* poss
         myAssert(amountOfMoves == possibleMoves[i]);
         Square move = toOurNotation(playedMoves[i]);
         makeTemporaryMove(board, move);
-        myAssert(getWinner(board) == (i != totalAmountOfMoves - 1? NONE : expectedWinner));
+        myAssert(board->state.winner == (i != totalAmountOfMoves - 1? NONE : expectedWinner));
     }
     freeBoard(board);
 }
