@@ -57,14 +57,14 @@ void boardToInput(Board* board, int16_t* restrict output) {
 }
 
 
-void applyClippedReLU(const int16_t* restrict input, int8_t* restrict output) {
+void applyClippedReLU(const int16_t* restrict input, int16_t* restrict output) {
     for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        output[i] = (int8_t)(input[i] <= 0? 0 : input[i] >= 127? 127 : input[i]);
+        output[i] = (int16_t)(input[i] <= 0? 0 : input[i] >= 127? 127 : input[i]);
     }
 }
 
 
-float multiplyOutputWeights(const int8_t* restrict input) {
+float multiplyOutputWeights(const int16_t* restrict input) {
     int32_t result = 0;
     for (int i = 0; i < HIDDEN_NEURONS; i++) {
         result += input[i] * outputWeights[i];
@@ -79,7 +79,7 @@ void setHidden(Board* board, int16_t* restrict input) {
 
 
 float neuralNetworkEvalFromHidden(int16_t* restrict input) {
-    int8_t output[HIDDEN_NEURONS];
+    int16_t output[HIDDEN_NEURONS];
     applyClippedReLU(input, output);
     float x = multiplyOutputWeights(output) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
