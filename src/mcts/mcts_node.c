@@ -162,7 +162,7 @@ void discoverChildNodes(int nodeIndex, Board* board) {
 
 
 bool isLeafNode(int nodeIndex, Board* board) {
-    return (&board->nodes[nodeIndex])->sims == 0;
+    return board->nodes[nodeIndex].sims == 0;
 }
 
 
@@ -271,7 +271,7 @@ void backpropagateEval(Board* board, MCTSNode* node) {
 
 
 void visitNode(int nodeIndex, Board* board) {
-    makeTemporaryMove(board, (&board->nodes[nodeIndex])->square);
+    makeTemporaryMove(board, board->nodes[nodeIndex].square);
 }
 
 
