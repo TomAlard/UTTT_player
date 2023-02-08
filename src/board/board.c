@@ -181,8 +181,3 @@ Winner getWinnerAfterMove(Board* board, Square square) {
     board->state = tempCheckpoint;
     return winner;
 }
-
-
-bool currentPlayerIsMe(Board* board) {
-    return board->state.currentPlayer == board->me;
-}

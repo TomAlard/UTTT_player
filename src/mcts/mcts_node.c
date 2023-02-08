@@ -59,13 +59,13 @@ void singleChild(int nodeIndex, Board* board, Square square) {
 
 
 bool handleSpecialCases(int nodeIndex, Board* board) {
-    if (nextBoardIsEmpty(board) && board->state.ply <= 20) {
+    if (board->state.ply <= 20 && nextBoardIsEmpty(board)) {
         uint8_t currentBoard = board->state.currentBoard;
         Square sameBoard = {currentBoard, currentBoard};
         singleChild(nodeIndex, board, sameBoard);
         return true;
     }
-    if (currentPlayerIsMe(board) && board->state.ply == 0) {
+    if (board->state.ply == 0 && board->state.currentPlayer == board->me) {
         Square bestFirstMove = {4, 4};
         singleChild(nodeIndex, board, bestFirstMove);
         return true;

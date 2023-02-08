@@ -49,6 +49,4 @@ void makePermanentMove(Board* board, Square square);
 
 Winner getWinnerAfterMove(Board* board, Square square);
 
-bool currentPlayerIsMe(Board* board);
-
 #endif //UTTT2_BOARD_H
