@@ -39,7 +39,7 @@ float getEvalOfMove(Board* board, Square square) {
     Player player = OTHER_PLAYER(board->state.currentPlayer);
     Winner winner = board->state.winner;
     if (winner != NONE) {
-        eval = winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
+        eval = winner == DRAW? 0.5f : player + 1 == winner? 10000.0f : -10000.0f;
     } else {
         eval = neuralNetworkEval(board);
     }
@@ -195,7 +195,7 @@ int selectNextChild(Board* board, int nodeIndex) {
     assert(node->amountOfChildren > 0);
     float logSims = EXPLORATION_PARAMETER*EXPLORATION_PARAMETER * fastLog2(node->sims);
     int highestUCTChildIndex = -1;
-    float highestUCT = -1.0f;
+    float highestUCT = -100000.0f;
     for (int i = 0; i < node->amountOfChildren; i++) {
         int childIndex = node->childrenIndex + i;
         float UCT = getUCTValue(&board->nodes[childIndex], logSims);
@@ -246,7 +246,7 @@ int updateRoot(MCTSNode* root, Board* board, Square square) {
 void backpropagate(Board* board, int nodeIndex, Winner winner, Player player) {
     assert(winner != NONE && "backpropagate: Can't backpropagate a NONE Winner");
     MCTSNode* node = &board->nodes[nodeIndex];
-    node->eval = winner == DRAW ? 0.5f : player + 1 == winner ? 1.0f : 0.0f;
+    node->eval = winner == DRAW ? 0.5f : player + 1 == winner ? 10000.0f : -10000.0f;
     backpropagateEval(board, node);
 }
 
@@ -258,7 +258,7 @@ void backpropagateEval(Board* board, MCTSNode* node) {
         currentNode = &board->nodes[currentNode->parentIndex];
     }
     while (currentNode != NULL) {
-        float maxChildEval = 0.0f;
+        float maxChildEval = -100000.0f;
         for (int i = 0; i < currentNode->amountOfChildren; i++) {
             float eval = (&board->nodes[currentNode->childrenIndex + i])->eval;
             maxChildEval = maxChildEval >= eval? maxChildEval : eval;

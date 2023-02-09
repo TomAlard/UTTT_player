@@ -6,8 +6,8 @@
 #include "../misc/util.h"
 
 
-#define ROUNDS 100
-#define TIME 0.1
+#define ROUNDS 1000
+#define TIME 0.05
 
 
 Winner simulateSingleGame(bool weArePlayer1) {
