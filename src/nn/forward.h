@@ -11,7 +11,7 @@ inline __attribute__((always_inline)) void addFeature(int feature, __m256i regs[
     }
 }
 
-void setHidden(Board* board, int16_t* restrict input);
+void boardToInput(Board* board, int16_t* restrict output);
 
 float neuralNetworkEvalFromHidden(int16_t* restrict input);
 

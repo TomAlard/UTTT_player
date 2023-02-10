@@ -73,11 +73,6 @@ float multiplyOutputWeights(const int16_t* restrict input) {
 }
 
 
-void setHidden(Board* board, int16_t* restrict input) {
-    boardToInput(board, input);
-}
-
-
 float neuralNetworkEvalFromHidden(int16_t* restrict input) {
     int16_t output[HIDDEN_NEURONS];
     applyClippedReLU(input, output);

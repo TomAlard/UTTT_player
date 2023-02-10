@@ -85,7 +85,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
     MCTSNode* parent = &board->nodes[parentIndex];
     alignas(32) int16_t NNInputs[256];
     board->state.currentPlayer ^= 1;
-    setHidden(board, NNInputs);
+    boardToInput(board, NNInputs);
     board->state.currentPlayer ^= 1;
     int8_t amountOfMoves = parent->amountOfChildren;
     PlayerBitBoard* p1 = &board->state.player1;
