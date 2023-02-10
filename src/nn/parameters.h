@@ -3,12 +3,20 @@
 
 #include <stdint.h>
 
-extern int16_t hiddenWeights[190][256];
+extern int16_t hidden1Weights[190][512];
 
-extern int16_t hiddenBiases[256];
+extern int16_t hidden1Biases[512];
 
-extern int16_t outputWeights[256];
+extern int8_t hidden2Weights[32][512];
 
-extern float outputBias;
+extern int32_t hidden2Biases[32];
+
+extern int8_t hidden3Weights[32][32];
+
+extern int32_t hidden3Biases[32];
+
+extern int8_t hidden4Weights[32];
+
+extern float hidden4Bias;
 
 #endif //UTTT2_PARAMETERS_H

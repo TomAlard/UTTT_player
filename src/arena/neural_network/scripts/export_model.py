@@ -1,8 +1,8 @@
 import torch
 import shutil
 
-VERSION = 'MCTS_20ms'
-MODEL_FILENAME = '../model_latest.pth'
+VERSION = 'MCTS_1s_512_32_32'
+MODEL_FILENAME = 'model_latest.pth'
 
 
 def clamp(n, smallest, largest):
@@ -10,9 +10,8 @@ def clamp(n, smallest, largest):
 
 
 def double_to_int(value, scaling_factor, smallest, largest):
-    return str(round(value, 3))
     x = round(value * scaling_factor)
-    if (x > largest or x < smallest) and scaling_factor == 64:
+    if not (smallest <= x <= largest):
         print(value, x)
     return str(clamp(x, smallest, largest))
 
@@ -36,13 +35,17 @@ def export1d(filename, parameters, scaling_factor, smallest, largest):
 
 
 def main():
-    model = torch.load(MODEL_FILENAME)
-    export2d('hidden_layer_weights.txt', model.l1.weight.T.tolist(), 127, -32768, 32767)
-    export1d('hidden_layer_biases.txt', model.l1.bias.tolist(), 127, -32768, 32767)
-    export1d('output_layer_weights.txt', model.l2.weight.tolist()[0], 64, -127, 128)
-    with open(f'../parameters/{VERSION}/output_layer_bias.txt', 'w') as f:
-        f.write(str(model.l2.bias.item()))
-    shutil.copyfile(MODEL_FILENAME, f'../parameters/{VERSION}/{MODEL_FILENAME[3:]}')
+    model = torch.load(f'../{MODEL_FILENAME}')
+    export2d('hidden1_layer_weights.txt', model.l1.weight.T.tolist(), 127, -32768, 32767)
+    export1d('hidden1_layer_biases.txt', model.l1.bias.tolist(), 127, -32768, 32767)
+    export2d('hidden2_layer_weights.txt', model.l2.weight.tolist(), 64, -128, 127)
+    export1d('hidden2_layer_biases.txt', model.l2.bias.tolist(), 127*64, -32768, 32767)
+    export2d('hidden3_layer_weights.txt', model.l3.weight.tolist(), 64, -128, 127)
+    export1d('hidden3_layer_biases.txt', model.l3.bias.tolist(), 127*64, -32768, 32767)
+    export1d('hidden4_layer_weights.txt', model.l4.weight.tolist()[0], 64, -128, 127)
+    with open(f'../parameters/{VERSION}/hidden4_layer_bias.txt', 'w') as f:
+        f.write(str(model.l4.bias.item()))
+    shutil.copyfile(f'../{MODEL_FILENAME}', f'../parameters/{VERSION}/{MODEL_FILENAME}')
 
 
 if __name__ == '__main__':

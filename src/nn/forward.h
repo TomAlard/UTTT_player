@@ -5,15 +5,14 @@
 #include "../board/board.h"
 #include "parameters.h"
 
-inline __attribute__((always_inline)) void addFeature(int feature, __m256i regs[16]) {
-    for (int i = 0; i < 16; i++) {
-        regs[i] = _mm256_add_epi16(regs[i], _mm256_load_si256((__m256i*) &hiddenWeights[feature][i * 16]));
-    }
-}
+#define HIDDEN1_NEURONS 512
+
+void updateAccumulator(const int16_t* restrict input, int numNewFeatures, const int newFeatures[numNewFeatures],
+                       int16_t* restrict output);
 
 void boardToInput(Board* board, int16_t* restrict output);
 
-float neuralNetworkEvalFromHidden(int16_t* restrict input);
+float neuralNetworkEvalFromAccumulator(const int16_t* restrict input);
 
 float neuralNetworkEval(Board* board);
 

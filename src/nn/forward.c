@@ -1,89 +1,107 @@
-#pragma GCC optimize("Ofast", "unroll-loops", "omit-frame-pointer")
-#pragma GCC option("arch=native", "tune=native", "no-zero-upper")
-#pragma GCC target("avx2", "fma")
-
-
 #include <stdalign.h>
 #include "forward.h"
+#include "clipped_relu.h"
+#include "linear.h"
 
-#define HIDDEN_NEURONS 256
+#define HIDDEN2_NEURONS 32
+#define HIDDEN3_NEURONS 32
 
 
-void addHiddenWeights(int i, int16_t* restrict output) {
-    for (int j = 0; j < HIDDEN_NEURONS; j++) {
-        output[j] = (int16_t) (output[j] + hiddenWeights[i][j]);
+void addAccumulatorWeights(int i, int16_t* restrict output) {
+    for (int j = 0; j < HIDDEN1_NEURONS; j++) {
+        output[j] = (int16_t)(output[j] + hidden1Weights[i][j]);
+    }
+}
+
+
+void updateAccumulator(const int16_t* restrict input, int numNewFeatures, const int newFeatures[numNewFeatures],
+                       int16_t* restrict output) {
+    for (int i = 0; i < 2; i++) {
+        __m256i regs[16];
+        for (int j = 0; j < 16; j++) {
+            regs[j] = _mm256_load_si256((__m256i*) &input[i*256 + j*16]);
+        }
+
+        for (int a = 0; a < numNewFeatures; a++) {
+            int f = newFeatures[a];
+            for (int j = 0; j < 16; j++) {
+                regs[j] = _mm256_add_epi16(regs[j], _mm256_load_si256((__m256i*) &hidden1Weights[f][i*256 + j*16]));
+            }
+        }
+
+        for (int j = 0; j < 16; j++) {
+            _mm256_store_si256((__m256i*) &output[i*256 + j*16], regs[j]);
+        }
     }
 }
 
 
 void boardToInput(Board* board, int16_t* restrict output) {
-    __m256i regs[16];
-    for (int i = 0; i < 16; i++) {
-        regs[i] = _mm256_load_si256((__m256i*) &hiddenBiases[i * 16]);
-    }
-
+    int numActiveFeatures = 0;
+    int activeFeatures[81 + 9*2 + 1];
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayer = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayer = p1 + !board->state.currentPlayer;
     uint16_t bigBoard = currentPlayer->bigBoard;
     while (bigBoard) {
-        addFeature(__builtin_ffs(bigBoard) - 1, regs);
+        activeFeatures[numActiveFeatures++] = __builtin_ffs(bigBoard) - 1;
         bigBoard &= bigBoard - 1;
     }
     for (int i = 0; i < 9; i++) {
         uint16_t smallBoard = currentPlayer->smallBoards[i];
         while (smallBoard) {
-            addFeature(__builtin_ffs(smallBoard) + 8 + 9 * i, regs);
+            activeFeatures[numActiveFeatures++] = __builtin_ffs(smallBoard) + 8 + 9 * i;
             smallBoard &= smallBoard - 1;
         }
     }
 
     bigBoard = otherPlayer->bigBoard;
     while (bigBoard) {
-        addFeature(__builtin_ffs(bigBoard) + 89, regs);
+        activeFeatures[numActiveFeatures++] = __builtin_ffs(bigBoard) + 89;
         bigBoard &= bigBoard - 1;
     }
     for (int i = 0; i < 9; i++) {
         uint16_t smallBoard = otherPlayer->smallBoards[i];
         while (smallBoard) {
-            addFeature(__builtin_ffs(smallBoard) + 98 + 9 * i, regs);
+            activeFeatures[numActiveFeatures++] = __builtin_ffs(smallBoard) + 98 + 9 * i;
             smallBoard &= smallBoard - 1;
         }
     }
-
-    for (int i = 0; i < 16; i++) {
-        _mm256_store_si256((__m256i*) &output[i * 16], regs[i]);
-    }
+    updateAccumulator(hidden1Biases, numActiveFeatures, activeFeatures, output);
 }
 
 
-void applyClippedReLU(const int16_t* restrict input, int16_t* restrict output) {
-    for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        output[i] = (int16_t)(input[i] <= 0? 0 : input[i] >= 127? 127 : input[i]);
-    }
-}
-
-
-float multiplyOutputWeights(const int16_t* restrict input) {
+float multiplyOutputWeights(const int8_t* restrict input) {
     int32_t result = 0;
-    for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        result += input[i] * outputWeights[i];
+    for (int i = 0; i < HIDDEN3_NEURONS; i++) {
+        result += input[i] * hidden4Weights[i];
     }
     return (float)result / (127*64);
 }
 
 
-float neuralNetworkEvalFromHidden(int16_t* restrict input) {
-    int16_t output[HIDDEN_NEURONS];
-    applyClippedReLU(input, output);
-    float x = multiplyOutputWeights(output) + outputBias + 0.5f;
+float neuralNetworkEvalFromAccumulator(const int16_t* restrict input) {
+    alignas(32) int8_t afterReLU1[HIDDEN1_NEURONS];
+    applyClippedReLU512(input, afterReLU1);
+
+    alignas(32) int32_t afterHidden1[HIDDEN2_NEURONS];
+    alignas(32) int8_t afterReLU2[HIDDEN2_NEURONS];
+    applyLinear512_32(afterReLU1, afterHidden1);
+    applyClippedReLU32(afterHidden1, afterReLU2);
+
+    alignas(32) int32_t afterHidden2[HIDDEN3_NEURONS];
+    alignas(32) int8_t afterReLU3[HIDDEN3_NEURONS];
+    applyLinear32_32(afterReLU2, afterHidden2);
+    applyClippedReLU32(afterHidden2, afterReLU3);
+
+    float x = multiplyOutputWeights(afterReLU3) + hidden4Bias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
 
 
 float neuralNetworkEval(Board* board) {
-    alignas(32) int16_t input[HIDDEN_NEURONS];
+    alignas(32) int16_t input[HIDDEN1_NEURONS];
     boardToInput(board, input);
-    addHiddenWeights(board->state.currentBoard + 180, input);
-    return neuralNetworkEvalFromHidden(input);
+    addAccumulatorWeights(board->state.currentBoard + 180, input);
+    return neuralNetworkEvalFromAccumulator(input);
 }

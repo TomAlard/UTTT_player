@@ -83,7 +83,7 @@ bool isBadMove(Board* board, Square square, Winner winner, Player player) {
 
 void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* winners) {
     MCTSNode* parent = &board->nodes[parentIndex];
-    alignas(32) int16_t NNInputs[256];
+    alignas(32) int16_t NNInputs[HIDDEN1_NEURONS];
     board->state.currentPlayer ^= 1;
     boardToInput(board, NNInputs);
     board->state.currentPlayer ^= 1;
@@ -106,29 +106,25 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
         uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
-        __m256i regs[16];
-        for (int j = 0; j < 16; j++) {
-            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
-        }
+        int numNewFeatures = 0;
+        int newFeatures[4];
         if (isWin(smallBoard)) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            addFeature(move.board + 90, regs);
+            newFeatures[numNewFeatures++] = move.board + 90;
         } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            addFeature(move.board, regs);
-            addFeature(move.board + 90, regs);
+            newFeatures[numNewFeatures++] = move.board;
+            newFeatures[numNewFeatures++] = move.board + 90;
         } else {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard, move.position);
         }
-        addFeature(move.position + 99 + 9*move.board, regs);
-        addFeature((smallBoardIsDecided? ANY_BOARD : move.position) + 180, regs);
-        alignas(32) int16_t result[256];
-        for (int j = 0; j < 16; j++) {
-            _mm256_store_si256((__m256i*) &result[j * 16], regs[j]);
-        }
-        float eval = neuralNetworkEvalFromHidden(result);
+        newFeatures[numNewFeatures++] = move.position + 99 + 9*move.board;
+        newFeatures[numNewFeatures++] = (smallBoardIsDecided? ANY_BOARD : move.position) + 180;
+        alignas(32) int16_t result[HIDDEN1_NEURONS];
+        updateAccumulator(NNInputs, numNewFeatures, newFeatures, result);
+        float eval = neuralNetworkEvalFromAccumulator(result);
         initializeMCTSNode(parentIndex, move, eval, child);
     }
 }

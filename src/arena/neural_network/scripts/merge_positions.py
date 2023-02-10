@@ -1,7 +1,7 @@
 import os
 import random
 
-PATH = '../positions_mcts_20ms'
+PATH = '../new_positions'
 LINE_SIZE = 197
 
 
