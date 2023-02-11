@@ -7,7 +7,6 @@
 
 Square openSquares[512][9][9];
 int8_t amountOfOpenSquares[512];
-Winner winnerByBigBoards[512][512];
 
 
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
@@ -21,14 +20,11 @@ int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBo
 }
 
 
-Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard) {
-    uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
-    uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
-    if (isWin(boardsWonByPlayer1)) {
+Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard, Player currentPlayer) {
+    if (currentPlayer == PLAYER1 && isWin(player1BigBoard & (player1BigBoard ^ player2BigBoard))) {
         return WIN_P1;
     }
-    uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
-    if (isWin(boardsWonByPlayer2)) {
+    if (currentPlayer == PLAYER2 && isWin(player2BigBoard & (player1BigBoard ^ player2BigBoard))) {
         return WIN_P2;
     }
     if ((player1BigBoard | player2BigBoard) == 511) {
@@ -62,11 +58,6 @@ Board* createBoard() {
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
             amountOfOpenSquares[bitBoard] = setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
-        }
-    }
-    for (uint16_t player1BigBoard = 0; player1BigBoard < 512; player1BigBoard++) {
-        for (uint16_t player2BigBoard = 0; player2BigBoard < 512; player2BigBoard++) {
-            winnerByBigBoards[player1BigBoard][player2BigBoard] = calculateWinner(player1BigBoard, player2BigBoard);
         }
     }
     return board;
@@ -157,7 +148,7 @@ void makeTemporaryMove(Board* board, Square square) {
 
     PlayerBitBoard* p1 = &board->state.player1;
     if (setSquareOccupied(p1 + board->state.currentPlayer, p1 + !board->state.currentPlayer, square)) {
-        board->state.winner = winnerByBigBoards[board->state.player1.bigBoard][board->state.player2.bigBoard];
+        board->state.winner = calculateWinner(board->state.player1.bigBoard, board->state.player2.bigBoard, board->state.currentPlayer);
     }
     board->state.currentPlayer ^= 1;
     board->state.currentBoard = getNextBoard(board, square.position);
