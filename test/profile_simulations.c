@@ -9,7 +9,7 @@ void profileSimulations() {
     for (int i = 0; i < runs; i++) {
         Board* board = createBoard();
         int rootIndex = createMCTSRootNode(board);
-        Square square = createSquare(1, 0);
+        Square square = {1, 0};
         discoverChildNodes(rootIndex, board);
         rootIndex = updateRoot(&board->nodes[rootIndex], board, square);
         makePermanentMove(board, square);
