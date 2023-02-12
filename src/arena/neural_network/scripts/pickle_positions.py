@@ -1,6 +1,14 @@
 import csv
 
 
+def set_one(value):
+    if value == 0:
+        return b'0' * 5
+    result = [b'0'] * 5
+    result[value - 1] = b'1'
+    return b''.join(result)
+
+
 def convert(position) -> (bytes, bytes):
     if len(position) != 8 or sum(map(len, position)) != 190:
         return b'', b''
@@ -8,14 +16,24 @@ def convert(position) -> (bytes, bytes):
         float(position[6])
     except ValueError:
         return b'', b''
-    current_board = ['0'] * 10
-    current_board[int(position[5])] = '1'
-    current_board = ''.join(current_board)
-    if position[4] == '0':
-        X = position[2] + position[0] + position[3] + position[1] + current_board + '00'
-    else:
-        X = position[3] + position[1] + position[2] + position[0] + current_board + '00'
-    b = bytes(int(X[i:i+8], 2) for i in range(0, len(X), 8))
+    cp_is_p1 = position[4] == '0'
+    result = b''
+    bb_iter = zip(position[2], position[3]) if cp_is_p1 else zip(position[3], position[2])
+    for i, (cp_bb, op_bb) in enumerate(bb_iter):
+        cp_set, op_set = cp_bb == '1', op_bb == '1'
+        if cp_set or op_set:
+            value = 5 if cp_set and op_set else 3 if cp_set else 4
+            result += set_one(value) * 9
+            continue
+        sb_iter = (zip(position[0][9*i:9*(i+1)], position[1][9*i:9*(i+1)]) if cp_is_p1
+                   else zip(position[1][9*i:9*(i+1)], position[0][9*i:9*(i+1)]))
+        for cp_sb, op_sb in sb_iter:
+            value = 1 if cp_sb == '1' else 2 if op_sb == '1' else 0
+            result += set_one(value)
+    current_board = [b'0'] * 10
+    current_board[int(position[5])] = b'1'
+    result += b''.join(current_board) + b'0'
+    b = bytes(int(result[i:i+8], 2) for i in range(0, len(result), 8))
     return b, bytes(position[6], encoding='UTF-8')
 
 

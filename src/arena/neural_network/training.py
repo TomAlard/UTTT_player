@@ -7,7 +7,7 @@ from neural_network.network import NeuralNetwork, WeightClipper
 
 
 class PositionDataset(Dataset):
-    POSITIONS_LINE_LENGTH = 24
+    POSITIONS_LINE_LENGTH = 52
     EVALUATIONS_LINE_LENGTH = 6
 
     def __init__(self, is_train: bool, batch_size: int):
@@ -33,7 +33,7 @@ class PositionDataset(Dataset):
 
     def __getitem__(self, index):
         i = index * self.batch_size
-        X = np.unpackbits(self.positions[i:i+self.batch_size], axis=1)[:, :190].astype(np.float32)
+        X = np.unpackbits(self.positions[i:i+self.batch_size], axis=1)[:, :415].astype(np.float32)
         y = self.evaluations[i:i+self.batch_size].reshape((self.batch_size, 1))
         return torch.from_numpy(X), y
 
@@ -83,7 +83,7 @@ def main():
     train_dataloader = DataLoader(training_data, batch_size=1, num_workers=4, persistent_workers=True,
                                   pin_memory=True, collate_fn=identity)
     test_dataloader = DataLoader(testing_data, batch_size=1, collate_fn=identity)
-    model = NeuralNetwork().cuda()
+    model = torch.load('model_latest.pth')
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, nesterov=True)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, threshold=0.0002, factor=0.5)
