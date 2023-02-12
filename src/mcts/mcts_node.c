@@ -106,24 +106,27 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
         uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
-        int numNewFeatures = 0;
-        int newFeatures[4];
+        __m256i regs[16];
+        for (int j = 0; j < 16; j++) {
+            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
+        }
         if (isWin(smallBoard)) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            newFeatures[numNewFeatures++] = move.board + 90;
+            setBoardValues(regs, currentPlayerBitBoard, otherPlayerBitBoard, move.board, 3);
         } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            newFeatures[numNewFeatures++] = move.board;
-            newFeatures[numNewFeatures++] = move.board + 90;
+            setBoardValues(regs, currentPlayerBitBoard, otherPlayerBitBoard, move.board, 4);
         } else {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard, move.position);
+            addFeature(regs, move.board*45 + move.position*5 + 1);
         }
-        newFeatures[numNewFeatures++] = move.position + 99 + 9*move.board;
-        newFeatures[numNewFeatures++] = (smallBoardIsDecided? ANY_BOARD : move.position) + 180;
+        addFeature(regs, 405 + (smallBoardIsDecided? ANY_BOARD : move.position));
         alignas(32) int16_t result[HIDDEN1_NEURONS];
-        updateAccumulator(NNInputs, numNewFeatures, newFeatures, result);
+        for (int j = 0; j < 16; j++) {
+            _mm256_store_si256((__m256i*) &result[j * 16], regs[j]);
+        }
         float eval = neuralNetworkEvalFromAccumulator(result);
         initializeMCTSNode(parentIndex, move, eval, child);
     }

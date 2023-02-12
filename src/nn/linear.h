@@ -25,13 +25,13 @@ inline __attribute__((always_inline)) __m128i m256_haddx4(__m256i sum0, __m256i 
 }
 
 
-inline __attribute__((always_inline)) void applyLinear512_32(const int8_t* input, int32_t* output) {
+inline __attribute__((always_inline)) void applyLinear256_32(const int8_t* input, int32_t* output) {
     for (int i = 0; i < 8; i++) {
         __m256i sum0 = _mm256_setzero_si256();
         __m256i sum1 = _mm256_setzero_si256();
         __m256i sum2 = _mm256_setzero_si256();
         __m256i sum3 = _mm256_setzero_si256();
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < 8; j++) {
             __m256i in = _mm256_load_si256((__m256i*) &input[j * 32]);
             m256_add_dpbusd_epi32(&sum0, in, _mm256_load_si256((__m256i*) &hidden2Weights[i*4 + 0][j * 32]));
             m256_add_dpbusd_epi32(&sum1, in, _mm256_load_si256((__m256i*) &hidden2Weights[i*4 + 1][j * 32]));
