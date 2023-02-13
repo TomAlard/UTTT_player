@@ -7,7 +7,7 @@ extern int16_t hiddenWeights[190][256];
 
 extern int16_t hiddenBiases[256];
 
-extern int16_t outputWeights[256];
+extern int8_t outputWeights[256];
 
 extern float outputBias;
 

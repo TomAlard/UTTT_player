@@ -5,6 +5,8 @@
 
 #include <stdalign.h>
 #include "forward.h"
+#include "clipped_relu.h"
+#include "linear.h"
 
 #define HIDDEN_NEURONS 256
 
@@ -57,26 +59,10 @@ void boardToInput(Board* board, int16_t* restrict output) {
 }
 
 
-void applyClippedReLU(const int16_t* restrict input, int16_t* restrict output) {
-    for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        output[i] = (int16_t)(input[i] <= 0? 0 : input[i] >= 127? 127 : input[i]);
-    }
-}
-
-
-float multiplyOutputWeights(const int16_t* restrict input) {
-    int32_t result = 0;
-    for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        result += input[i] * outputWeights[i];
-    }
-    return (float)result / (127*64);
-}
-
-
 float neuralNetworkEvalFromHidden(int16_t* restrict input) {
-    int16_t output[HIDDEN_NEURONS];
-    applyClippedReLU(input, output);
-    float x = multiplyOutputWeights(output) + outputBias + 0.5f;
+    alignas(32) int8_t output[HIDDEN_NEURONS];
+    applyClippedReLU256(input, output);
+    float x = applyLinear256_1(output) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
 
