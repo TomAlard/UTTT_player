@@ -15,7 +15,7 @@ void boardInitiallyEmpty() {
     initializePlayerBitBoard(&playerBitBoard);
     for (int board = 0; board < 9; board++) {
         for (int position = 0; position < 9; position++) {
-            Square square = createSquare(board, position);
+            Square square = {board, position};
             myAssert(!squareIsOccupied(&playerBitBoard, square));
         }
     }
@@ -29,7 +29,7 @@ void testSetSquareOccupied() {
     initializePlayerBitBoard(&otherPlayerBitBoard);
     for (int board = 0; board < 9; board++) {
         for (int position = 0; position < 9; position++) {
-            Square square = createSquare(board, position);
+            Square square = {board, position};
             myAssert(!squareIsOccupied(&playerBitBoard, square));
             setSquareOccupied(&playerBitBoard, &otherPlayerBitBoard, square);
             myAssert(squareIsOccupied(&playerBitBoard, square));
@@ -66,21 +66,21 @@ void winSmallBoardUpdatesBigBoard() {
     for (int board = 0; board < 9; board++) {
         for (int testCaseIndex = 0; testCaseIndex < 8; testCaseIndex++) {
             for (int i = 0; i < 3; i++) {
-                Square square = createSquare(board, directWins[testCaseIndex][i]);
+                Square square = {board, directWins[testCaseIndex][i]};
                 myAssert(!boardIsWon(&playerBitBoard, board));
                 setSquareOccupied(&playerBitBoard, &otherPlayerBitBoard, square);
             }
             myAssert(boardIsWon(&playerBitBoard, board));
             initializePlayerBitBoard(&playerBitBoard);
             for (int i = 0; i < 4; i++) {
-                Square square = createSquare(board, oneAdditionalMove[testCaseIndex][i]);
+                Square square = {board, oneAdditionalMove[testCaseIndex][i]};
                 myAssert(!boardIsWon(&playerBitBoard, board));
                 setSquareOccupied(&playerBitBoard, &otherPlayerBitBoard, square);
             }
             myAssert(boardIsWon(&playerBitBoard, board));
             initializePlayerBitBoard(&playerBitBoard);
             for (int i = 0; i < 5; i++) {
-                Square square = createSquare(board, twoAdditionalMoves[testCaseIndex][i]);
+                Square square = {board, twoAdditionalMoves[testCaseIndex][i]};
                 myAssert(!boardIsWon(&playerBitBoard, board));
                 setSquareOccupied(&playerBitBoard, &otherPlayerBitBoard, square);
             }
@@ -105,7 +105,7 @@ void drawSmallBoardUpdatesBothBigBoards() {
     initializePlayerBitBoard(&otherPlayerBitBoard);
     for (uint8_t board = 0; board < 9; board++) {
         for (int i = 0; i < 9; i++) {
-            Square square = createSquare(board, movesLeadingToDraw[i]);
+            Square square = {board, movesLeadingToDraw[i]};
             if (i % 2 == 0) {
                 setSquareOccupied(&playerBitBoard, &otherPlayerBitBoard, square);
             } else {

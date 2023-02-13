@@ -9,8 +9,6 @@ typedef struct Square {
     uint8_t position;
 } Square;
 
-Square createSquare(uint8_t board, uint8_t position);
-
 bool squaresAreEqual(Square square1, Square square2);
 
 #endif //UTTT2_SQUARE_H
