@@ -1,6 +1,5 @@
 #include <string.h>
 #include <assert.h>
-#include <time.h>
 #include "board.h"
 #include "../mcts/mcts_node.h"
 #include "../misc/util.h"
@@ -56,7 +55,6 @@ Board* createBoard() {
     board->nodes = safeMalloc(NUM_NODES * sizeof(MCTSNode));
     board->currentNodeIndex = 0;
     board->me = PLAYER2;
-    seedRNG(&board->rng, time(NULL), time(NULL)*69 + 420);
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
             amountOfOpenSquares[bitBoard] = setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);

@@ -174,11 +174,10 @@ float fastSquareRoot(float x) {
 
 #define EXPLORATION_PARAMETER 0.41f
 #define FIRST_PLAY_URGENCY 0.40f
-float getUCTValue(MCTSNode* node, float parentLogSims, RNG* rng) {
-    float r = (((float)generateBoundedRandomNumber(rng, 128)/128.0f) * 0.1f) + 0.95f;
+float getUCTValue(MCTSNode* node, float parentLogSims) {
     float exploitation = node->eval;
     float exploration = node->sims == 0? FIRST_PLAY_URGENCY : fastSquareRoot(parentLogSims / node->sims);
-    return r*exploitation + exploration;
+    return exploitation + exploration;
 }
 
 
@@ -199,7 +198,7 @@ int selectNextChild(Board* board, int nodeIndex) {
     float highestUCT = -100000.0f;
     for (int i = 0; i < node->amountOfChildren; i++) {
         int childIndex = node->childrenIndex + i;
-        float UCT = getUCTValue(&board->nodes[childIndex], logSims, &board->rng);
+        float UCT = getUCTValue(&board->nodes[childIndex], logSims);
         if (UCT > highestUCT) {
             highestUCTChildIndex = childIndex;
             highestUCT = UCT;

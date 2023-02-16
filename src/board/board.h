@@ -4,7 +4,6 @@
 #include "square.h"
 #include "../misc/player.h"
 #include "player_bitboard.h"
-#include "../misc/rng.h"
 
 #define TOTAL_SMALL_SQUARES 81
 #define ANY_BOARD 9
@@ -26,7 +25,6 @@ typedef struct Board {
     MCTSNode* nodes;
     int currentNodeIndex;
     Player me;
-    RNG rng;
 } Board;
 
 Board* createBoard();
