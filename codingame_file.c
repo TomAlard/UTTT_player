@@ -202,7 +202,7 @@ alignas(32) int16_t hiddenWeights[190][256] = {{16,2,-2,15,-136,-9,-9,3,-10,7,8,
 
 alignas(32) int16_t hiddenBiases[256] = {-141,-105,-158,-76,-84,-79,-96,-73,-80,-25,-49,-75,-113,-87,-143,-92,-76,-81,-72,-96,-93,-116,-123,-89,-149,-66,-72,-109,-76,-102,-120,-86,-80,-118,-78,-72,-19,-82,-87,-67,-103,-105,-86,-72,-138,-121,-55,-78,-97,-84,-77,-249,-105,-49,-84,-11,-92,-63,-74,-76,-83,-99,-128,-67,-133,-117,-91,-83,-123,-114,-34,-144,3,-100,-88,-205,-101,-195,-115,-64,-110,-146,-109,-115,-116,-72,-160,-81,-65,-96,-69,-103,-74,-93,-46,-83,0,-66,-128,-114,-129,-138,-10,-114,-130,-121,-84,-104,-91,-68,-69,-210,-77,-84,-143,-97,-114,-109,-89,-67,-44,-49,-74,-97,-82,-119,-80,-78,-95,-69,-87,-69,-164,-80,-123,-72,-106,-82,-81,-53,-81,34,-81,-76,-166,-12,-74,-80,-92,-102,-56,-80,-98,-124,-96,-74,-137,-44,-95,-79,-112,-147,-4,-108,-110,-139,17,-63,-73,-167,-22,-87,-97,-70,-66,-134,-49,-70,-65,-79,-139,-183,-80,-97,-86,-125,-98,-66,-69,-126,-83,-114,-119,-64,-99,-144,-53,-75,-68,-66,-49,-79,-103,-78,-127,-104,-108,-110,-108,4,13,-40,-81,-98,-52,-79,-52,-133,-65,-121,-1,-61,-78,-127,-97,-18,-104,-61,-82,-75,-71,-61,-27,-121,-2,-76,-117,-138,-24,-75,-60,7,-91,-79,-19,-69,-68,11,-40,-54,-120,-104,-55,-73,-88,-31};
 
-alignas(32) int16_t outputWeights[256] = {21,12,12,9,8,-9,9,13,9,-5,-9,10,-16,-5,-15,7,-18,11,11,-18,-17,-12,-12,10,-35,9,-11,-17,9,8,-13,-13,-17,-38,-16,11,-7,-15,16,-6,-13,9,9,-7,12,-6,-26,13,-11,6,-12,10,-9,10,12,-6,-17,8,-11,-17,-9,-11,11,-16,20,12,15,-14,-36,-28,-7,36,7,-14,-16,12,-19,-20,-17,9,14,9,8,-11,-13,10,10,-15,9,-28,-16,-10,9,12,12,20,6,-16,14,7,12,13,-4,-23,15,-14,-17,-15,13,9,11,14,7,-10,-36,14,-18,12,-12,10,7,8,-7,-18,-11,-7,8,-16,11,9,19,-12,10,11,-13,-12,-12,-15,-16,10,11,6,-10,-10,40,-10,11,-16,-29,13,11,9,-7,-12,-11,-16,8,-9,-7,-7,-18,14,-6,-8,9,14,5,8,7,-10,-5,8,-11,-14,-12,10,-9,11,10,-16,-12,-15,-11,-24,-15,-17,8,10,7,-11,-12,-11,-13,-7,-18,-9,6,-15,10,-12,-6,9,10,8,25,-20,11,-12,-16,5,-5,-33,14,-18,-16,-16,10,10,-5,14,-7,-11,15,10,14,-6,-15,-11,-13,11,-13,5,-7,11,-6,-12,-36,-34,9,12,-13,6,-7,-9,-6,9,-12,-6,6,9,9,10,10,12,11,-8};
+alignas(32) int8_t outputWeights[256] = {21,12,12,9,8,-9,9,13,9,-5,-9,10,-16,-5,-15,7,-18,11,11,-18,-17,-12,-12,10,-35,9,-11,-17,9,8,-13,-13,-17,-38,-16,11,-7,-15,16,-6,-13,9,9,-7,12,-6,-26,13,-11,6,-12,10,-9,10,12,-6,-17,8,-11,-17,-9,-11,11,-16,20,12,15,-14,-36,-28,-7,36,7,-14,-16,12,-19,-20,-17,9,14,9,8,-11,-13,10,10,-15,9,-28,-16,-10,9,12,12,20,6,-16,14,7,12,13,-4,-23,15,-14,-17,-15,13,9,11,14,7,-10,-36,14,-18,12,-12,10,7,8,-7,-18,-11,-7,8,-16,11,9,19,-12,10,11,-13,-12,-12,-15,-16,10,11,6,-10,-10,40,-10,11,-16,-29,13,11,9,-7,-12,-11,-16,8,-9,-7,-7,-18,14,-6,-8,9,14,5,8,7,-10,-5,8,-11,-14,-12,10,-9,11,10,-16,-12,-15,-11,-24,-15,-17,8,10,7,-11,-12,-11,-13,-7,-18,-9,6,-15,10,-12,-6,9,10,8,25,-20,11,-12,-16,5,-5,-33,14,-18,-16,-16,10,10,-5,14,-7,-11,15,10,14,-6,-15,-11,-13,11,-13,5,-7,11,-6,-12,-36,-34,9,12,-13,6,-7,-9,-6,9,-12,-6,6,9,9,10,10,12,11,-8};
 
 float outputBias = -0.0376901775598526f;
 // END PARAMETERS
@@ -218,8 +218,6 @@ bool squaresAreEqual(Square square1, Square square2);
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))
-#define BIT_CHANGE(a,b,c) ((a) = (a) & ~(b) | (-(c) & (b)))
-#define ONE_BIT_SET(a) (((a) & ((a)-1)) == 0 && (a) != 0)
 
 Square toOurNotation(Square rowAndColumn);
 
@@ -242,10 +240,6 @@ typedef struct PlayerBitBoard {
 } PlayerBitBoard;
 
 void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard);
-
-bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board);
-
-bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square);
 
 bool isWin(uint16_t smallBoard);
 
@@ -287,10 +281,6 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 
 bool nextBoardIsEmpty(Board* board);
 
-uint8_t getCurrentBoard(Board* board);
-
-Player getCurrentPlayer(Board* board);
-
 void revertToCheckpoint(Board* board);
 
 void updateCheckpoint(Board* board);
@@ -300,14 +290,6 @@ void makeTemporaryMove(Board* board, Square square);
 void makePermanentMove(Board* board, Square square);
 
 Winner getWinnerAfterMove(Board* board, Square square);
-
-Winner getWinner(Board* board);
-
-void setMe(Board* board, Player player);
-
-bool currentPlayerIsMe(Board* board);
-
-uint8_t getPly(Board* board);
 
 typedef struct MCTSNode {
     int parentIndex;
@@ -338,8 +320,6 @@ void visitNode(int nodeIndex, Board* board);
 
 Square getMostPromisingMove(Board* board, MCTSNode* node);
 
-float getEval(MCTSNode* node);
-
 int findNextMove(Board* board, int rootIndex, double allocatedTime);
 
 typedef struct HandleTurnResult {
@@ -350,25 +330,54 @@ typedef struct HandleTurnResult {
 
 HandleTurnResult handleTurn(Board* board, int rootIndex, double allocatedTime, Square enemyMove);
 
+inline __attribute__((always_inline)) void applyClippedReLU256(const int16_t* input, int8_t* output) {
+    __m256i zero = _mm256_setzero_si256();
+    for (int i = 0; i < 8; i++) {
+        __m256i in0 = _mm256_load_si256((__m256i*) &input[i*32]);
+        __m256i in1 = _mm256_load_si256((__m256i*) &input[i*32 + 16]);
+        __m256i result = _mm256_permute4x64_epi64(_mm256_max_epi8(_mm256_packs_epi16(in0, in1), zero), 0b11011000);
+        _mm256_store_si256((__m256i*) &output[i * 32], result);
+    }
+}
+
+inline __attribute__((always_inline)) void m256_add_dpbusd_epi32(__m256i* acc, __m256i a, __m256i b) {
+    __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    __m256i product0 = _mm256_maddubs_epi16(a, b);
+    product0 = _mm256_madd_epi16(product0, one);
+    *acc = _mm256_add_epi32(*acc, product0);
+}
+
+
+inline __attribute__((always_inline)) float applyLinear256_1(const int8_t* input) {
+    __m256i inputRegs[8];
+    for (int i = 0; i < 8; i++) {
+        inputRegs[i] = _mm256_load_si256((__m256i*) &input[i * 32]);
+    }
+    __m256i sum = _mm256_setzero_si256();
+    for (int i = 0; i < 8; i++) {
+        m256_add_dpbusd_epi32(&sum, inputRegs[i], _mm256_load_si256((__m256i*) &outputWeights[i * 32]));
+    }
+    __m128i sum128lo = _mm256_castsi256_si128(sum);
+    __m128i sum128hi = _mm256_extracti128_si256(sum, 1);
+    __m128i sum128 = _mm_add_epi32(sum128lo, sum128hi);
+    int output[4];
+    _mm_store_si128((__m128i*) &output[0], sum128);
+    int result = output[0] + output[1] + output[2] + output[3];
+    return (float)result * (1.0f / (127*64));
+}
+
 inline __attribute__((always_inline)) void addFeature(int feature, __m256i regs[16]) {
     for (int i = 0; i < 16; i++) {
         regs[i] = _mm256_add_epi16(regs[i], _mm256_load_si256((__m256i*) &hiddenWeights[feature][i * 16]));
     }
 }
 
-void setHidden(Board* board, int16_t* restrict input);
+void boardToInput(Board* board, int16_t* restrict output);
 
 float neuralNetworkEvalFromHidden(int16_t* restrict input);
 
 float neuralNetworkEval(Board* board);
 // END HEADERS
-
-
-
-
-
-
-
 
 
 
@@ -415,11 +424,6 @@ Square toGameNotation(Square square) {
 
 
 
-
-
-
-
-
 // START PLAYER_BITBOARD
 bool isWin(uint16_t smallBoard) {
     __m128i masks = _mm_setr_epi16(0x7, 0x38, 0x1c0, 0x49, 0x92, 0x124, 0x111, 0x54);
@@ -433,16 +437,6 @@ bool isWin(uint16_t smallBoard) {
 
 void initializePlayerBitBoard(PlayerBitBoard* playerBitBoard) {
     memset(playerBitBoard, 0, sizeof(PlayerBitBoard));
-}
-
-
-bool boardIsWon(PlayerBitBoard* playerBitBoard, uint8_t board) {
-    return BIT_CHECK(playerBitBoard->bigBoard, board);
-}
-
-
-bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
-    return BIT_CHECK(playerBitBoard->smallBoards[square.board], square.position);
 }
 
 
@@ -475,12 +469,9 @@ bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
 
 
 
-
-
 // START BOARD
 Square openSquares[512][9][9];
 int8_t amountOfOpenSquares[512];
-Winner winnerByBigBoards[512][512];
 
 
 int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
@@ -494,14 +485,11 @@ int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBo
 }
 
 
-Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard) {
-    uint16_t decisiveBoards = player1BigBoard ^ player2BigBoard;
-    uint16_t boardsWonByPlayer1 = player1BigBoard & decisiveBoards;
-    if (isWin(boardsWonByPlayer1)) {
+Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard, Player currentPlayer) {
+    if (currentPlayer == PLAYER1 && isWin(player1BigBoard & (player1BigBoard ^ player2BigBoard))) {
         return WIN_P1;
     }
-    uint16_t boardsWonByPlayer2 = player2BigBoard & decisiveBoards;
-    if (isWin(boardsWonByPlayer2)) {
+    if (currentPlayer == PLAYER2 && isWin(player2BigBoard & (player1BigBoard ^ player2BigBoard))) {
         return WIN_P2;
     }
     if ((player1BigBoard | player2BigBoard) == 511) {
@@ -534,14 +522,7 @@ Board* createBoard() {
     board->me = PLAYER2;
     for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
         for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
-            amountOfOpenSquares[bitBoard] =
-                    setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
-        }
-    }
-    for (uint16_t player1BigBoard = 0; player1BigBoard < 512; player1BigBoard++) {
-        for (uint16_t player2BigBoard = 0; player2BigBoard < 512; player2BigBoard++) {
-            Winner winner = calculateWinner(player1BigBoard, player2BigBoard);
-            winnerByBigBoards[player1BigBoard][player2BigBoard] = winner;
+            amountOfOpenSquares[bitBoard] = setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
         }
     }
     return board;
@@ -570,8 +551,7 @@ Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMo
 
 int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
     uint16_t bitBoard = ~(board->state.player1.smallBoards[boardIndex] | board->state.player2.smallBoards[boardIndex]) & 511;
-    memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex],
-           amountOfOpenSquares[bitBoard] * sizeof(Square));
+    memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex], amountOfOpenSquares[bitBoard] * sizeof(Square));
     return (int8_t)(amountOfMoves + amountOfOpenSquares[bitBoard]);
 }
 
@@ -615,16 +595,6 @@ bool nextBoardIsEmpty(Board* board) {
 }
 
 
-uint8_t getCurrentBoard(Board* board) {
-    return board->state.currentBoard;
-}
-
-
-Player getCurrentPlayer(Board* board) {
-    return board->state.currentPlayer;
-}
-
-
 void revertToCheckpoint(Board* board) {
     board->state = board->stateCheckpoint;
 }
@@ -638,7 +608,7 @@ void updateCheckpoint(Board* board) {
 void makeTemporaryMove(Board* board, Square square) {
     PlayerBitBoard* p1 = &board->state.player1;
     if (setSquareOccupied(p1 + board->state.currentPlayer, p1 + !board->state.currentPlayer, square)) {
-        board->state.winner = winnerByBigBoards[board->state.player1.bigBoard][board->state.player2.bigBoard];
+        board->state.winner = calculateWinner(board->state.player1.bigBoard, board->state.player2.bigBoard, board->state.currentPlayer);
     }
     board->state.currentPlayer ^= 1;
     board->state.currentBoard = getNextBoard(board, square.position);
@@ -655,34 +625,11 @@ void makePermanentMove(Board* board, Square square) {
 Winner getWinnerAfterMove(Board* board, Square square) {
     State tempCheckpoint = board->state;
     makeTemporaryMove(board, square);
-    Winner winner = getWinner(board);
+    Winner winner = board->state.winner;
     board->state = tempCheckpoint;
     return winner;
 }
-
-
-Winner getWinner(Board* board) {
-    return board->state.winner;
-}
-
-
-void setMe(Board* board, Player player) {
-    board->me = player;
-}
-
-
-bool currentPlayerIsMe(Board* board) {
-    return board->state.currentPlayer == board->me;
-}
-
-
-uint8_t getPly(Board* board) {
-    return board->state.ply;
-}
 // END BOARD
-
-
-
 
 
 
@@ -745,31 +692,10 @@ void boardToInput(Board* board, int16_t* restrict output) {
 }
 
 
-void applyClippedReLU(const int16_t* restrict input, int16_t* restrict output) {
-    for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        output[i] = (int16_t)(input[i] <= 0? 0 : input[i] >= 127? 127 : input[i]);
-    }
-}
-
-
-float multiplyOutputWeights(const int16_t* restrict input) {
-    int32_t result = 0;
-    for (int i = 0; i < HIDDEN_NEURONS; i++) {
-        result += input[i] * outputWeights[i];
-    }
-    return (float)result / (127*64);
-}
-
-
-void setHidden(Board* board, int16_t* restrict input) {
-    boardToInput(board, input);
-}
-
-
 float neuralNetworkEvalFromHidden(int16_t* restrict input) {
-    int16_t output[HIDDEN_NEURONS];
-    applyClippedReLU(input, output);
-    float x = multiplyOutputWeights(output) + outputBias + 0.5f;
+    alignas(32) int8_t output[HIDDEN_NEURONS];
+    applyClippedReLU256(input, output);
+    float x = applyLinear256_1(output) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
 
@@ -781,13 +707,6 @@ float neuralNetworkEval(Board* board) {
     return neuralNetworkEvalFromHidden(input);
 }
 // END FORWARD
-
-
-
-
-
-
-
 
 
 
@@ -831,7 +750,7 @@ float getEvalOfMove(Board* board, Square square) {
     Player player = OTHER_PLAYER(board->state.currentPlayer);
     Winner winner = board->state.winner;
     if (winner != NONE) {
-        eval = winner == DRAW? 0.5f : player + 1 == winner? 1.0f : 0.0f;
+        eval = winner == DRAW? 0.5f : player + 1 == winner? 10000.0f : -10000.0f;
     } else {
         eval = neuralNetworkEval(board);
     }
@@ -851,13 +770,13 @@ void singleChild(int nodeIndex, Board* board, Square square) {
 
 
 bool handleSpecialCases(int nodeIndex, Board* board) {
-    if (nextBoardIsEmpty(board) && getPly(board) <= 20) {
-        uint8_t currentBoard = getCurrentBoard(board);
+    if (board->state.ply <= 20 && nextBoardIsEmpty(board)) {
+        uint8_t currentBoard = board->state.currentBoard;
         Square sameBoard = {currentBoard, currentBoard};
         singleChild(nodeIndex, board, sameBoard);
         return true;
     }
-    if (currentPlayerIsMe(board) && getPly(board) == 0) {
+    if (board->state.ply == 0 && board->state.currentPlayer == board->me) {
         Square bestFirstMove = {4, 4};
         singleChild(nodeIndex, board, bestFirstMove);
         return true;
@@ -869,7 +788,7 @@ bool handleSpecialCases(int nodeIndex, Board* board) {
 bool isBadMove(Board* board, Square square, Winner winner, Player player) {
     bool isProvenLoss = (winner == WIN_P1 && player == PLAYER2) || (winner == WIN_P2 && player == PLAYER1);
     bool sendsToDecidedBoard = (board->state.player1.bigBoard | board->state.player2.bigBoard) & (1 << square.position);
-    return isProvenLoss || (sendsToDecidedBoard && getPly(board) <= 30);
+    return isProvenLoss || (sendsToDecidedBoard && board->state.ply <= 30);
 }
 
 
@@ -877,7 +796,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
     MCTSNode* parent = &board->nodes[parentIndex];
     alignas(32) int16_t NNInputs[256];
     board->state.currentPlayer ^= 1;
-    setHidden(board, NNInputs);
+    boardToInput(board, NNInputs);
     board->state.currentPlayer ^= 1;
     int8_t amountOfMoves = parent->amountOfChildren;
     PlayerBitBoard* p1 = &board->state.player1;
@@ -932,10 +851,10 @@ void discoverChildNodes(int nodeIndex, Board* board) {
         Square movesArray[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves;
         Square* moves = generateMoves(board, movesArray, &amountOfMoves);
-        Player player = getCurrentPlayer(board);
+        Player player = board->state.currentPlayer;
         Winner winners[amountOfMoves];
         memset(winners, NONE, amountOfMoves * sizeof(Winner));
-        if (getPly(board) > 30) {
+        if (board->state.ply > 30) {
             for (int i = 0; i < amountOfMoves; i++) {
                 Winner winner = getWinnerAfterMove(board, moves[i]);
                 if (winner == player + 1) {
@@ -954,7 +873,7 @@ void discoverChildNodes(int nodeIndex, Board* board) {
 
 
 bool isLeafNode(int nodeIndex, Board* board) {
-    return (&board->nodes[nodeIndex])->sims == 0;
+    return board->nodes[nodeIndex].sims == 0;
 }
 
 
@@ -986,7 +905,7 @@ int selectNextChild(Board* board, int nodeIndex) {
     MCTSNode* node = &board->nodes[nodeIndex];
     float logSims = EXPLORATION_PARAMETER*EXPLORATION_PARAMETER * fastLog2(node->sims);
     int highestUCTChildIndex = -1;
-    float highestUCT = -1.0f;
+    float highestUCT = -100000.0f;
     for (int i = 0; i < node->amountOfChildren; i++) {
         int childIndex = node->childrenIndex + i;
         float UCT = getUCTValue(&board->nodes[childIndex], logSims);
@@ -1034,7 +953,7 @@ int updateRoot(MCTSNode* root, Board* board, Square square) {
 
 void backpropagate(Board* board, int nodeIndex, Winner winner, Player player) {
     MCTSNode* node = &board->nodes[nodeIndex];
-    node->eval = winner == DRAW ? 0.5f : player + 1 == winner ? 1.0f : 0.0f;
+    node->eval = winner == DRAW ? 0.5f : player + 1 == winner ? 10000.0f : -10000.0f;
     backpropagateEval(board, node);
 }
 
@@ -1045,7 +964,7 @@ void backpropagateEval(Board* board, MCTSNode* node) {
         currentNode = &board->nodes[currentNode->parentIndex];
     }
     while (currentNode != NULL) {
-        float maxChildEval = 0.0f;
+        float maxChildEval = -100000.0f;
         for (int i = 0; i < currentNode->amountOfChildren; i++) {
             float eval = (&board->nodes[currentNode->childrenIndex + i])->eval;
             maxChildEval = maxChildEval >= eval? maxChildEval : eval;
@@ -1058,16 +977,16 @@ void backpropagateEval(Board* board, MCTSNode* node) {
 
 
 void visitNode(int nodeIndex, Board* board) {
-    makeTemporaryMove(board, (&board->nodes[nodeIndex])->square);
+    makeTemporaryMove(board, board->nodes[nodeIndex].square);
 }
 
 
 Square getMostPromisingMove(Board* board, MCTSNode* node) {
     MCTSNode* highestScoreChild = &board->nodes[node->childrenIndex + 0];
-    float highestScore = getEval(highestScoreChild) + fastLog2(highestScoreChild->sims);
+    float highestScore = highestScoreChild->eval + fastLog2(highestScoreChild->sims);
     for (int i = 1; i < node->amountOfChildren; i++) {
         MCTSNode* child = &board->nodes[node->childrenIndex + i];
-        float score = getEval(child) + fastLog2(child->sims);
+        float score = child->eval + fastLog2(child->sims);
         if (score > highestScore) {
             highestScoreChild = child;
             highestScore = score;
@@ -1075,16 +994,7 @@ Square getMostPromisingMove(Board* board, MCTSNode* node) {
     }
     return highestScoreChild->square;
 }
-
-
-float getEval(MCTSNode* node) {
-    return node->eval;
-}
 // END MCTS_NODE
-
-
-
-
 
 
 
@@ -1095,7 +1005,7 @@ float getEval(MCTSNode* node) {
 // START FIND_NEXT_MOVE
 int selectLeaf(Board* board, int rootIndex) {
     int currentNodeIndex = rootIndex;
-    while (!isLeafNode(currentNodeIndex, board) && getWinner(board) == NONE) {
+    while (!isLeafNode(currentNodeIndex, board) && board->state.winner == NONE) {
         currentNodeIndex = selectNextChild(board, currentNodeIndex);
         visitNode(currentNodeIndex, board);
     }
@@ -1117,8 +1027,8 @@ int findNextMove(Board* board, int rootIndex, double allocatedTime) {
     gettimeofday(&start, NULL);
     while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
         int leafIndex = selectLeaf(board, rootIndex);
-        Winner winner = getWinner(board);
-        Player player = OTHER_PLAYER(getCurrentPlayer(board));
+        Winner winner = board->state.winner;
+        Player player = OTHER_PLAYER(board->state.currentPlayer);
         if (winner == NONE) {
             backpropagateEval(board, expandLeaf(leafIndex, board));
         } else {
@@ -1136,48 +1046,10 @@ int findNextMove(Board* board, int rootIndex, double allocatedTime) {
 
 
 
-
-
-
-
-
-
 // START HANDLE_TURN
-Square handleOpening(Board* board) {
-    uint8_t ply = getPly(board);
-    Square invalid = {9, 9};
-    if (board->me != PLAYER2 || ply > 10) {
-        return invalid;
-    }
-    bool firstMove = BIT_CHECK(board->state.player1.smallBoards[4], 4);
-    bool secondMove = BIT_CHECK(board->state.player1.smallBoards[8], 8);
-    bool thirdMove = BIT_CHECK(board->state.player1.smallBoards[0], 0);
-    bool fourthMove = BIT_CHECK(board->state.player1.smallBoards[5], 5);
-    bool fifthMove = BIT_CHECK(board->state.player1.smallBoards[7], 7);
-    uint8_t currentBoard = getCurrentBoard(board);
-    if (ply == 1 && firstMove) {
-        Square move = {4, 8};
-        return move;
-    } else if (ply == 3 && firstMove && secondMove && currentBoard == 8) {
-        Square move = {8, 0};
-        return move;
-    } else if (ply == 5 && firstMove && secondMove && thirdMove && currentBoard == 0) {
-        Square move = {0, 5};
-        return move;
-    } else if (ply == 7 && firstMove && secondMove && thirdMove && fourthMove && currentBoard == 5) {
-        Square move = {5, 7};
-        return move;
-    } else if (ply == 9 && firstMove && secondMove && thirdMove && fourthMove && fifthMove && currentBoard == 7) {
-        Square move = {7, 5};
-        return move;
-    }
-    return invalid;
-}
-
-
 int handleEnemyTurn(Board* board, int rootIndex, Square enemyMove) {
     if (enemyMove.board == 9 && enemyMove.position == 9) {
-        setMe(board, PLAYER1);
+        board->me = PLAYER1;
         return rootIndex;
     }
     discoverChildNodes(rootIndex, board);
@@ -1190,14 +1062,8 @@ int handleEnemyTurn(Board* board, int rootIndex, Square enemyMove) {
 HandleTurnResult handleTurn(Board* board, int rootIndex, double allocatedTime, Square enemyMove) {
     rootIndex = handleEnemyTurn(board, rootIndex, enemyMove);
     MCTSNode* root = &board->nodes[rootIndex];
-    Square openingMove = handleOpening(board);
-    if (openingMove.board != 9) {
-        int newRootIndex = updateRoot(root, board, openingMove);
-        makePermanentMove(board, openingMove);
-        HandleTurnResult result = {openingMove, newRootIndex, 0};
-        return result;
-    }
-    int amountOfSimulations = findNextMove(board, rootIndex, allocatedTime);
+    double time = board->state.ply <= 1? 10*allocatedTime : allocatedTime;
+    int amountOfSimulations = findNextMove(board, rootIndex, time);
     Square move = getMostPromisingMove(board, root);
     int newRootIndex = updateRoot(root, board, move);
     makePermanentMove(board, move);
@@ -1205,12 +1071,6 @@ HandleTurnResult handleTurn(Board* board, int rootIndex, double allocatedTime, S
     return result;
 }
 // END HANDLE_TURN
-
-
-
-
-
-
 
 
 
@@ -1235,7 +1095,7 @@ void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
     Square s = toGameNotation(bestMove);
     uint8_t x = s.board;
     uint8_t y = s.position;
-    float winrate = getEval(root);
+    float winrate = root->eval;
     printf("%d %d %.4f %d\n", x, y, winrate, amountOfSimulations);
     fflush(stdout);
 }
@@ -1260,7 +1120,6 @@ void playGame(FILE* file, double timePerMove) {
     }
     freeBoard(board);
 }
-
 
 #define TIME 0.090
 int main() {
