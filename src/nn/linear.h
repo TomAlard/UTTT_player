@@ -64,4 +64,20 @@ inline __attribute__((always_inline)) void applyLinear32_32(const int8_t* input,
     }
 }
 
+
+inline __attribute__((always_inline)) float applyLinear32_1(const int8_t* input) {
+    __m256i in = _mm256_load_si256((__m256i*) input);
+    __m256i weights = _mm256_load_si256((__m256i*) hidden4Weights);
+    __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    __m256i product0 = _mm256_maddubs_epi16(in, weights);
+    __m256i sum = _mm256_madd_epi16(product0, one);
+    __m128i sum128lo = _mm256_castsi256_si128(sum);
+    __m128i sum128hi = _mm256_extracti128_si256(sum, 1);
+    __m128i sum128 = _mm_add_epi32(sum128lo, sum128hi);
+    int output[4];
+    _mm_store_si128((__m128i*) &output[0], sum128);
+    int result = output[0] + output[1] + output[2] + output[3];
+    return (float)result * (1.0f / (127*64));
+}
+
 #endif //UTTT2_LINEAR_H

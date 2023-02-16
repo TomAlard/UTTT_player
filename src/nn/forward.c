@@ -71,15 +71,6 @@ void boardToInput(Board* board, int16_t* restrict output) {
 }
 
 
-float multiplyOutputWeights(const int8_t* restrict input) {
-    int32_t result = 0;
-    for (int i = 0; i < HIDDEN3_NEURONS; i++) {
-        result += input[i] * hidden4Weights[i];
-    }
-    return (float)result / (127*64);
-}
-
-
 float neuralNetworkEvalFromAccumulator(const int16_t* restrict input) {
     alignas(32) int8_t afterReLU1[HIDDEN1_NEURONS];
     applyClippedReLU512(input, afterReLU1);
@@ -94,7 +85,7 @@ float neuralNetworkEvalFromAccumulator(const int16_t* restrict input) {
     applyLinear32_32(afterReLU2, afterHidden2);
     applyClippedReLU32(afterHidden2, afterReLU3);
 
-    float x = multiplyOutputWeights(afterReLU3) + hidden4Bias + 0.5f;
+    float x = applyLinear32_1(afterReLU3) + hidden4Bias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
 
