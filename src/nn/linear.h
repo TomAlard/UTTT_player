@@ -7,7 +7,7 @@
 #define LOG2_WEIGHT_SCALE 6
 
 
-inline __attribute__((always_inline)) void m256_add_dpbusd_epi32(__m256i* acc, __m256i a, __m256i b) {
+void m256_add_dpbusd_epi32(__m256i* acc, __m256i a, __m256i b) {
     __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
     __m256i product0 = _mm256_maddubs_epi16(a, b);
     product0 = _mm256_madd_epi16(product0, one);
@@ -15,7 +15,7 @@ inline __attribute__((always_inline)) void m256_add_dpbusd_epi32(__m256i* acc, _
 }
 
 
-inline __attribute__((always_inline)) __m128i m256_haddx4(__m256i sum0, __m256i sum1, __m256i sum2, __m256i sum3, __m128i bias) {
+__m128i m256_haddx4(__m256i sum0, __m256i sum1, __m256i sum2, __m256i sum3, __m128i bias) {
     sum0 = _mm256_hadd_epi32(sum0, sum1);
     sum2 = _mm256_hadd_epi32(sum2, sum3);
     sum0 = _mm256_hadd_epi32(sum0, sum2);
@@ -25,7 +25,7 @@ inline __attribute__((always_inline)) __m128i m256_haddx4(__m256i sum0, __m256i 
 }
 
 
-inline __attribute__((always_inline)) void applyLinear512_32(const int8_t* input, int32_t* output) {
+void applyLinear512_32(const int8_t* input, int32_t* output) {
     for (int i = 0; i < 8; i++) {
         __m256i sum0 = _mm256_setzero_si256();
         __m256i sum1 = _mm256_setzero_si256();
@@ -46,7 +46,7 @@ inline __attribute__((always_inline)) void applyLinear512_32(const int8_t* input
 }
 
 
-inline __attribute__((always_inline)) void applyLinear32_32(const int8_t* input, int32_t* output) {
+void applyLinear32_32(const int8_t* input, int32_t* output) {
     for (int i = 0; i < 8; i++) {
         __m256i sum0 = _mm256_setzero_si256();
         __m256i sum1 = _mm256_setzero_si256();
@@ -65,7 +65,7 @@ inline __attribute__((always_inline)) void applyLinear32_32(const int8_t* input,
 }
 
 
-inline __attribute__((always_inline)) float applyLinear32_1(const int8_t* input) {
+float applyLinear32_1(const int8_t* input) {
     __m256i in = _mm256_load_si256((__m256i*) input);
     __m256i weights = _mm256_load_si256((__m256i*) hidden4Weights);
     __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);

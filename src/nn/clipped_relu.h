@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <immintrin.h>
 
-inline __attribute__((always_inline)) void applyClippedReLU512(const int16_t* input, int8_t* output) {
+void applyClippedReLU512(const int16_t* input, int8_t* output) {
     __m256i zero = _mm256_setzero_si256();
     for (int i = 0; i < 16; i++) {
         __m256i in0 = _mm256_load_si256((__m256i*) &input[i*32]);
@@ -15,7 +15,7 @@ inline __attribute__((always_inline)) void applyClippedReLU512(const int16_t* in
 }
 
 
-inline __attribute__((always_inline)) void applyClippedReLU32(const int32_t* input, int8_t* output) {
+void applyClippedReLU32(const int32_t* input, int8_t* output) {
     __m256i zero = _mm256_setzero_si256();
     __m256i control = _mm256_set_epi32(7, 3, 6, 2, 5, 1, 4, 0);
     __m256i in0 = _mm256_packs_epi32(_mm256_load_si256((__m256i*) &input[0]), _mm256_load_si256((__m256i*) &input[8]));
