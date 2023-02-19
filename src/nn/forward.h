@@ -13,9 +13,6 @@ inline __attribute__((always_inline)) void addFeature(int feature, __m256i regs[
     }
 }
 
-void updateAccumulator(const int16_t* restrict input, int numNewFeatures, const int newFeatures[numNewFeatures],
-                       int16_t* restrict output);
-
 void boardToInput(Board* board, int16_t* restrict output);
 
 float neuralNetworkEvalFromAccumulator(const int16_t* restrict input);
