@@ -6,6 +6,9 @@ import numpy as np
 from neural_network.network import NeuralNetwork, WeightClipper
 
 
+VERSION = 'MCTS_1s_190_256_32_32'
+
+
 class PositionDataset(Dataset):
     POSITIONS_LINE_LENGTH = 24
     EVALUATIONS_LINE_LENGTH = 6
@@ -74,7 +77,7 @@ def identity(x):
 
 
 def main():
-    learning_rate = 0.2
+    learning_rate = 0.4
     batch_size = 16384
     epochs = 600
 
@@ -93,7 +96,14 @@ def main():
         train_loop(train_dataloader, model, loss_fn, optimizer, scheduler)
         test_loop(test_dataloader, model, loss_fn)
         print(f'Epoch completed in {time.time() - start:<7f}\n')
-        torch.save(model, 'model_latest.pth')
+        if i % 5 == 0:
+            torch.save(model, f'models/{VERSION}/model_epoch_{i+1}.pth')
+            torch.save({
+                'epoch': i+1,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict()
+            }, f'checkpoints/{VERSION}/checkpoint_epoch_{i+1}')
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@
 
 
 void m256_add_dpbusd_epi32(__m256i* acc, __m256i a, __m256i b) {
-    __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    __m256i one = _mm256_set1_epi16(1);
     __m256i product0 = _mm256_maddubs_epi16(a, b);
     product0 = _mm256_madd_epi16(product0, one);
     *acc = _mm256_add_epi32(*acc, product0);
@@ -25,13 +25,13 @@ __m128i m256_haddx4(__m256i sum0, __m256i sum1, __m256i sum2, __m256i sum3, __m1
 }
 
 
-void applyLinear512_32(const int8_t* input, int32_t* output) {
+void applyLinear256_32(const int8_t* input, int32_t* output) {
     for (int i = 0; i < 8; i++) {
         __m256i sum0 = _mm256_setzero_si256();
         __m256i sum1 = _mm256_setzero_si256();
         __m256i sum2 = _mm256_setzero_si256();
         __m256i sum3 = _mm256_setzero_si256();
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < 8; j++) {
             __m256i in = _mm256_load_si256((__m256i*) &input[j * 32]);
             m256_add_dpbusd_epi32(&sum0, in, _mm256_load_si256((__m256i*) &hidden2Weights[i*4 + 0][j * 32]));
             m256_add_dpbusd_epi32(&sum1, in, _mm256_load_si256((__m256i*) &hidden2Weights[i*4 + 1][j * 32]));
@@ -68,7 +68,7 @@ void applyLinear32_32(const int8_t* input, int32_t* output) {
 float applyLinear32_1(const int8_t* input) {
     __m256i in = _mm256_load_si256((__m256i*) input);
     __m256i weights = _mm256_load_si256((__m256i*) hidden4Weights);
-    __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    __m256i one = _mm256_set1_epi16(1);
     __m256i product0 = _mm256_maddubs_epi16(in, weights);
     __m256i sum = _mm256_madd_epi16(product0, one);
     __m128i sum128lo = _mm256_castsi256_si128(sum);

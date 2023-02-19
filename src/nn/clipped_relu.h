@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <immintrin.h>
 
-void applyClippedReLU512(const int16_t* input, int8_t* output) {
+void applyClippedReLU256(const int16_t* input, int8_t* output) {
     __m256i zero = _mm256_setzero_si256();
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 8; i++) {
         __m256i in0 = _mm256_load_si256((__m256i*) &input[i*32]);
         __m256i in1 = _mm256_load_si256((__m256i*) &input[i*32 + 16]);
         __m256i result = _mm256_permute4x64_epi64(_mm256_max_epi8(_mm256_packs_epi16(in0, in1), zero), 0b11011000);

@@ -1,7 +1,7 @@
 import torch
 import shutil
 
-VERSION = 'MCTS_1s_512_32_32'
+VERSION = 'MCTS_1s_256_32_32'
 MODEL_FILENAME = 'model_latest.pth'
 
 

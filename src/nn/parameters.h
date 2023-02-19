@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-extern int16_t hidden1Weights[190][512];
+extern int16_t hidden1Weights[190][256];
 
-extern int16_t hidden1Biases[512];
+extern int16_t hidden1Biases[256];
 
-extern int8_t hidden2Weights[32][512];
+extern int8_t hidden2Weights[32][256];
 
 extern int32_t hidden2Biases[32];
 

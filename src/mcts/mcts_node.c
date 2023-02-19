@@ -106,24 +106,28 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
         uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
-        int numNewFeatures = 0;
-        int newFeatures[4];
+        __m256i regs[16];
+        for (int j = 0; j < 16; j++) {
+            regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
+        }
         if (isWin(smallBoard)) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            newFeatures[numNewFeatures++] = move.board + 90;
+            addFeature(move.board + 90, regs);
         } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
-            newFeatures[numNewFeatures++] = move.board;
-            newFeatures[numNewFeatures++] = move.board + 90;
+            addFeature(move.board, regs);
+            addFeature(move.board + 90, regs);
         } else {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard, move.position);
         }
-        newFeatures[numNewFeatures++] = move.position + 99 + 9*move.board;
-        newFeatures[numNewFeatures++] = (smallBoardIsDecided? ANY_BOARD : move.position) + 180;
+        addFeature(move.position + 99 + 9*move.board, regs);
+        addFeature((smallBoardIsDecided? ANY_BOARD : move.position) + 180, regs);
         alignas(32) int16_t result[HIDDEN1_NEURONS];
-        updateAccumulator(NNInputs, numNewFeatures, newFeatures, result);
+        for (int j = 0; j < 16; j++) {
+            _mm256_store_si256((__m256i*) &result[j * 16], regs[j]);
+        }
         float eval = neuralNetworkEvalFromAccumulator(result);
         initializeMCTSNode(parentIndex, move, eval, child);
     }

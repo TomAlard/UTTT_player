@@ -3,6 +3,7 @@
 #include "board.h"
 #include "../mcts/mcts_node.h"
 #include "../misc/util.h"
+#include "../nn/lookup_table_indices.h"
 
 
 Square openSquares[512][9][9];
@@ -44,6 +45,7 @@ Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard, Playe
 #define NODES_SIZE (512*MEGABYTE)
 #define NUM_NODES (NODES_SIZE / sizeof(MCTSNode))
 Board* createBoard() {
+    computeLookupTable();
     Board* board = safeMalloc(sizeof(Board));
     initializePlayerBitBoard(&board->state.player1);
     initializePlayerBitBoard(&board->state.player2);
