@@ -3,14 +3,15 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from neural_network.network import NeuralNetwork, WeightClipper
+from neural_network.network import NeuralNetwork, WeightClipper, NUM_INPUTS
+from math import ceil
 
 
 VERSION = 'MCTS_1s_190_256_32_32'
 
 
 class PositionDataset(Dataset):
-    POSITIONS_LINE_LENGTH = 24
+    POSITIONS_LINE_LENGTH = ceil(NUM_INPUTS / 8)
     EVALUATIONS_LINE_LENGTH = 6
 
     def __init__(self, is_train: bool, batch_size: int):
@@ -36,7 +37,7 @@ class PositionDataset(Dataset):
 
     def __getitem__(self, index):
         i = index * self.batch_size
-        X = np.unpackbits(self.positions[i:i+self.batch_size], axis=1)[:, :190].astype(np.float32)
+        X = np.unpackbits(self.positions[i:i+self.batch_size], axis=1)[:, :NUM_INPUTS].astype(np.float32)
         y = self.evaluations[i:i+self.batch_size].reshape((self.batch_size, 1))
         return torch.from_numpy(X), y
 

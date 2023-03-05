@@ -1,11 +1,13 @@
 import torch
 from torch import nn
 
+NUM_INPUTS = 190
+
 
 class NeuralNetwork(nn.Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        self.l1 = nn.Linear(190, 256)
+        self.l1 = nn.Linear(NUM_INPUTS, 256)
         self.l2 = nn.Linear(256, 32)
         self.l3 = nn.Linear(32, 32)
         self.l4 = nn.Linear(32, 1)
@@ -27,5 +29,5 @@ class WeightClipper(object):
         self.frequency = frequency
 
     def __call__(self, module):
-        if hasattr(module, 'weight') and module.weight.shape != (256, 190):
+        if hasattr(module, 'weight') and module.weight.shape != (256, NUM_INPUTS):
             module.weight.data = module.weight.data.clamp(-2, 2)

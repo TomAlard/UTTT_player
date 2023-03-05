@@ -11,10 +11,16 @@ def convert(position) -> (bytes, bytes):
     current_board = ['0'] * 10
     current_board[int(position[5])] = '1'
     current_board = ''.join(current_board)
-    if position[4] == '0':
-        X = position[2] + position[0] + position[3] + position[1] + current_board + '00'
-    else:
-        X = position[3] + position[1] + position[2] + position[0] + current_board + '00'
+    cp_is_p1 = position[4] == '0'
+    cp_bb, op_bb = (position[2], position[3]) if cp_is_p1 else (position[3], position[2])
+    cp_sbs, op_sbs = (position[0], position[1]) if cp_is_p1 else (position[1], position[0])
+    X = cp_bb
+    for i in range(9):
+        X += '1'*9 if cp_bb[i] == '1' else '0'*9 if op_bb[i] == '1' else cp_sbs[i*9:(i+1)*9]
+    X += op_bb
+    for i in range(9):
+        X += '1'*9 if op_bb[i] == '1' else '0'*9 if cp_bb[i] == '1' else op_sbs[i*9:(i+1)*9]
+    X += current_board + '00'
     b = bytes(int(X[i:i+8], 2) for i in range(0, len(X), 8))
     return b, bytes(position[6], encoding='UTF-8')
 
