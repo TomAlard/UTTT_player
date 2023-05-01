@@ -18,6 +18,24 @@ void addHiddenWeights(int i, int16_t* restrict output) {
 }
 
 
+void handlePlayerInput(PlayerBitBoard* playerBitBoard, bool isCurrentPlayer, __m256i regs[16]) {
+    uint16_t bigBoard = playerBitBoard->bigBoard;
+    int bigBoardOffset = isCurrentPlayer? 0 : 90;
+    while (bigBoard) {
+        addFeature(__builtin_ffs(bigBoard) - 1 + bigBoardOffset, regs);
+        bigBoard &= bigBoard - 1;
+    }
+    int smallBoardOffset = isCurrentPlayer? 9 : 99;
+    for (int i = 0; i < 9; i++) {
+        uint16_t smallBoard = playerBitBoard->smallBoards[i];
+        while (smallBoard) {
+            addFeature(__builtin_ffs(smallBoard) - 1 + smallBoardOffset + 9 * i, regs);
+            smallBoard &= smallBoard - 1;
+        }
+    }
+}
+
+
 void boardToInput(Board* board, int16_t* restrict output) {
     __m256i regs[16];
     for (int i = 0; i < 16; i++) {
@@ -27,31 +45,8 @@ void boardToInput(Board* board, int16_t* restrict output) {
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayer = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayer = p1 + !board->state.currentPlayer;
-    uint16_t bigBoard = currentPlayer->bigBoard;
-    while (bigBoard) {
-        addFeature(__builtin_ffs(bigBoard) - 1, regs);
-        bigBoard &= bigBoard - 1;
-    }
-    for (int i = 0; i < 9; i++) {
-        uint16_t smallBoard = currentPlayer->smallBoards[i];
-        while (smallBoard) {
-            addFeature(__builtin_ffs(smallBoard) + 8 + 9 * i, regs);
-            smallBoard &= smallBoard - 1;
-        }
-    }
-
-    bigBoard = otherPlayer->bigBoard;
-    while (bigBoard) {
-        addFeature(__builtin_ffs(bigBoard) + 89, regs);
-        bigBoard &= bigBoard - 1;
-    }
-    for (int i = 0; i < 9; i++) {
-        uint16_t smallBoard = otherPlayer->smallBoards[i];
-        while (smallBoard) {
-            addFeature(__builtin_ffs(smallBoard) + 98 + 9 * i, regs);
-            smallBoard &= smallBoard - 1;
-        }
-    }
+    handlePlayerInput(currentPlayer, true, regs);
+    handlePlayerInput(otherPlayer, false, regs);
 
     for (int i = 0; i < 16; i++) {
         _mm256_store_si256((__m256i*) &output[i * 16], regs[i]);
