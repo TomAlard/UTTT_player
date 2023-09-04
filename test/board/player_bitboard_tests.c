@@ -6,7 +6,7 @@
 
 
 bool squareIsOccupied(PlayerBitBoard* playerBitBoard, Square square) {
-    return BIT_CHECK(playerBitBoard->smallBoards[square.board], square.position);
+    return BIT_CHECK(extractSmallBoard(playerBitBoard, square.board), square.position);
 }
 
 

@@ -26,12 +26,15 @@ void handlePlayerInput(PlayerBitBoard* playerBitBoard, bool isCurrentPlayer, __m
         bigBoard &= bigBoard - 1;
     }
     int smallBoardOffset = isCurrentPlayer? 9 : 99;
-    for (int i = 0; i < 9; i++) {
-        uint16_t smallBoard = playerBitBoard->smallBoards[i];
-        while (smallBoard) {
-            addFeature(__builtin_ffs(smallBoard) - 1 + smallBoardOffset + 9 * i, regs);
-            smallBoard &= smallBoard - 1;
-        }
+    int64_t lowBits = (int64_t) playerBitBoard->marks;
+    int64_t highBits = (int64_t) (playerBitBoard->marks >> 64);
+    while (lowBits) {
+        addFeature(__builtin_ffsl(lowBits) - 1 + smallBoardOffset, regs);
+        lowBits &= lowBits - 1;
+    }
+    while (highBits) {
+        addFeature(__builtin_ffsl(highBits) - 1 + smallBoardOffset + 64, regs);
+        highBits &= highBits - 1;
     }
 }
 

@@ -77,15 +77,20 @@ int allocateNodes(Board* board, uint8_t amount) {
 }
 
 
-Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMoves) {
-    uint16_t bitBoard = ~(board->state.player1.smallBoards[boardIndex] | board->state.player2.smallBoards[boardIndex]) & 511;
-    *amountOfMoves = amountOfOpenSquares[bitBoard];
-    return openSquares[bitBoard][boardIndex];
+uint16_t extractCombinedSmallBoard(Board* board, uint8_t boardIndex) {
+    return extractSmallBoard(&board->state.player1, boardIndex) | extractSmallBoard(&board->state.player2, boardIndex);
 }
 
 
+Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMoves) {
+    uint16_t bitBoard = ~(extractCombinedSmallBoard(board, boardIndex)) & 511;
+    *amountOfMoves = amountOfOpenSquares[bitBoard];
+    return openSquares[bitBoard][boardIndex];
+}
+// TODO: CHANGE THIS above and below
+
 int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
-    uint16_t bitBoard = ~(board->state.player1.smallBoards[boardIndex] | board->state.player2.smallBoards[boardIndex]) & 511;
+    uint16_t bitBoard = ~(extractCombinedSmallBoard(board, boardIndex)) & 511;
     memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex], amountOfOpenSquares[bitBoard] * sizeof(Square));
     return (int8_t)(amountOfMoves + amountOfOpenSquares[bitBoard]);
 }
@@ -125,8 +130,7 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
 
 bool nextBoardIsEmpty(Board* board) {
     uint8_t currentBoard = board->state.currentBoard;
-    return currentBoard != ANY_BOARD
-        && (board->state.player1.smallBoards[currentBoard] | board->state.player2.smallBoards[currentBoard]) == 0;
+    return currentBoard != ANY_BOARD && extractCombinedSmallBoard(board, currentBoard) == 0;
 }
 
 
@@ -142,8 +146,7 @@ void updateCheckpoint(Board* board) {
 
 void makeTemporaryMove(Board* board, Square square) {
     assert(square.board == board->state.currentBoard || board->state.currentBoard == ANY_BOARD);
-    assert(!BIT_CHECK(board->state.player1.smallBoards[square.board], square.position)
-        && !BIT_CHECK(board->state.player2.smallBoards[square.board], square.position));
+    assert(!BIT_CHECK(extractCombinedSmallBoard(board, square.board), square.position));
     assert(board->state.winner == NONE);
 
     PlayerBitBoard* p1 = &board->state.player1;

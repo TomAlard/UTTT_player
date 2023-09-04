@@ -103,7 +103,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
             continue;
         }
         MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
-        uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
+        uint16_t smallBoard = extractSmallBoard(currentPlayerBitBoard, move.board);
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
         __m256i regs[16];
@@ -114,7 +114,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
             addFeature(move.board + 90, regs);
-        } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
+        } else if (isDraw(smallBoard, extractSmallBoard(otherPlayerBitBoard, move.board))) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
             addFeature(move.board, regs);

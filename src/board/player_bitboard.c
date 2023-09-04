@@ -29,9 +29,9 @@ bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
 
 
 bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square) {
-    BIT_SET(playerBitBoard->smallBoards[square.board], square.position);
-    uint16_t smallBoard = playerBitBoard->smallBoards[square.board];
-    uint16_t otherPlayerSmallBoard = otherPlayerBitBoard->smallBoards[square.board];
+    BIT_SET_128(playerBitBoard->marks, 9*square.board + square.position);
+    uint16_t smallBoard = extractSmallBoard(playerBitBoard, square.board);
+    uint16_t otherPlayerSmallBoard = extractSmallBoard(otherPlayerBitBoard, square.board);
     if (isWin(smallBoard)) {
         BIT_SET(playerBitBoard->bigBoard, square.board);
         return true;
@@ -41,4 +41,9 @@ bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
         return true;
     }
     return false;
+}
+
+
+uint16_t extractSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t smallBoardIndex) {
+    return (playerBitBoard->marks >> (9 * smallBoardIndex)) & 511;
 }
