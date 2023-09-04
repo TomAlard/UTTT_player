@@ -14,14 +14,10 @@ inline __attribute__((always_inline)) void m256_add_dpbusd_epi32(__m256i* acc, _
 }
 
 
-inline __attribute__((always_inline)) float applyLinear256_1(const int8_t* input) {
-    __m256i inputRegs[8];
-    for (int i = 0; i < 8; i++) {
-        inputRegs[i] = _mm256_load_si256((__m256i*) &input[i * 32]);
-    }
+inline __attribute__((always_inline)) float applyLinear256_1(__m256i regs[16]) {
     __m256i sum = _mm256_setzero_si256();
     for (int i = 0; i < 8; i++) {
-        m256_add_dpbusd_epi32(&sum, inputRegs[i], _mm256_load_si256((__m256i*) &outputWeights[i * 32]));
+        m256_add_dpbusd_epi32(&sum, regs[i], _mm256_load_si256((__m256i*) &outputWeights[i * 32]));
     }
     __m128i sum128lo = _mm256_castsi256_si128(sum);
     __m128i sum128hi = _mm256_extracti128_si256(sum, 1);
