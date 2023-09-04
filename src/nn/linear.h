@@ -7,7 +7,7 @@
 
 
 inline __attribute__((always_inline)) void m256_add_dpbusd_epi32(__m256i* acc, __m256i a, __m256i b) {
-    __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    __m256i one = _mm256_set1_epi16(1);
     __m256i product0 = _mm256_maddubs_epi16(a, b);
     product0 = _mm256_madd_epi16(product0, one);
     *acc = _mm256_add_epi32(*acc, product0);
