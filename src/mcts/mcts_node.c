@@ -124,11 +124,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
         }
         addFeature(move.position + 99 + 9*move.board, regs);
         addFeature((smallBoardIsDecided? ANY_BOARD : move.position) + 180, regs);
-        alignas(32) int16_t result[256];
-        for (int j = 0; j < 16; j++) {
-            _mm256_store_si256((__m256i*) &result[j * 16], regs[j]);
-        }
-        float eval = neuralNetworkEvalFromHidden(result);
+        float eval = neuralNetworkEvalFromHidden(regs);
         initializeMCTSNode(parentIndex, move, eval, child);
     }
 }

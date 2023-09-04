@@ -54,9 +54,9 @@ void boardToInput(Board* board, int16_t* restrict output) {
 }
 
 
-float neuralNetworkEvalFromHidden(int16_t* restrict input) {
+float neuralNetworkEvalFromHidden(__m256i regs[16]) {
     alignas(32) int8_t output[HIDDEN_NEURONS];
-    applyClippedReLU256(input, output);
+    applyClippedReLU256(regs, output);
     float x = applyLinear256_1(output) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
@@ -66,5 +66,9 @@ float neuralNetworkEval(Board* board) {
     alignas(32) int16_t input[HIDDEN_NEURONS];
     boardToInput(board, input);
     addHiddenWeights(board->state.currentBoard + 180, input);
-    return neuralNetworkEvalFromHidden(input);
+    __m256i regs[16];
+    for (int j = 0; j < 16; j++) {
+        regs[j] = _mm256_load_si256((__m256i*) &input[j * 16]);
+    }
+    return neuralNetworkEvalFromHidden(regs);
 }
