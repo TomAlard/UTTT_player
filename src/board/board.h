@@ -33,7 +33,7 @@ void freeBoard(Board* board);
 
 int allocateNodes(Board* board, uint8_t amount);
 
-Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
+int8_t generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]);
 
 uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 

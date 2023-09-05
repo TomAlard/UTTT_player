@@ -83,10 +83,14 @@ bool isBadMove(Board* board, Square square, Winner winner, Player player) {
 
 void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* winners) {
     MCTSNode* parent = &board->nodes[parentIndex];
+    __m256i regs[16];
+    board->state.currentPlayer ^= 1;
+    boardToInput(board, regs);
+    board->state.currentPlayer ^= 1;
     alignas(32) int16_t NNInputs[256];
-    board->state.currentPlayer ^= 1;
-    boardToInput(board, NNInputs);
-    board->state.currentPlayer ^= 1;
+    for (int i = 0; i < 16; i++) {
+        _mm256_store_si256((__m256i*) &NNInputs[i * 16], regs[i]);
+    }
     int8_t amountOfMoves = parent->amountOfChildren;
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayerBitBoard = p1 + board->state.currentPlayer;
@@ -106,7 +110,6 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
         uint16_t smallBoard = extractSmallBoard(currentPlayerBitBoard, move.board);
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
-        __m256i regs[16];
         for (int j = 0; j < 16; j++) {
             regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
         }
@@ -133,9 +136,8 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
 void discoverChildNodes(int nodeIndex, Board* board) {
     MCTSNode* node = &board->nodes[nodeIndex];
     if (node->amountOfChildren == -1 && !handleSpecialCases(nodeIndex, board)) {
-        Square movesArray[TOTAL_SMALL_SQUARES];
-        int8_t amountOfMoves;
-        Square* moves = generateMoves(board, movesArray, &amountOfMoves);
+        Square moves[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves = generateMoves(board, moves);
         Player player = board->state.currentPlayer;
         Winner winners[amountOfMoves];
         memset(winners, NONE, amountOfMoves * sizeof(Winner));
@@ -224,9 +226,8 @@ int updateRoot(MCTSNode* root, Board* board, Square square) {
         }
     }
 
-    Square movesArray[TOTAL_SMALL_SQUARES];
-    int8_t amountOfMoves;
-    Square* moves = generateMoves(board, movesArray, &amountOfMoves);
+    Square moves[TOTAL_SMALL_SQUARES];
+    int8_t amountOfMoves = generateMoves(board, moves);
     for (int i = 0; i < amountOfMoves; i++) {
         if (squaresAreEqual(moves[i], square)) {
             int newRootIndex = allocateNodes(board, 1);
