@@ -219,6 +219,8 @@ bool squaresAreEqual(Square square1, Square square2);
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))
 
+#define BIT_SET_128(a,b) ((a) |= ((__uint128_t) 1 << (b)))
+
 Square toOurNotation(Square rowAndColumn);
 
 Square toGameNotation(Square square);
@@ -235,7 +237,7 @@ Square toGameNotation(Square square);
 #define DRAW 3
 
 typedef struct PlayerBitBoard {
-    uint16_t smallBoards[9];
+    __uint128_t marks;
     uint16_t bigBoard;
 } PlayerBitBoard;
 
@@ -246,6 +248,8 @@ bool isWin(uint16_t smallBoard);
 bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard);
 
 bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square);
+
+uint16_t extractSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t smallBoardIndex);
 
 #define TOTAL_SMALL_SQUARES 81
 #define ANY_BOARD 9
@@ -275,7 +279,7 @@ void freeBoard(Board* board);
 
 int allocateNodes(Board* board, uint8_t amount);
 
-Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves);
+int8_t generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]);
 
 uint8_t getNextBoard(Board* board, uint8_t previousPosition);
 
@@ -330,32 +334,28 @@ typedef struct HandleTurnResult {
 
 HandleTurnResult handleTurn(Board* board, int rootIndex, double allocatedTime, Square enemyMove);
 
-inline __attribute__((always_inline)) void applyClippedReLU256(const int16_t* input, int8_t* output) {
+inline __attribute__((always_inline)) void applyClippedReLU256(__m256i regs[16]) {
     __m256i zero = _mm256_setzero_si256();
     for (int i = 0; i < 8; i++) {
-        __m256i in0 = _mm256_load_si256((__m256i*) &input[i*32]);
-        __m256i in1 = _mm256_load_si256((__m256i*) &input[i*32 + 16]);
-        __m256i result = _mm256_permute4x64_epi64(_mm256_max_epi8(_mm256_packs_epi16(in0, in1), zero), 0b11011000);
-        _mm256_store_si256((__m256i*) &output[i * 32], result);
+        __m256i in0 = regs[2*i];
+        __m256i in1 = regs[2*i + 1];
+        regs[i] = _mm256_permute4x64_epi64(_mm256_max_epi8(_mm256_packs_epi16(in0, in1), zero), 0b11011000);
     }
 }
 
+
 inline __attribute__((always_inline)) void m256_add_dpbusd_epi32(__m256i* acc, __m256i a, __m256i b) {
-    __m256i one = _mm256_set_epi16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+    __m256i one = _mm256_set1_epi16(1);
     __m256i product0 = _mm256_maddubs_epi16(a, b);
     product0 = _mm256_madd_epi16(product0, one);
     *acc = _mm256_add_epi32(*acc, product0);
 }
 
 
-inline __attribute__((always_inline)) float applyLinear256_1(const int8_t* input) {
-    __m256i inputRegs[8];
-    for (int i = 0; i < 8; i++) {
-        inputRegs[i] = _mm256_load_si256((__m256i*) &input[i * 32]);
-    }
+inline __attribute__((always_inline)) float applyLinear256_1(__m256i regs[16]) {
     __m256i sum = _mm256_setzero_si256();
     for (int i = 0; i < 8; i++) {
-        m256_add_dpbusd_epi32(&sum, inputRegs[i], _mm256_load_si256((__m256i*) &outputWeights[i * 32]));
+        m256_add_dpbusd_epi32(&sum, regs[i], _mm256_load_si256((__m256i*) &outputWeights[i * 32]));
     }
     __m128i sum128lo = _mm256_castsi256_si128(sum);
     __m128i sum128hi = _mm256_extracti128_si256(sum, 1);
@@ -366,15 +366,16 @@ inline __attribute__((always_inline)) float applyLinear256_1(const int8_t* input
     return (float)result * (1.0f / (127*64));
 }
 
+
 inline __attribute__((always_inline)) void addFeature(int feature, __m256i regs[16]) {
     for (int i = 0; i < 16; i++) {
         regs[i] = _mm256_add_epi16(regs[i], _mm256_load_si256((__m256i*) &hiddenWeights[feature][i * 16]));
     }
 }
 
-void boardToInput(Board* board, int16_t* restrict output);
+void boardToInput(Board* board, __m256i regs[16]);
 
-float neuralNetworkEvalFromHidden(int16_t* restrict input);
+float neuralNetworkEvalFromHidden(__m256i regs[16]);
 
 float neuralNetworkEval(Board* board);
 // END HEADERS
@@ -446,9 +447,9 @@ bool isDraw(uint16_t smallBoard, uint16_t otherPlayerSmallBoard) {
 
 
 bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlayerBitBoard, Square square) {
-    BIT_SET(playerBitBoard->smallBoards[square.board], square.position);
-    uint16_t smallBoard = playerBitBoard->smallBoards[square.board];
-    uint16_t otherPlayerSmallBoard = otherPlayerBitBoard->smallBoards[square.board];
+    BIT_SET_128(playerBitBoard->marks, 9*square.board + square.position);
+    uint16_t smallBoard = extractSmallBoard(playerBitBoard, square.board);
+    uint16_t otherPlayerSmallBoard = extractSmallBoard(otherPlayerBitBoard, square.board);
     if (isWin(smallBoard)) {
         BIT_SET(playerBitBoard->bigBoard, square.board);
         return true;
@@ -458,6 +459,11 @@ bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
         return true;
     }
     return false;
+}
+
+
+uint16_t extractSmallBoard(PlayerBitBoard* playerBitBoard, uint8_t smallBoardIndex) {
+    return (playerBitBoard->marks >> (9 * smallBoardIndex)) & 511;
 }
 // END PLAYER_BITBOARD
 
@@ -470,21 +476,6 @@ bool setSquareOccupied(PlayerBitBoard* playerBitBoard, PlayerBitBoard* otherPlay
 
 
 // START BOARD
-Square openSquares[512][9][9];
-int8_t amountOfOpenSquares[512];
-
-
-int8_t setOpenSquares(Square openSquares_[9], uint8_t boardIndex, uint16_t bitBoard) {
-    int8_t amountOfMoves = 0;
-    while (bitBoard) {
-        Square square = {boardIndex, __builtin_ffs(bitBoard) - 1};
-        openSquares_[amountOfMoves++] = square;
-        bitBoard &= bitBoard - 1;
-    }
-    return amountOfMoves;
-}
-
-
 Winner calculateWinner(uint16_t player1BigBoard, uint16_t player2BigBoard, Player currentPlayer) {
     if (currentPlayer == PLAYER1 && isWin(player1BigBoard & (player1BigBoard ^ player2BigBoard))) {
         return WIN_P1;
@@ -520,11 +511,6 @@ Board* createBoard() {
     board->nodes = malloc(NUM_NODES * sizeof(MCTSNode));
     board->currentNodeIndex = 0;
     board->me = PLAYER2;
-    for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
-        for (int bitBoard = 0; bitBoard < 512; bitBoard++) {
-            amountOfOpenSquares[bitBoard] = setOpenSquares(openSquares[bitBoard][boardIndex], boardIndex, bitBoard);
-        }
-    }
     return board;
 }
 
@@ -542,43 +528,45 @@ int allocateNodes(Board* board, uint8_t amount) {
 }
 
 
-Square* getMovesSingleBoard(Board* board, uint8_t boardIndex, int8_t* amountOfMoves) {
-    uint16_t bitBoard = ~(board->state.player1.smallBoards[boardIndex] | board->state.player2.smallBoards[boardIndex]) & 511;
-    *amountOfMoves = amountOfOpenSquares[bitBoard];
-    return openSquares[bitBoard][boardIndex];
+uint16_t extractCombinedSmallBoard(Board* board, uint8_t boardIndex) {
+    return extractSmallBoard(&board->state.player1, boardIndex) | extractSmallBoard(&board->state.player2, boardIndex);
 }
 
 
-int8_t copyMovesSingleBoard(Board* board, uint8_t boardIndex, Square moves[TOTAL_SMALL_SQUARES], int8_t amountOfMoves) {
-    uint16_t bitBoard = ~(board->state.player1.smallBoards[boardIndex] | board->state.player2.smallBoards[boardIndex]) & 511;
-    memcpy(&moves[amountOfMoves], openSquares[bitBoard][boardIndex], amountOfOpenSquares[bitBoard] * sizeof(Square));
-    return (int8_t)(amountOfMoves + amountOfOpenSquares[bitBoard]);
-}
-
-
-int8_t generateMovesAnyBoard(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
-    int8_t amountOfMoves = 0;
-    uint16_t undecidedSmallBoards = ~(board->state.player1.bigBoard | board->state.player2.bigBoard) & 511;
-    while (undecidedSmallBoards) {
-        uint8_t boardIndex = __builtin_ffs(undecidedSmallBoards) - 1;
-        amountOfMoves = copyMovesSingleBoard(board, boardIndex, moves, amountOfMoves);
-        undecidedSmallBoards &= undecidedSmallBoards - 1;
-    }
-    return amountOfMoves;
-}
-
-
-Square* generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES], int8_t* amountOfMoves) {
+int8_t generateMoves(Board* board, Square moves[TOTAL_SMALL_SQUARES]) {
     if (board->state.winner != NONE) {
-        *amountOfMoves = 0;
-        return moves;
+        return 0;
     }
-    uint8_t currentBoard = board->state.currentBoard;
-    if (currentBoard == ANY_BOARD) {
-        *amountOfMoves = generateMovesAnyBoard(board, moves);
-        return moves;
+    __uint128_t mask;
+    if (board->state.currentBoard == ANY_BOARD) {
+        mask = 0;
+        uint16_t undecidedSmallBoards = ~(board->state.player1.bigBoard | board->state.player2.bigBoard) & 511;
+        while (undecidedSmallBoards) {
+            uint8_t boardIndex = __builtin_ffs(undecidedSmallBoards) - 1;
+            mask |= (__uint128_t) 511 << (9 * boardIndex);
+            undecidedSmallBoards &= undecidedSmallBoards - 1;
+        }
+    } else {
+        mask = (__uint128_t) 511 << (9 * board->state.currentBoard);
     }
-    return getMovesSingleBoard(board, currentBoard, amountOfMoves);
+    __uint128_t occupiedSquares = board->state.player1.marks | board->state.player2.marks;
+    __uint128_t legalMoves = ~occupiedSquares & mask;
+    uint64_t lowBits = legalMoves;
+    uint64_t highBits = legalMoves >> 64;
+    int8_t i = 0;
+    while (lowBits) {
+        int squareIndex = __builtin_ffsl((int64_t) lowBits) - 1;
+        Square s = {squareIndex / 9, squareIndex % 9};
+        moves[i++] = s;
+        lowBits &= lowBits - 1;
+    }
+    while (highBits) {
+        int squareIndex = __builtin_ffsl((int64_t) highBits) + 63;
+        Square s = {squareIndex / 9, squareIndex % 9};
+        moves[i++] = s;
+        highBits &= highBits - 1;
+    }
+    return i;
 }
 
 
@@ -590,8 +578,7 @@ uint8_t getNextBoard(Board* board, uint8_t previousPosition) {
 
 bool nextBoardIsEmpty(Board* board) {
     uint8_t currentBoard = board->state.currentBoard;
-    return currentBoard != ANY_BOARD
-           && (board->state.player1.smallBoards[currentBoard] | board->state.player2.smallBoards[currentBoard]) == 0;
+    return currentBoard != ANY_BOARD && extractCombinedSmallBoard(board, currentBoard) == 0;
 }
 
 
@@ -644,67 +631,51 @@ Winner getWinnerAfterMove(Board* board, Square square) {
 #define HIDDEN_NEURONS 256
 
 
-void addHiddenWeights(int i, int16_t* restrict output) {
-    for (int j = 0; j < HIDDEN_NEURONS; j++) {
-        output[j] = (int16_t) (output[j] + hiddenWeights[i][j]);
+void handlePlayerInput(PlayerBitBoard* playerBitBoard, bool isCurrentPlayer, __m256i regs[16]) {
+    uint16_t bigBoard = playerBitBoard->bigBoard;
+    int bigBoardOffset = isCurrentPlayer? 0 : 90;
+    while (bigBoard) {
+        addFeature(__builtin_ffs(bigBoard) - 1 + bigBoardOffset, regs);
+        bigBoard &= bigBoard - 1;
+    }
+    int smallBoardOffset = isCurrentPlayer? 9 : 99;
+    int64_t lowBits = (int64_t) playerBitBoard->marks;
+    int64_t highBits = (int64_t) (playerBitBoard->marks >> 64);
+    while (lowBits) {
+        addFeature(__builtin_ffsl(lowBits) - 1 + smallBoardOffset, regs);
+        lowBits &= lowBits - 1;
+    }
+    while (highBits) {
+        addFeature(__builtin_ffsl(highBits) - 1 + smallBoardOffset + 64, regs);
+        highBits &= highBits - 1;
     }
 }
 
 
-void boardToInput(Board* board, int16_t* restrict output) {
-    __m256i regs[16];
+void boardToInput(Board* board, __m256i regs[16]) {
     for (int i = 0; i < 16; i++) {
         regs[i] = _mm256_load_si256((__m256i*) &hiddenBiases[i * 16]);
     }
-
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayer = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayer = p1 + !board->state.currentPlayer;
-    uint16_t bigBoard = currentPlayer->bigBoard;
-    while (bigBoard) {
-        addFeature(__builtin_ffs(bigBoard) - 1, regs);
-        bigBoard &= bigBoard - 1;
-    }
-    for (int i = 0; i < 9; i++) {
-        uint16_t smallBoard = currentPlayer->smallBoards[i];
-        while (smallBoard) {
-            addFeature(__builtin_ffs(smallBoard) + 8 + 9 * i, regs);
-            smallBoard &= smallBoard - 1;
-        }
-    }
-
-    bigBoard = otherPlayer->bigBoard;
-    while (bigBoard) {
-        addFeature(__builtin_ffs(bigBoard) + 89, regs);
-        bigBoard &= bigBoard - 1;
-    }
-    for (int i = 0; i < 9; i++) {
-        uint16_t smallBoard = otherPlayer->smallBoards[i];
-        while (smallBoard) {
-            addFeature(__builtin_ffs(smallBoard) + 98 + 9 * i, regs);
-            smallBoard &= smallBoard - 1;
-        }
-    }
-
-    for (int i = 0; i < 16; i++) {
-        _mm256_store_si256((__m256i*) &output[i * 16], regs[i]);
-    }
+    handlePlayerInput(currentPlayer, true, regs);
+    handlePlayerInput(otherPlayer, false, regs);
 }
 
 
-float neuralNetworkEvalFromHidden(int16_t* restrict input) {
-    alignas(32) int8_t output[HIDDEN_NEURONS];
-    applyClippedReLU256(input, output);
-    float x = applyLinear256_1(output) + outputBias + 0.5f;
+float neuralNetworkEvalFromHidden(__m256i regs[16]) {
+    applyClippedReLU256(regs);
+    float x = applyLinear256_1(regs) + outputBias + 0.5f;
     return x < 0? 0 : x > 1? 1 : x;
 }
 
 
 float neuralNetworkEval(Board* board) {
-    alignas(32) int16_t input[HIDDEN_NEURONS];
-    boardToInput(board, input);
-    addHiddenWeights(board->state.currentBoard + 180, input);
-    return neuralNetworkEvalFromHidden(input);
+    __m256i regs[16];
+    boardToInput(board, regs);
+    addFeature(board->state.currentBoard + 180, regs);
+    return neuralNetworkEvalFromHidden(regs);
 }
 // END FORWARD
 
@@ -794,10 +765,14 @@ bool isBadMove(Board* board, Square square, Winner winner, Player player) {
 
 void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* winners) {
     MCTSNode* parent = &board->nodes[parentIndex];
+    __m256i regs[16];
+    board->state.currentPlayer ^= 1;
+    boardToInput(board, regs);
+    board->state.currentPlayer ^= 1;
     alignas(32) int16_t NNInputs[256];
-    board->state.currentPlayer ^= 1;
-    boardToInput(board, NNInputs);
-    board->state.currentPlayer ^= 1;
+    for (int i = 0; i < 16; i++) {
+        _mm256_store_si256((__m256i*) &NNInputs[i * 16], regs[i]);
+    }
     int8_t amountOfMoves = parent->amountOfChildren;
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayerBitBoard = p1 + board->state.currentPlayer;
@@ -814,10 +789,9 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
             continue;
         }
         MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
-        uint16_t smallBoard = currentPlayerBitBoard->smallBoards[move.board];
+        uint16_t smallBoard = extractSmallBoard(currentPlayerBitBoard, move.board);
         BIT_SET(smallBoard, move.position);
         bool smallBoardIsDecided;
-        __m256i regs[16];
         for (int j = 0; j < 16; j++) {
             regs[j] = _mm256_load_si256((__m256i*) &NNInputs[j * 16]);
         }
@@ -825,7 +799,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
             addFeature(move.board + 90, regs);
-        } else if (isDraw(smallBoard, otherPlayerBitBoard->smallBoards[move.board])) {
+        } else if (isDraw(smallBoard, extractSmallBoard(otherPlayerBitBoard, move.board))) {
             smallBoardIsDecided = BIT_CHECK(board->state.player1.bigBoard | board->state.player2.bigBoard
                                             | (1 << move.board), move.position);
             addFeature(move.board, regs);
@@ -835,11 +809,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
         }
         addFeature(move.position + 99 + 9*move.board, regs);
         addFeature((smallBoardIsDecided? ANY_BOARD : move.position) + 180, regs);
-        alignas(32) int16_t result[256];
-        for (int j = 0; j < 16; j++) {
-            _mm256_store_si256((__m256i*) &result[j * 16], regs[j]);
-        }
-        float eval = neuralNetworkEvalFromHidden(result);
+        float eval = neuralNetworkEvalFromHidden(regs);
         initializeMCTSNode(parentIndex, move, eval, child);
     }
 }
@@ -848,9 +818,8 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
 void discoverChildNodes(int nodeIndex, Board* board) {
     MCTSNode* node = &board->nodes[nodeIndex];
     if (node->amountOfChildren == -1 && !handleSpecialCases(nodeIndex, board)) {
-        Square movesArray[TOTAL_SMALL_SQUARES];
-        int8_t amountOfMoves;
-        Square* moves = generateMoves(board, movesArray, &amountOfMoves);
+        Square moves[TOTAL_SMALL_SQUARES];
+        int8_t amountOfMoves = generateMoves(board, moves);
         Player player = board->state.currentPlayer;
         Winner winners[amountOfMoves];
         memset(winners, NONE, amountOfMoves * sizeof(Winner));
@@ -936,9 +905,8 @@ int updateRoot(MCTSNode* root, Board* board, Square square) {
         }
     }
 
-    Square movesArray[TOTAL_SMALL_SQUARES];
-    int8_t amountOfMoves;
-    Square* moves = generateMoves(board, movesArray, &amountOfMoves);
+    Square moves[TOTAL_SMALL_SQUARES];
+    int8_t amountOfMoves = generateMoves(board, moves);
     for (int i = 0; i < amountOfMoves; i++) {
         if (squaresAreEqual(moves[i], square)) {
             int newRootIndex = allocateNodes(board, 1);

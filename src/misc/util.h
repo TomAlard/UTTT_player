@@ -10,7 +10,6 @@
 #define BIT_CHECK(a,b) ((a) & (1ULL<<(b)))
 
 #define BIT_SET_128(a,b) ((a) |= ((__uint128_t) 1 << (b)))
-#define BIT_CHECK_128(a,b) ((a) & ((__uint128_t) 1 << (b)))
 
 void* safeMalloc(size_t size);
 
