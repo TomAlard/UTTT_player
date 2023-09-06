@@ -13,6 +13,7 @@ int createMCTSRootNode(Board* board) {
     root->parentIndex = -1;
     root->childrenIndex = -1;
     root->eval = 0.0f;
+    root->evalSum = 0.0f;
     root->sims = 0.0f;
     root->square.board = 9;
     root->square.position = 9;
@@ -25,6 +26,7 @@ void initializeMCTSNode(int parentIndex, Square square, float eval, MCTSNode* no
     node->parentIndex = parentIndex;
     node->childrenIndex = -1;
     node->eval = eval;
+    node->evalSum = eval;
     node->sims = 0.0f;
     node->square = square;
     node->amountOfChildren = -1;
@@ -172,8 +174,9 @@ float fastSquareRoot(float x) {
 
 #define EXPLORATION_PARAMETER 0.41f
 #define FIRST_PLAY_URGENCY 0.40f
+#define EXPLOITATION_LAMBDA 0.20f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
-    float exploitation = node->eval;
+    float exploitation = (EXPLOITATION_LAMBDA * node->eval) + ((1 - EXPLOITATION_LAMBDA) * (node->evalSum / (node->sims + 1)));
     float exploration = node->sims == 0? FIRST_PLAY_URGENCY : fastSquareRoot(parentLogSims / node->sims);
     return exploitation + exploration;
 }
@@ -244,6 +247,7 @@ void backpropagate(Board* board, int nodeIndex, Winner winner, Player player) {
     assert(winner != NONE && "backpropagate: Can't backpropagate a NONE Winner");
     MCTSNode* node = &board->nodes[nodeIndex];
     node->eval = winner == DRAW ? 0.5f : player + 1 == winner ? 10000.0f : -10000.0f;
+    node->evalSum = node->eval * (node->sims + 1);
     backpropagateEval(board, node);
 }
 
@@ -261,6 +265,7 @@ void backpropagateEval(Board* board, MCTSNode* node) {
             maxChildEval = maxChildEval >= eval? maxChildEval : eval;
         }
         currentNode->eval = 1 - maxChildEval;
+        currentNode->evalSum += currentNode->eval;
         currentNode->sims++;
         currentNode = currentNode->parentIndex == -1? NULL : &board->nodes[currentNode->parentIndex];
     }

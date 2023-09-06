@@ -6,7 +6,7 @@
 #include "../misc/util.h"
 
 
-#define ROUNDS 1000
+#define ROUNDS 4000
 #define TIME 0.05
 
 

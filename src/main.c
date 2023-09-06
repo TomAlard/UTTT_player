@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <stdlib.h>
 #include "../test/tests_main.h"
 #include "main.h"
 #include "misc/util.h"
@@ -25,9 +25,20 @@ void printMove(MCTSNode* root, Square bestMove, int amountOfSimulations) {
     fflush(stdout);
 }
 
+int numMovesPlayed = 0;
+int numSims = 0;
 
 Square playTurn(Board* board, int* rootIndex, double allocatedTime, Square enemyMove) {
     HandleTurnResult result = handleTurn(board, *rootIndex, allocatedTime, enemyMove);
+    /*
+    numSims += result.amountOfSimulations;
+    if (++numMovesPlayed % 300 == 0) {
+        printf("Sims: %f\n", numSims / 300.0);
+        numMovesPlayed = 0;
+        numSims = 0;
+        exit(0);
+    }
+    */
     *rootIndex = result.newRootIndex;
     return result.move;
 }
@@ -56,7 +67,7 @@ void playGame(FILE* file, double timePerMove) {
 
 #define TIME 0.0999
 int main() {
-    runTests();
-    // runArena();
+    // runTests();
+    runArena();
     // playGame(stdin, TIME);
 }
