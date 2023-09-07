@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "../misc/player.h"
 #include "../main.h"
 #include "arena_opponent.h"
@@ -18,9 +19,9 @@ Winner simulateSingleGame(bool weArePlayer1) {
     bool weAreCurrentPlayer = weArePlayer1;
     while (board->state.winner == NONE && stateOpponent != NULL) {
         if (weAreCurrentPlayer) {
-            previousMove = playTurn(board, &rootIndex, TIME, previousMove);
+            previousMove = playTurn(board, &rootIndex, ((rand() / (RAND_MAX * 2.0)) + 0.75) * TIME, previousMove);
         } else {
-            previousMove = playTurnOpponent(&stateOpponent, TIME, previousMove);
+            previousMove = playTurnOpponent(&stateOpponent, ((rand() / (RAND_MAX * 2.0)) + 0.75) * TIME, previousMove);
         }
         weAreCurrentPlayer = !weAreCurrentPlayer;
     }
@@ -36,6 +37,7 @@ Winner simulateSingleGame(bool weArePlayer1) {
 
 
 void runArena() {
+    srand(69);
     int winsGoingFirst = 0;
     int drawsGoingFirst = 0;
     int lossesGoingFirst = 0;
