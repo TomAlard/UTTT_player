@@ -147,7 +147,9 @@ void discoverChildNodes(int nodeIndex, Board* board) {
             for (int i = 0; i < amountOfMoves; i++) {
                 Winner winner = getWinnerAfterMove(board, moves[i]);
                 if (winner == player + 1) {
-                    singleChild(nodeIndex, board, moves[i]);
+                    node->amountOfChildren = 1;
+                    node->childrenIndex = allocateNodes(board, 1);
+                    initializeMCTSNode(nodeIndex, moves[i], 10000.0f, &board->nodes[node->childrenIndex]);
                     return;
                 } else {
                     winners[i] = winner;
@@ -174,7 +176,7 @@ float fastSquareRoot(float x) {
 
 #define EXPLORATION_PARAMETER 0.41f
 #define FIRST_PLAY_URGENCY 0.40f
-#define EXPLOITATION_LAMBDA 0.20f
+#define EXPLOITATION_LAMBDA 0.60f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     float exploitation = (EXPLOITATION_LAMBDA * node->eval) + ((1 - EXPLOITATION_LAMBDA) * (node->evalSum / (node->sims + 1)));
     float exploration = node->sims == 0? FIRST_PLAY_URGENCY : fastSquareRoot(parentLogSims / node->sims);
