@@ -5,7 +5,6 @@
 #include "../board/board.h"
 
 typedef struct MCTSNode {
-    int parentIndex;
     int childrenIndex;
     float eval;
     float evalSum;
@@ -26,9 +25,9 @@ MCTSNode* expandLeaf(int leafIndex, Board* board);
 
 int updateRoot(MCTSNode* root, Board* board, Square square);
 
-void backpropagate(Board* board, int nodeIndex, Winner winner, Player player);
+void backpropagate(Board* board, int nodeIndex, Winner winner, Player player, const int* parentIndices);
 
-void backpropagateEval(Board* board, MCTSNode* node);
+void backpropagateEval(Board* board, MCTSNode* node, const int* parentIndices);
 
 void visitNode(int nodeIndex, Board* board);
 

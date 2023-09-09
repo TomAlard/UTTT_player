@@ -10,7 +10,6 @@
 int createMCTSRootNode(Board* board) {
     int rootIndex = allocateNodes(board, 1);
     MCTSNode* root = &board->nodes[rootIndex];
-    root->parentIndex = -1;
     root->childrenIndex = -1;
     root->eval = 0.0f;
     root->evalSum = 0.0f;
@@ -22,8 +21,7 @@ int createMCTSRootNode(Board* board) {
 }
 
 
-void initializeMCTSNode(int parentIndex, Square square, float eval, MCTSNode* node) {
-    node->parentIndex = parentIndex;
+void initializeMCTSNode(Square square, float eval, MCTSNode* node) {
     node->childrenIndex = -1;
     node->eval = eval;
     node->evalSum = eval;
@@ -56,7 +54,7 @@ void singleChild(int nodeIndex, Board* board, Square square) {
     node->amountOfChildren = 1;
     node->childrenIndex = allocateNodes(board, 1);
     float eval = getEvalOfMove(board, square);
-    initializeMCTSNode(nodeIndex, square, eval, &board->nodes[node->childrenIndex + 0]);
+    initializeMCTSNode(square, eval, &board->nodes[node->childrenIndex + 0]);
 }
 
 
@@ -105,7 +103,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
             continue;
         } else if (winners[i] == DRAW) {
             MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
-            initializeMCTSNode(parentIndex, move, 0.5f, child);
+            initializeMCTSNode(move, 0.5f, child);
             continue;
         }
         MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
@@ -130,7 +128,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
         addFeature(move.position + 99 + 9*move.board, regs);
         addFeature((smallBoardIsDecided? ANY_BOARD : move.position) + 180, regs);
         float eval = neuralNetworkEvalFromHidden(regs);
-        initializeMCTSNode(parentIndex, move, eval, child);
+        initializeMCTSNode(move, eval, child);
     }
 }
 
@@ -149,7 +147,7 @@ void discoverChildNodes(int nodeIndex, Board* board) {
                 if (winner == player + 1) {
                     node->amountOfChildren = 1;
                     node->childrenIndex = allocateNodes(board, 1);
-                    initializeMCTSNode(nodeIndex, moves[i], 10000.0f, &board->nodes[node->childrenIndex]);
+                    initializeMCTSNode(moves[i], 10000.0f, &board->nodes[node->childrenIndex]);
                     return;
                 } else {
                     winners[i] = winner;
@@ -215,19 +213,15 @@ int selectNextChild(Board* board, int nodeIndex) {
 MCTSNode* expandLeaf(int leafIndex, Board* board) {
     assert(isLeafNode(leafIndex, board));
     discoverChildNodes(leafIndex, board);
-    return &board->nodes[selectNextChild(board, leafIndex)];
+    return &board->nodes[leafIndex];
 }
 
 
 int updateRoot(MCTSNode* root, Board* board, Square square) {
-    MCTSNode* newRoot = NULL;
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &board->nodes[root->childrenIndex + i];
         if (squaresAreEqual(square, child->square)) {
-            newRoot = child;
-            int newRootIndex = root->childrenIndex + i;
-            newRoot->parentIndex = -1;
-            return newRootIndex;
+            return root->childrenIndex + i;
         }
     }
 
@@ -236,8 +230,7 @@ int updateRoot(MCTSNode* root, Board* board, Square square) {
     for (int i = 0; i < amountOfMoves; i++) {
         if (squaresAreEqual(moves[i], square)) {
             int newRootIndex = allocateNodes(board, 1);
-            newRoot = &board->nodes[newRootIndex];
-            initializeMCTSNode(-1, square, 0.0f, newRoot);
+            initializeMCTSNode(square, 0.0f, &board->nodes[newRootIndex]);
             return newRootIndex;
         }
     }
@@ -245,31 +238,35 @@ int updateRoot(MCTSNode* root, Board* board, Square square) {
 }
 
 
-void backpropagate(Board* board, int nodeIndex, Winner winner, Player player) {
+void backpropagate(Board* board, int nodeIndex, Winner winner, Player player, const int* parentIndices) {
     assert(winner != NONE && "backpropagate: Can't backpropagate a NONE Winner");
     MCTSNode* node = &board->nodes[nodeIndex];
     node->eval = winner == DRAW ? 0.5f : player + 1 == winner ? 10000.0f : -10000.0f;
     node->evalSum = node->eval * (node->sims + 1);
-    backpropagateEval(board, node);
+    backpropagateEval(board, node, parentIndices);
 }
 
 
-void backpropagateEval(Board* board, MCTSNode* node) {
+void backpropagateEval(Board* board, MCTSNode* node, const int* parentIndices) {
     assert(node != NULL);
     MCTSNode* currentNode = node;
+    int i = 0;
     if (currentNode->amountOfChildren <= 0) {
-        currentNode = &board->nodes[currentNode->parentIndex];
+        int nextNodeIndex = parentIndices[i++];
+        currentNode = nextNodeIndex == -1 ? NULL : &board->nodes[nextNodeIndex];
     }
     while (currentNode != NULL) {
-        float maxChildEval = -100000.0f;
-        for (int i = 0; i < currentNode->amountOfChildren; i++) {
-            float eval = (&board->nodes[currentNode->childrenIndex + i])->eval;
+        float maxChildEval = -10000.0f;
+        for (int j = 0; j < currentNode->amountOfChildren; j++) {
+            MCTSNode* child = &board->nodes[currentNode->childrenIndex + j];
+            float eval = child->eval;
             maxChildEval = maxChildEval >= eval? maxChildEval : eval;
         }
         currentNode->eval = 1 - maxChildEval;
         currentNode->evalSum += currentNode->eval;
         currentNode->sims++;
-        currentNode = currentNode->parentIndex == -1? NULL : &board->nodes[currentNode->parentIndex];
+        int nextNodeIndex = parentIndices[i++];
+        currentNode = nextNodeIndex == -1 ? NULL : &board->nodes[nextNodeIndex];
     }
 }
 

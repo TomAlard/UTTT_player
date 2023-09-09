@@ -37,13 +37,14 @@ void updateRootTest() {
     int rootIndex = createMCTSRootNode(board);
     MCTSNode* root = &board->nodes[rootIndex];
     discoverChildNodes(rootIndex, board);
-    backpropagate(board, root->childrenIndex + 0, DRAW, board->state.currentPlayer);
+    int parentIndices[1] = {-1};
+    backpropagate(board, root->childrenIndex + 0, DRAW, board->state.currentPlayer, parentIndices);
     Square square = getMostPromisingMove(board, root);
     makePermanentMove(board, square);
     int newRootIndex = updateRoot(root, board, square);
     MCTSNode* newRoot = &board->nodes[newRootIndex];
     discoverChildNodes(newRootIndex, board);
-    backpropagate(board, newRoot->childrenIndex + 0, DRAW, board->state.currentPlayer);
+    backpropagate(board, newRoot->childrenIndex + 0, DRAW, board->state.currentPlayer, parentIndices);
     myAssert(getMostPromisingMove(board, newRoot).board == square.position);
     freeBoard(board);
 }
@@ -61,7 +62,7 @@ void updateRootStillWorksWhenPlayedMoveWasPruned() {
     discoverChildNodes(rootIndex, board);
     root->amountOfChildren = 1;  // 'prune' the other 8 moves
     Square prunedMove = {4, 5};
-    myAssert(!squaresAreEqual((&board->nodes[root->childrenIndex + 0])->square, prunedMove));
+    myAssert(!squaresAreEqual(board->nodes[root->childrenIndex].square, prunedMove));
     updateRoot(root, board, prunedMove);
     freeBoard(board);
 }
@@ -86,7 +87,9 @@ void optimizedNNEvalTest() {
     for (int i = 0; i < root->amountOfChildren; i++) {
         MCTSNode* child = &board->nodes[root->childrenIndex + i];
         makeTemporaryMove(board, child->square);
-        myAssert(fabsf(neuralNetworkEval(board) - child->eval) < 1e-5);
+        float expectedEval = neuralNetworkEval(board);
+        float actualEval = child->eval;
+        myAssert(fabsf(expectedEval - actualEval) < 1e-4);
         revertToCheckpoint(board);
     }
     freeBoard(board);

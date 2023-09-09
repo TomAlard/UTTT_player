@@ -3,9 +3,12 @@
 #include "../misc/util.h"
 
 
-int selectLeaf(Board* board, int rootIndex) {
+int selectLeaf(Board* board, int rootIndex, int* parentIndices, int* i) {
+    *i = TOTAL_SMALL_SQUARES - 1;
+    parentIndices[(*i)--] = -1;
     int currentNodeIndex = rootIndex;
     while (!isLeafNode(currentNodeIndex, board) && board->state.winner == NONE) {
+        parentIndices[(*i)--] = currentNodeIndex;
         currentNodeIndex = selectNextChild(board, currentNodeIndex);
         visitNode(currentNodeIndex, board);
     }
@@ -25,14 +28,17 @@ int findNextMove(Board* board, int rootIndex, double allocatedTime) {
     int amountOfSimulations = 0;
     struct timeval start;
     gettimeofday(&start, NULL);
-    while (++amountOfSimulations % 128 != 0 || hasTimeRemaining(start, allocatedTime)) {
-        int leafIndex = selectLeaf(board, rootIndex);
+    while (++amountOfSimulations % 512 != 0 || hasTimeRemaining(start, allocatedTime)) {
+        int parentIndicesArray[TOTAL_SMALL_SQUARES];
+        int i;
+        int leafIndex = selectLeaf(board, rootIndex, parentIndicesArray, &i);
+        int* parentIndices = &parentIndicesArray[i + 1];
         Winner winner = board->state.winner;
         Player player = OTHER_PLAYER(board->state.currentPlayer);
         if (winner == NONE) {
-            backpropagateEval(board, expandLeaf(leafIndex, board));
+            backpropagateEval(board, expandLeaf(leafIndex, board), parentIndices);
         } else {
-            backpropagate(board, leafIndex, winner, player);
+            backpropagate(board, leafIndex, winner, player, parentIndices);
         }
         revertToCheckpoint(board);
     }
