@@ -10,7 +10,7 @@ typedef struct MCTSNode {
     float evalSum;
     float sims;
     Square square;
-    int8_t amountOfChildren;
+    int8_t numChildren;
 } MCTSNode;
 
 int createMCTSRootNode(Board* board);

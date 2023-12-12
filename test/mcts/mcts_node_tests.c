@@ -20,7 +20,7 @@ void between17And81MovesInOneGame() {
     discoverChildNodes(nodeIndex, board);
     int count = 0;
     MCTSNode* node = &board->nodes[nodeIndex];
-    while (node->amountOfChildren > 0) {
+    while (node->numChildren > 0) {
         nodeIndex = selectNextChild(board, nodeIndex);
         node = &board->nodes[nodeIndex];
         visitNode(nodeIndex, board);
@@ -60,7 +60,7 @@ void updateRootStillWorksWhenPlayedMoveWasPruned() {
     root = &board->nodes[rootIndex];
     makePermanentMove(board, firstMove);
     discoverChildNodes(rootIndex, board);
-    root->amountOfChildren = 1;  // 'prune' the other 8 moves
+    root->numChildren = 1;  // 'prune' the other 8 moves
     Square prunedMove = {4, 5};
     myAssert(!squaresAreEqual(board->nodes[root->childrenIndex].square, prunedMove));
     updateRoot(root, board, prunedMove);
@@ -84,7 +84,7 @@ void optimizedNNEvalTest() {
     int rootIndex = createMCTSRootNode(board);
     MCTSNode* root = &board->nodes[rootIndex];
     discoverChildNodes(rootIndex, board);
-    for (int i = 0; i < root->amountOfChildren; i++) {
+    for (int i = 0; i < root->numChildren; i++) {
         MCTSNode* child = &board->nodes[root->childrenIndex + i];
         makeTemporaryMove(board, child->square);
         float expectedEval = neuralNetworkEval(board);

@@ -16,7 +16,7 @@ int createMCTSRootNode(Board* board) {
     root->sims = 0.0f;
     root->square.board = 9;
     root->square.position = 9;
-    root->amountOfChildren = -1;
+    root->numChildren = -1;
     return rootIndex;
 }
 
@@ -27,7 +27,7 @@ void initializeMCTSNode(Square square, float eval, MCTSNode* node) {
     node->evalSum = eval;
     node->sims = 0.0f;
     node->square = square;
-    node->amountOfChildren = -1;
+    node->numChildren = -1;
 }
 
 
@@ -51,7 +51,7 @@ float getEvalOfMove(Board* board, Square square) {
 
 void singleChild(int nodeIndex, Board* board, Square square) {
     MCTSNode* node = &board->nodes[nodeIndex];
-    node->amountOfChildren = 1;
+    node->numChildren = 1;
     node->childrenIndex = allocateNodes(board, 1);
     float eval = getEvalOfMove(board, square);
     initializeMCTSNode(square, eval, &board->nodes[node->childrenIndex + 0]);
@@ -91,15 +91,15 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
     for (int i = 0; i < 16; i++) {
         _mm256_store_si256((__m256i*) &NNInputs[i * 16], regs[i]);
     }
-    int8_t amountOfMoves = parent->amountOfChildren;
+    int8_t amountOfMoves = parent->numChildren;
     PlayerBitBoard* p1 = &board->state.player1;
     PlayerBitBoard* currentPlayerBitBoard = p1 + board->state.currentPlayer;
     PlayerBitBoard* otherPlayerBitBoard = p1 + !board->state.currentPlayer;
     int childIndex = 0;
     for (int i = 0; i < amountOfMoves; i++) {
         Square move = moves[i];
-        if (isBadMove(board, move, winners[i], board->state.currentPlayer) && parent->amountOfChildren > 1) {
-            parent->amountOfChildren--;
+        if (isBadMove(board, move, winners[i], board->state.currentPlayer) && parent->numChildren > 1) {
+            parent->numChildren--;
             continue;
         } else if (winners[i] == DRAW) {
             MCTSNode* child = &board->nodes[parent->childrenIndex + childIndex++];
@@ -135,7 +135,7 @@ void initializeChildNodes(int parentIndex, Board* board, Square* moves, Winner* 
 
 void discoverChildNodes(int nodeIndex, Board* board) {
     MCTSNode* node = &board->nodes[nodeIndex];
-    if (node->amountOfChildren == -1 && !handleSpecialCases(nodeIndex, board)) {
+    if (node->numChildren == -1 && !handleSpecialCases(nodeIndex, board)) {
         Square moves[TOTAL_SMALL_SQUARES];
         int8_t amountOfMoves = generateMoves(board, moves);
         Player player = board->state.currentPlayer;
@@ -145,7 +145,7 @@ void discoverChildNodes(int nodeIndex, Board* board) {
             for (int i = 0; i < amountOfMoves; i++) {
                 Winner winner = getWinnerAfterMove(board, moves[i]);
                 if (winner == player + 1) {
-                    node->amountOfChildren = 1;
+                    node->numChildren = 1;
                     node->childrenIndex = allocateNodes(board, 1);
                     initializeMCTSNode(moves[i], 10000.0f, &board->nodes[node->childrenIndex]);
                     return;
@@ -154,7 +154,7 @@ void discoverChildNodes(int nodeIndex, Board* board) {
                 }
             }
         }
-        node->amountOfChildren = amountOfMoves;
+        node->numChildren = amountOfMoves;
         node->childrenIndex = allocateNodes(board, amountOfMoves);
         initializeChildNodes(nodeIndex, board, moves, winners);
     }
@@ -175,10 +175,12 @@ float fastSquareRoot(float x) {
 #define EXPLORATION_PARAMETER 0.41f
 #define FIRST_PLAY_URGENCY 0.40f
 #define EXPLOITATION_LAMBDA 0.60f
+#define FREE_MOVE_PENALTY 0.25f
 float getUCTValue(MCTSNode* node, float parentLogSims) {
     float exploitation = (EXPLOITATION_LAMBDA * node->eval) + ((1 - EXPLOITATION_LAMBDA) * (node->evalSum / (node->sims + 1)));
     float exploration = node->sims == 0? FIRST_PLAY_URGENCY : fastSquareRoot(parentLogSims / node->sims);
-    return exploitation + exploration;
+    float exploration_penalty = node->numChildren > 9? FREE_MOVE_PENALTY : 1.0f;
+    return exploitation + exploration * exploration_penalty;
 }
 
 
@@ -193,11 +195,11 @@ float fastLog2(float x) {
 
 int selectNextChild(Board* board, int nodeIndex) {
     MCTSNode* node = &board->nodes[nodeIndex];
-    assert(node->amountOfChildren > 0);
+    assert(node->numChildren > 0);
     float logSims = EXPLORATION_PARAMETER*EXPLORATION_PARAMETER * fastLog2(node->sims);
     int highestUCTChildIndex = -1;
     float highestUCT = -100000.0f;
-    for (int i = 0; i < node->amountOfChildren; i++) {
+    for (int i = 0; i < node->numChildren; i++) {
         int childIndex = node->childrenIndex + i;
         float UCT = getUCTValue(&board->nodes[childIndex], logSims);
         if (UCT > highestUCT) {
@@ -218,7 +220,7 @@ MCTSNode* expandLeaf(int leafIndex, Board* board) {
 
 
 int updateRoot(MCTSNode* root, Board* board, Square square) {
-    for (int i = 0; i < root->amountOfChildren; i++) {
+    for (int i = 0; i < root->numChildren; i++) {
         MCTSNode* child = &board->nodes[root->childrenIndex + i];
         if (squaresAreEqual(square, child->square)) {
             return root->childrenIndex + i;
@@ -251,13 +253,13 @@ void backpropagateEval(Board* board, MCTSNode* node, const int* parentIndices) {
     assert(node != NULL);
     MCTSNode* currentNode = node;
     int i = 0;
-    if (currentNode->amountOfChildren <= 0) {
+    if (currentNode->numChildren <= 0) {
         int nextNodeIndex = parentIndices[i++];
         currentNode = nextNodeIndex == -1 ? NULL : &board->nodes[nextNodeIndex];
     }
     while (currentNode != NULL) {
         float maxChildEval = -10000.0f;
-        for (int j = 0; j < currentNode->amountOfChildren; j++) {
+        for (int j = 0; j < currentNode->numChildren; j++) {
             MCTSNode* child = &board->nodes[currentNode->childrenIndex + j];
             float eval = child->eval;
             maxChildEval = maxChildEval >= eval? maxChildEval : eval;
@@ -277,10 +279,10 @@ void visitNode(int nodeIndex, Board* board) {
 
 
 Square getMostPromisingMove(Board* board, MCTSNode* node) {
-    assert(node->amountOfChildren > 0 && "getMostPromisingMove: node has no children");
+    assert(node->numChildren > 0 && "getMostPromisingMove: node has no children");
     MCTSNode* highestScoreChild = &board->nodes[node->childrenIndex + 0];
     float highestScore = highestScoreChild->eval + fastLog2(highestScoreChild->sims);
-    for (int i = 1; i < node->amountOfChildren; i++) {
+    for (int i = 1; i < node->numChildren; i++) {
         MCTSNode* child = &board->nodes[node->childrenIndex + i];
         float score = child->eval + fastLog2(child->sims);
         if (score > highestScore) {
